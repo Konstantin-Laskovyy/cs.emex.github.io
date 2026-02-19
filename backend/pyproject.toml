@@ -1,0 +1,19 @@
+[project]
+name = "intranet-social-backend"
+version = "0.1.0"
+description = "Backend for intranet social network MVP"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "pydantic-settings",
+  "sqlalchemy",
+  "alembic",
+  "psycopg[binary]",
+  "python-jose[cryptography]",
+  "passlib[bcrypt]",
+]
+
+[tool.uvicorn]
+factory = false
+
