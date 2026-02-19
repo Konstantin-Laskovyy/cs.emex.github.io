@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Redirecting…</title>
+    <meta http-equiv="refresh" content="0;url=./" />
+  </head>
+  <body>
+    <script>
+      // GitHub Pages doesn't support SPA routes напрямую.
+      // Перенаправляем на корень, сохранив путь в hash.
+      (function () {
+        var path = window.location.pathname;
+        var search = window.location.search || "";
+        var hash = window.location.hash || "";
+        window.location.replace("./#"+ encodeURIComponent(path + search + hash));
+      })();
+    </script>
+  </body>
+</html>
+
