@@ -12,6 +12,7 @@ export function DepartmentsPage() {
     let cancelled = false;
     setLoading(true);
     setError(null);
+
     apiFetch<DepartmentPublic[]>("/departments")
       .then((data) => {
         if (cancelled) return;
@@ -29,6 +30,7 @@ export function DepartmentsPage() {
         if (cancelled) return;
         setLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
@@ -39,7 +41,7 @@ export function DepartmentsPage() {
       <div className="cardInner">
         <h1 style={{ margin: "0 0 6px" }}>Отделы</h1>
         <div className="muted" style={{ marginBottom: 14 }}>
-          Данные загружаются из API (нужна авторизация).
+          Отделы и численность сотрудников загружаются из API.
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -55,11 +57,7 @@ export function DepartmentsPage() {
               <div className="cardInner">
                 <div>{error}</div>
                 <div style={{ marginTop: 10 }}>
-                  <Link
-                    className="btn"
-                    to="/login"
-                    state={{ from: "/departments" }}
-                  >
+                  <Link className="btn" to="/login" state={{ from: "/departments" }}>
                     Перейти к входу
                   </Link>
                 </div>
@@ -67,29 +65,39 @@ export function DepartmentsPage() {
             </div>
           )}
 
-          {loading && <div className="muted">Загрузка…</div>}
+          {loading && <div className="muted">Загрузка...</div>}
 
           {!loading &&
             !error &&
-            departments.map((d) => (
-            <div
-              key={d.id}
-              className="card"
-              style={{
-                boxShadow: "none",
-                background: "rgba(255,255,255,0.03)",
-              }}
-            >
-              <div className="cardInner">
-                <div className="row">
-                  <div style={{ fontWeight: 650 }}>{d.name}</div>
-                  <div className="spacer" />
-                  <div className="muted" style={{ fontSize: 13 }}>
-                    {d.parent_id ? "подотдел" : "отдел"}
+            departments.map((department) => (
+              <div
+                key={department.id}
+                className="card"
+                style={{
+                  boxShadow: "none",
+                  background: "rgba(255,255,255,0.03)",
+                }}
+              >
+                <div className="cardInner">
+                  <div className="row">
+                    <div>
+                      <div style={{ fontWeight: 650 }}>{department.name}</div>
+                      <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+                        {department.employee_count} сотрудник
+                        {department.employee_count === 1
+                          ? ""
+                          : department.employee_count >= 2 && department.employee_count <= 4
+                            ? "а"
+                            : "ов"}
+                      </div>
+                    </div>
+                    <div className="spacer" />
+                    <div className="muted" style={{ fontSize: 13 }}>
+                      {department.parent_id ? "подотдел" : "отдел"}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
             ))}
 
           {!loading && !error && departments.length === 0 && (
@@ -102,4 +110,3 @@ export function DepartmentsPage() {
     </section>
   );
 }
-

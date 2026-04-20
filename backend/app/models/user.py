@@ -18,7 +18,19 @@ class User(Base):
     title: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
     department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id"), nullable=True)
-    department = relationship("Department")
+    department = relationship("Department", back_populates="users")
+    manager_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    manager: Mapped["User | None"] = relationship(
+        "User",
+        remote_side="User.id",
+        back_populates="reports",
+        foreign_keys=[manager_id],
+    )
+    reports: Mapped[list["User"]] = relationship(
+        "User",
+        back_populates="manager",
+        foreign_keys="User.manager_id",
+    )
 
     avatar_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     bio: Mapped[str | None] = mapped_column(String(2000), nullable=True)

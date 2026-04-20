@@ -12,4 +12,5 @@ class Department(Base):
     parent_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id"), nullable=True)
 
     parent: Mapped["Department | None"] = relationship(remote_side="Department.id")
+    users: Mapped[list["User"]] = relationship(back_populates="department")
 

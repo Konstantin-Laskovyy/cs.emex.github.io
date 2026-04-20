@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -15,5 +16,20 @@ def list_departments(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_user),
 ) -> list[DepartmentPublic]:
-    return db.query(Department).order_by(Department.name.asc()).all()
+    rows = (
+        db.query(Department, func.count(User.id))
+        .outerjoin(User, (User.department_id == Department.id) & User.is_active.is_(True))
+        .group_by(Department.id)
+        .order_by(Department.name.asc())
+        .all()
+    )
+    return [
+        DepartmentPublic(
+            id=department.id,
+            name=department.name,
+            parent_id=department.parent_id,
+            employee_count=employee_count,
+        )
+        for department, employee_count in rows
+    ]
 
