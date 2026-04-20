@@ -64,10 +64,10 @@ export function AppShell() {
                   style={({ isActive }) => ({
                     ...navLinkStyle,
                     borderColor: isActive
-                      ? "rgba(124,58,237,0.7)"
+                      ? "rgba(96,165,250,0.72)"
                       : "rgba(255,255,255,0.12)",
                     background: isActive
-                      ? "rgba(124,58,237,0.22)"
+                      ? "rgba(37,99,235,0.24)"
                       : "rgba(255,255,255,0.06)",
                   })}
                 >
@@ -78,10 +78,10 @@ export function AppShell() {
                   style={({ isActive }) => ({
                     ...navLinkStyle,
                     borderColor: isActive
-                      ? "rgba(124,58,237,0.7)"
+                      ? "rgba(96,165,250,0.72)"
                       : "rgba(255,255,255,0.12)",
                     background: isActive
-                      ? "rgba(124,58,237,0.22)"
+                      ? "rgba(37,99,235,0.24)"
                       : "rgba(255,255,255,0.06)",
                   })}
                 >
@@ -92,10 +92,10 @@ export function AppShell() {
                   style={({ isActive }) => ({
                     ...navLinkStyle,
                     borderColor: isActive
-                      ? "rgba(124,58,237,0.7)"
+                      ? "rgba(96,165,250,0.72)"
                       : "rgba(255,255,255,0.12)",
                     background: isActive
-                      ? "rgba(124,58,237,0.22)"
+                      ? "rgba(37,99,235,0.24)"
                       : "rgba(255,255,255,0.06)",
                   })}
                 >

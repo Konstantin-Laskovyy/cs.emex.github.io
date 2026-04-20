@@ -1,14 +1,14 @@
 :root {
   color-scheme: light;
-  --bg: #0b1220;
-  --panel: rgba(255, 255, 255, 0.06);
-  --panel-2: rgba(255, 255, 255, 0.09);
+  --bg: #08111f;
+  --panel: rgba(146, 196, 255, 0.08);
+  --panel-2: rgba(146, 196, 255, 0.12);
   --text: rgba(255, 255, 255, 0.92);
   --muted: rgba(255, 255, 255, 0.66);
-  --border: rgba(255, 255, 255, 0.12);
-  --primary: #7c3aed;
+  --border: rgba(147, 197, 253, 0.18);
+  --primary: #2563eb;
   --danger: #ef4444;
-  --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+  --shadow: 0 14px 40px rgba(2, 12, 27, 0.42);
   --radius: 14px;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
     Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -25,9 +25,9 @@ body {
 
 body {
   margin: 0;
-  background: radial-gradient(1200px 800px at 20% 10%, rgba(124, 58, 237, 0.26), transparent 55%),
-    radial-gradient(1200px 900px at 90% 0%, rgba(59, 130, 246, 0.18), transparent 55%),
-    radial-gradient(900px 700px at 20% 95%, rgba(16, 185, 129, 0.15), transparent 55%),
+  background: radial-gradient(1200px 800px at 18% 12%, rgba(37, 99, 235, 0.28), transparent 55%),
+    radial-gradient(1200px 900px at 88% 0%, rgba(56, 189, 248, 0.2), transparent 55%),
+    radial-gradient(900px 700px at 25% 92%, rgba(14, 165, 233, 0.16), transparent 55%),
     var(--bg);
   color: var(--text);
 }
@@ -96,11 +96,11 @@ textarea {
   transform: translateY(1px);
 }
 .btnPrimary {
-  background: rgba(124, 58, 237, 0.32);
-  border-color: rgba(124, 58, 237, 0.6);
+  background: rgba(37, 99, 235, 0.34);
+  border-color: rgba(96, 165, 250, 0.62);
 }
 .btnPrimary:hover {
-  background: rgba(124, 58, 237, 0.38);
+  background: rgba(37, 99, 235, 0.42);
 }
 
 .input {
@@ -113,7 +113,7 @@ textarea {
   outline: none;
 }
 .input:focus {
-  border-color: rgba(124, 58, 237, 0.7);
+  border-color: rgba(96, 165, 250, 0.78);
 }
 
 .grid2 {
