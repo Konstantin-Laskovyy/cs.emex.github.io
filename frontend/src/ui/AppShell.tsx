@@ -7,8 +7,8 @@ import type { UserPublic } from "../api/types";
 const navLinkStyle: React.CSSProperties = {
   padding: "10px 12px",
   borderRadius: 12,
-  border: "1px solid rgba(255,255,255,0.12)",
-  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(96,165,250,0.18)",
+  background: "rgba(255,255,255,0.05)",
 };
 
 export function AppShell() {
@@ -47,8 +47,8 @@ export function AppShell() {
       <header style={{ position: "sticky", top: 0, zIndex: 10 }}>
         <div
           style={{
-            borderBottom: "1px solid rgba(255,255,255,0.12)",
-            background: "rgba(11,18,32,0.55)",
+            borderBottom: "1px solid rgba(96,165,250,0.16)",
+            background: "linear-gradient(180deg, rgba(10,19,36,0.9), rgba(9,17,31,0.78))",
             backdropFilter: "blur(12px)",
           }}
         >
@@ -64,11 +64,14 @@ export function AppShell() {
                   style={({ isActive }) => ({
                     ...navLinkStyle,
                     borderColor: isActive
-                      ? "rgba(96,165,250,0.72)"
-                      : "rgba(255,255,255,0.12)",
+                      ? "rgba(147,197,253,0.9)"
+                      : "rgba(96,165,250,0.18)",
                     background: isActive
-                      ? "rgba(37,99,235,0.24)"
-                      : "rgba(255,255,255,0.06)",
+                      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
+                      : "rgba(255,255,255,0.05)",
+                    boxShadow: isActive
+                      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
+                      : "none",
                   })}
                 >
                   Главная
@@ -78,11 +81,14 @@ export function AppShell() {
                   style={({ isActive }) => ({
                     ...navLinkStyle,
                     borderColor: isActive
-                      ? "rgba(96,165,250,0.72)"
-                      : "rgba(255,255,255,0.12)",
+                      ? "rgba(147,197,253,0.9)"
+                      : "rgba(96,165,250,0.18)",
                     background: isActive
-                      ? "rgba(37,99,235,0.24)"
-                      : "rgba(255,255,255,0.06)",
+                      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
+                      : "rgba(255,255,255,0.05)",
+                    boxShadow: isActive
+                      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
+                      : "none",
                   })}
                 >
                   Сотрудники
@@ -92,11 +98,14 @@ export function AppShell() {
                   style={({ isActive }) => ({
                     ...navLinkStyle,
                     borderColor: isActive
-                      ? "rgba(96,165,250,0.72)"
-                      : "rgba(255,255,255,0.12)",
+                      ? "rgba(147,197,253,0.9)"
+                      : "rgba(96,165,250,0.18)",
                     background: isActive
-                      ? "rgba(37,99,235,0.24)"
-                      : "rgba(255,255,255,0.06)",
+                      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
+                      : "rgba(255,255,255,0.05)",
+                    boxShadow: isActive
+                      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
+                      : "none",
                   })}
                 >
                   Отделы
