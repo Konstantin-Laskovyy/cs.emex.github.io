@@ -56,14 +56,14 @@ export function LoginPage() {
         >
           <label style={{ display: "grid", gap: 6 }}>
             <span className="muted" style={{ fontSize: 13 }}>
-              Email
+              Логин
             </span>
             <input
               className="input"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
-              placeholder="name@company.local"
+              placeholder="ldapbind@emex.kz или EMEX\\username"
             />
           </label>
 

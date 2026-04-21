@@ -11,6 +11,14 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_access_token_minutes: int = 60
     auto_seed: bool = False
+    ad_enabled: bool = False
+    ad_server: str = ""
+    ad_domain: str = ""
+    ad_base_dn: str = ""
+    ad_use_ssl: bool = False
+    ad_bind_dn: str = ""
+    ad_bind_password: str = ""
+    ad_default_email_domain: str = "emex.kz"
 
 
 settings = Settings()
