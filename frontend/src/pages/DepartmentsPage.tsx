@@ -18,12 +18,12 @@ export function DepartmentsPage() {
         if (cancelled) return;
         setDepartments(data);
       })
-      .catch((e) => {
+      .catch((fetchError) => {
         if (cancelled) return;
-        if (e instanceof ApiError && e.status === 401) {
+        if (fetchError instanceof ApiError && fetchError.status === 401) {
           setError("Нужно войти, чтобы видеть отделы.");
         } else {
-          setError(e?.message || "Ошибка загрузки.");
+          setError(fetchError?.message || "Ошибка загрузки.");
         }
       })
       .finally(() => {
@@ -41,7 +41,7 @@ export function DepartmentsPage() {
       <div className="cardInner">
         <h1 style={{ margin: "0 0 6px" }}>Отделы</h1>
         <div className="muted" style={{ marginBottom: 14 }}>
-          Отделы и численность сотрудников загружаются из API.
+          При выборе отдела откроется список всех сотрудников этого отдела.
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -70,8 +70,9 @@ export function DepartmentsPage() {
           {!loading &&
             !error &&
             departments.map((department) => (
-              <div
+              <Link
                 key={department.id}
+                to={`/users?department_id=${department.id}`}
                 className="card"
                 style={{
                   boxShadow: "none",
@@ -93,11 +94,11 @@ export function DepartmentsPage() {
                     </div>
                     <div className="spacer" />
                     <div className="muted" style={{ fontSize: 13 }}>
-                      {department.parent_id ? "подотдел" : "отдел"}
+                      {department.parent_id ? "подотдел" : "отдел"} →
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
 
           {!loading && !error && departments.length === 0 && (

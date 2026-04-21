@@ -1,24 +1,33 @@
-import { createBrowserRouter, Navigate } from "react-router-dom";
+import { createBrowserRouter, Navigate, useLocation } from "react-router-dom";
 import { AppShell } from "./ui/AppShell";
 import { HomePage } from "./pages/HomePage";
 import { UsersPage } from "./pages/UsersPage";
 import { DepartmentsPage } from "./pages/DepartmentsPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
 import { LoginPage } from "./pages/LoginPage";
+import { getToken } from "./api/client";
+
+function ProtectedLayout() {
+  const location = useLocation();
+
+  if (!getToken()) {
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  }
+
+  return <AppShell />;
+}
 
 export const router = createBrowserRouter([
+  { path: "/login", element: <LoginPage /> },
   {
     path: "/",
-    element: <AppShell />,
+    element: <ProtectedLayout />,
     children: [
       { index: true, element: <HomePage /> },
       { path: "users", element: <UsersPage /> },
       { path: "users/:id", element: <UserProfilePage /> },
       { path: "departments", element: <DepartmentsPage /> },
-      { path: "login", element: <LoginPage /> },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
 ]);
-
-

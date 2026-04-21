@@ -27,6 +27,8 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const base = getApiBaseUrl().replace(/\/+$/, "");
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
 
   const headers = new Headers(init?.headers);
   headers.set("Accept", "application/json");
@@ -39,18 +41,30 @@ export async function apiFetch<T>(
     if (token) headers.set("Authorization", `Bearer ${token}`);
   }
 
-  const res = await fetch(url, { ...init, headers });
-  const text = await res.text();
-  const body = text ? safeJsonParse(text) : undefined;
+  try {
+    const res = await fetch(url, { ...init, headers, signal: controller.signal });
+    const text = await res.text();
+    const body = text ? safeJsonParse(text) : undefined;
 
-  if (!res.ok) {
-    throw new ApiError(
-      (body as any)?.detail || `Request failed: ${res.status}`,
-      res.status,
-      body,
-    );
+    if (!res.ok) {
+      throw new ApiError(
+        getErrorMessage(body, res.status),
+        res.status,
+        body,
+      );
+    }
+    return body as T;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError(
+        "API недоступно. Для входа нужен запущенный backend или опубликованный публичный API.",
+        504,
+      );
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
   }
-  return body as T;
 }
 
 function safeJsonParse(text: string) {
@@ -59,5 +73,18 @@ function safeJsonParse(text: string) {
   } catch {
     return text;
   }
+}
+
+function getErrorMessage(body: unknown, status: number) {
+  const detail = (body as any)?.detail;
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => item?.msg || item?.message || JSON.stringify(item))
+      .filter(Boolean)
+      .join("; ");
+  }
+  if (typeof body === "string" && body) return body;
+  return `Request failed: ${status}`;
 }
 

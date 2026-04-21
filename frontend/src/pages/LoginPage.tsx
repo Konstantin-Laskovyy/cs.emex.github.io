@@ -1,6 +1,6 @@
-import { apiFetch, setToken } from "../api/client";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { apiFetch, getApiBaseUrl, setToken } from "../api/client";
 
 type LocationState = { from?: string };
 
@@ -9,6 +9,7 @@ export function LoginPage() {
   const location = useLocation();
   const state = (location.state ?? {}) as LocationState;
   const from = useMemo(() => state.from ?? "/", [state.from]);
+  const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,15 +20,17 @@ export function LoginPage() {
     <section className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
       <div className="cardInner">
         <h1 style={{ margin: "0 0 6px" }}>Вход</h1>
-        <div className="muted" style={{ marginBottom: 14 }}>
-          На этом шаге форма без реальной авторизации. Подключим к API и JWT в
-          блоке backend.
+        <div className="muted" style={{ marginBottom: 14, lineHeight: 1.5 }}>
+          Для входа нужен доступный backend API.
+          <br />
+          Сейчас frontend обращается к: <code>{apiBaseUrl}</code>
         </div>
 
         <form
-          onSubmit={(e) => {
-            e.preventDefault();
+          onSubmit={(event) => {
+            event.preventDefault();
             setError(null);
+
             if (!email || !password) {
               setError("Введите email и пароль.");
               return;
@@ -39,13 +42,13 @@ export function LoginPage() {
               body: JSON.stringify({ email, password }),
               auth: false,
             })
-              .then((r) => {
-                setToken(r.access_token);
+              .then((response) => {
+                setToken(response.access_token);
                 navigate(from, { replace: true });
               })
-              .catch((e) => {
+              .catch((fetchError) => {
                 setToken(null);
-                setError(e?.message || "Ошибка входа.");
+                setError(fetchError?.message || "Ошибка входа.");
               })
               .finally(() => setLoading(false));
           }}
@@ -58,7 +61,7 @@ export function LoginPage() {
             <input
               className="input"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
               placeholder="name@company.local"
             />
@@ -72,7 +75,7 @@ export function LoginPage() {
               className="input"
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
               placeholder="••••••••"
             />
@@ -91,12 +94,11 @@ export function LoginPage() {
             </div>
           )}
 
-          <button className="btn btnPrimary" type="submit">
-            {loading ? "Входим…" : "Войти"}
+          <button className="btn btnPrimary" type="submit" disabled={loading}>
+            {loading ? "Входим..." : "Войти"}
           </button>
         </form>
       </div>
     </section>
   );
 }
-

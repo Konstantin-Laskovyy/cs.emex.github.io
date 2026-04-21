@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import type { DepartmentPublic, UserPublic, UserUpdate } from "../api/types";
 
@@ -34,8 +34,13 @@ function toFormState(profile: UserPublic): ProfileFormState {
   };
 }
 
+type OutletContext = {
+  me: UserPublic | null;
+};
+
 export function UserProfilePage() {
   const { id } = useParams();
+  const { me } = useOutletContext<OutletContext>();
   const userId = useMemo(() => (id ? Number(id) : NaN), [id]);
 
   const [profile, setProfile] = useState<UserPublic | null>(null);
@@ -44,6 +49,7 @@ export function UserProfilePage() {
   const [form, setForm] = useState<ProfileFormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -55,6 +61,7 @@ export function UserProfilePage() {
     setSaveError(null);
     setProfile(null);
     setForm(null);
+    setIsEditing(false);
 
     if (!Number.isFinite(userId)) {
       setLoading(false);
@@ -74,14 +81,14 @@ export function UserProfilePage() {
         setEmployees(employeesData);
         setForm(toFormState(profileData));
       })
-      .catch((e) => {
+      .catch((error) => {
         if (cancelled) return;
-        if (e instanceof ApiError && e.status === 401) {
+        if (error instanceof ApiError && error.status === 401) {
           setLoadError("Нужно войти, чтобы видеть карточку сотрудника.");
-        } else if (e instanceof ApiError && e.status === 404) {
+        } else if (error instanceof ApiError && error.status === 404) {
           setLoadError("Сотрудник не найден.");
         } else {
-          setLoadError(e?.message || "Ошибка загрузки.");
+          setLoadError(error?.message || "Ошибка загрузки.");
         }
       })
       .finally(() => {
@@ -121,9 +128,10 @@ export function UserProfilePage() {
       });
       setProfile(updated);
       setForm(toFormState(updated));
-      setSaveMessage("Профиль сотрудника обновлен.");
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Не удалось сохранить изменения.");
+      setIsEditing(false);
+      setSaveMessage("Мой профиль обновлен.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Не удалось сохранить изменения.");
     } finally {
       setSaving(false);
     }
@@ -145,14 +153,11 @@ export function UserProfilePage() {
         <div className="cardInner">
           <h1 style={{ margin: 0 }}>{loadError ?? "Сотрудник не найден"}</h1>
           <div className="muted" style={{ marginTop: 8 }}>
-            Попробуйте открыть карточку из списка сотрудников или войти в систему.
+            Попробуйте открыть карточку из списка сотрудников.
           </div>
           <div style={{ marginTop: 14 }} className="row">
             <Link className="btn" to="/users">
               ← К списку
-            </Link>
-            <Link className="btn" to="/login" state={{ from: `/users/${id}` }}>
-              Войти
             </Link>
           </div>
         </div>
@@ -160,6 +165,7 @@ export function UserProfilePage() {
     );
   }
 
+  const isOwnProfile = me?.id === profile.id;
   const fullName = `${profile.first_name} ${profile.last_name}`;
   const managerOptions = employees.filter((employee) => employee.id !== profile.id);
 
@@ -193,6 +199,20 @@ export function UserProfilePage() {
             </div>
 
             <div className="spacer" />
+            {isOwnProfile && !isEditing && (
+              <button
+                className="btn btnPrimary"
+                type="button"
+                onClick={() => {
+                  setForm(toFormState(profile));
+                  setSaveError(null);
+                  setSaveMessage(null);
+                  setIsEditing(true);
+                }}
+              >
+                Редактировать профиль
+              </button>
+            )}
             <Link className="btn" to="/users">
               ← К списку
             </Link>
@@ -228,128 +248,106 @@ export function UserProfilePage() {
         </div>
       </section>
 
-      <section className="card">
-        <div className="cardInner">
-          <div className="row" style={{ alignItems: "baseline" }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: 22 }}>Редактирование профиля</h2>
-              <div className="muted" style={{ marginTop: 6 }}>
-                Можно обновить фотографию, должность, отдел и руководителя.
+      {isOwnProfile && isEditing ? (
+        <section className="card">
+          <div className="cardInner">
+            <div className="row" style={{ alignItems: "baseline" }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 22 }}>Редактирование моего профиля</h2>
+                <div className="muted" style={{ marginTop: 6 }}>
+                  Только владелец профиля может менять свои данные.
+                </div>
               </div>
             </div>
+
+            <form onSubmit={handleSave} style={{ marginTop: 16, display: "grid", gap: 14 }}>
+              <div className="formGrid">
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Имя</div>
+                  <input className="input" value={form.first_name} onChange={(event) => setForm({ ...form, first_name: event.target.value })} />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фамилия</div>
+                  <input className="input" value={form.last_name} onChange={(event) => setForm({ ...form, last_name: event.target.value })} />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Должность</div>
+                  <input className="input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Отдел</div>
+                  <select className="input" value={form.department_id} onChange={(event) => setForm({ ...form, department_id: event.target.value })}>
+                    <option value="">Не выбран</option>
+                    {departments.map((department) => (
+                      <option key={department.id} value={department.id}>
+                        {department.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Руководитель</div>
+                  <select className="input" value={form.manager_id} onChange={(event) => setForm({ ...form, manager_id: event.target.value })}>
+                    <option value="">Не назначен</option>
+                    {managerOptions.map((employee) => (
+                      <option key={employee.id} value={employee.id}>
+                        {employee.first_name} {employee.last_name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фото (URL)</div>
+                  <input className="input" value={form.avatar_url} onChange={(event) => setForm({ ...form, avatar_url: event.target.value })} placeholder="https://..." />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Локация</div>
+                  <input className="input" value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Телефон</div>
+                  <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+                </label>
+              </div>
+
+              <label>
+                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Описание</div>
+                <textarea className="input" value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} rows={5} />
+              </label>
+
+              {saveMessage && <div style={{ color: "#bfdbfe" }}>{saveMessage}</div>}
+              {saveError && <div style={{ color: "#fecaca" }}>{saveError}</div>}
+
+              <div className="row">
+                <button
+                  className="btn"
+                  type="button"
+                  onClick={() => {
+                    setForm(toFormState(profile));
+                    setSaveError(null);
+                    setSaveMessage(null);
+                    setIsEditing(false);
+                  }}
+                >
+                  Отмена
+                </button>
+                <button className="btn btnPrimary" type="submit" disabled={saving}>
+                  {saving ? "Сохраняем..." : "Сохранить изменения"}
+                </button>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleSave} style={{ marginTop: 16, display: "grid", gap: 14 }}>
-            <div className="formGrid">
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Имя</div>
-                <input
-                  className="input"
-                  value={form.first_name}
-                  onChange={(e) => setForm({ ...form, first_name: e.target.value })}
-                />
-              </label>
-
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фамилия</div>
-                <input
-                  className="input"
-                  value={form.last_name}
-                  onChange={(e) => setForm({ ...form, last_name: e.target.value })}
-                />
-              </label>
-
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Должность</div>
-                <input
-                  className="input"
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                />
-              </label>
-
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Отдел</div>
-                <select
-                  className="input"
-                  value={form.department_id}
-                  onChange={(e) => setForm({ ...form, department_id: e.target.value })}
-                >
-                  <option value="">Не выбран</option>
-                  {departments.map((department) => (
-                    <option key={department.id} value={department.id}>
-                      {department.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Руководитель</div>
-                <select
-                  className="input"
-                  value={form.manager_id}
-                  onChange={(e) => setForm({ ...form, manager_id: e.target.value })}
-                >
-                  <option value="">Не назначен</option>
-                  {managerOptions.map((employee) => (
-                    <option key={employee.id} value={employee.id}>
-                      {employee.first_name} {employee.last_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фото (URL)</div>
-                <input
-                  className="input"
-                  value={form.avatar_url}
-                  onChange={(e) => setForm({ ...form, avatar_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </label>
-
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Локация</div>
-                <input
-                  className="input"
-                  value={form.location}
-                  onChange={(e) => setForm({ ...form, location: e.target.value })}
-                />
-              </label>
-
-              <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Телефон</div>
-                <input
-                  className="input"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-              </label>
+        </section>
+      ) : !isOwnProfile ? (
+        <section className="card">
+          <div className="cardInner">
+            <h2 style={{ margin: 0, fontSize: 22 }}>Профиль только для просмотра</h2>
+            <div className="muted" style={{ marginTop: 10 }}>
+              Редактировать можно только свой профиль. Для изменения чужих данных обратитесь к владельцу профиля или администратору.
             </div>
-
-            <label>
-              <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Описание</div>
-              <textarea
-                className="input"
-                value={form.bio}
-                onChange={(e) => setForm({ ...form, bio: e.target.value })}
-                rows={5}
-              />
-            </label>
-
-            {saveMessage && <div style={{ color: "#bfdbfe" }}>{saveMessage}</div>}
-            {saveError && <div style={{ color: "#fecaca" }}>{saveError}</div>}
-
-            <div className="row">
-              <button className="btn btnPrimary" type="submit" disabled={saving}>
-                {saving ? "Сохраняем..." : "Сохранить изменения"}
-              </button>
-            </div>
-          </form>
-        </div>
-      </section>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

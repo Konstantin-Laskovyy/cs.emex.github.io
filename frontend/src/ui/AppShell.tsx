@@ -22,21 +22,23 @@ export function AppShell() {
     let cancelled = false;
     setMeError(null);
     setMe(null);
+
     if (!getToken()) return;
 
-    apiFetch<UserPublic>("/me")
+    apiFetch<UserPublic>("/users/me")
       .then((data) => {
         if (cancelled) return;
         setMe(data);
       })
-      .catch((e) => {
+      .catch((error) => {
         if (cancelled) return;
-        if (e instanceof ApiError && e.status === 401) {
+        if (error instanceof ApiError && error.status === 401) {
           setToken(null);
         } else {
-          setMeError(e?.message || "Ошибка /me");
+          setMeError(error?.message || "Профиль недоступен");
         }
       });
+
     return () => {
       cancelled = true;
     };
@@ -63,9 +65,7 @@ export function AppShell() {
                   to="/"
                   style={({ isActive }) => ({
                     ...navLinkStyle,
-                    borderColor: isActive
-                      ? "rgba(147,197,253,0.9)"
-                      : "rgba(96,165,250,0.18)",
+                    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
                     background: isActive
                       ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
                       : "rgba(255,255,255,0.05)",
@@ -80,9 +80,7 @@ export function AppShell() {
                   to="/users"
                   style={({ isActive }) => ({
                     ...navLinkStyle,
-                    borderColor: isActive
-                      ? "rgba(147,197,253,0.9)"
-                      : "rgba(96,165,250,0.18)",
+                    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
                     background: isActive
                       ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
                       : "rgba(255,255,255,0.05)",
@@ -97,9 +95,7 @@ export function AppShell() {
                   to="/departments"
                   style={({ isActive }) => ({
                     ...navLinkStyle,
-                    borderColor: isActive
-                      ? "rgba(147,197,253,0.9)"
-                      : "rgba(96,165,250,0.18)",
+                    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
                     background: isActive
                       ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
                       : "rgba(255,255,255,0.05)",
@@ -112,11 +108,16 @@ export function AppShell() {
                 </NavLink>
               </nav>
               <div className="spacer" />
-              {hasToken ? (
+              {hasToken && (
                 <div className="row" style={{ gap: 10 }}>
                   <div className="muted" style={{ fontSize: 13 }}>
-                    {me ? `${me.first_name} ${me.last_name}` : meError ? "Профиль недоступен" : "…"}
+                    {me ? `${me.first_name} ${me.last_name}` : meError ?? "..."}
                   </div>
+                  {me && (
+                    <Link className="btn" to={`/users/${me.id}`}>
+                      Мой профиль
+                    </Link>
+                  )}
                   <button
                     className="btn"
                     onClick={() => {
@@ -128,14 +129,6 @@ export function AppShell() {
                     Выйти
                   </button>
                 </div>
-              ) : (
-                <Link
-                  className="btn"
-                  to="/login"
-                  state={{ from: location.pathname }}
-                >
-                  Войти
-                </Link>
               )}
             </div>
           </div>
@@ -143,7 +136,7 @@ export function AppShell() {
       </header>
 
       <main className="container" style={{ padding: "18px 0 40px" }}>
-        <Outlet />
+        <Outlet context={{ me }} />
       </main>
 
       <footer className="container" style={{ padding: "16px 0 26px" }}>
@@ -154,4 +147,3 @@ export function AppShell() {
     </div>
   );
 }
-

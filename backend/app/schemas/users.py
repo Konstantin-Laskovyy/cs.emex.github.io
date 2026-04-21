@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl
 
 
 class DepartmentSummary(BaseModel):
@@ -22,7 +22,7 @@ class ManagerSummary(BaseModel):
 
 class UserPublic(BaseModel):
     id: int
-    email: EmailStr
+    email: str
     first_name: str
     last_name: str
     title: str | None = None
@@ -52,6 +52,6 @@ class UserUpdate(BaseModel):
 
 
 class UserCreate(UserUpdate):
-    email: EmailStr
+    email: str
     password: str = Field(min_length=8, default="Password123!")
 
