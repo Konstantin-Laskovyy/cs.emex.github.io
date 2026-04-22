@@ -199,7 +199,7 @@ export function UsersPage() {
                   <input className="input" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Email</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Электронная почта</div>
                   <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 </label>
                 <label>

@@ -199,20 +199,6 @@ textarea {
   display: block;
 }
 
-.quickFacts {
-  display: grid;
-  gap: 10px;
-}
-
-.quickFact {
-  display: grid;
-  gap: 4px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: rgba(6, 13, 25, 0.34);
-  border: 1px solid rgba(96, 165, 250, 0.16);
-}
-
 .newsHero {
   position: relative;
   overflow: hidden;

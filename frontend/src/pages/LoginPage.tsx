@@ -21,9 +21,9 @@ export function LoginPage() {
       <div className="cardInner">
         <h1 style={{ margin: "0 0 6px" }}>Вход</h1>
         <div className="muted" style={{ marginBottom: 14, lineHeight: 1.5 }}>
-          Для входа нужен доступный backend API.
+          Для входа используйте корпоративную учетную запись.
           <br />
-          Сейчас frontend обращается к: <code>{apiBaseUrl}</code>
+          Подключение выполняется через: <code>{apiBaseUrl}</code>
         </div>
 
         <form
@@ -32,7 +32,7 @@ export function LoginPage() {
             setError(null);
 
             if (!email || !password) {
-              setError("Введите email и пароль.");
+              setError("Введите логин и пароль.");
               return;
             }
 
@@ -63,7 +63,7 @@ export function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
-              placeholder="ldapbind@emex.kz или EMEX\\username"
+              placeholder="username@emex.kz"
             />
           </label>
 
@@ -77,7 +77,7 @@ export function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
-              placeholder="••••••••"
+              placeholder="Введите пароль"
             />
           </label>
 

@@ -1,5 +1,5 @@
+import { useMemo } from "react";
 import { Link, useOutletContext } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
 import type { UserPublic } from "../api/types";
 
 type ShellContext = {
@@ -9,43 +9,34 @@ type ShellContext = {
 const featuredNews = [
   {
     id: "news-1",
-    tag: "Announcement",
-    title: "Corporate news feed is now the center of the homepage",
-    text: "The main page becomes a living company space with announcements, product updates, and important internal news instead of a technical placeholder.",
-    meta: "Today · Product team",
+    tag: "Новости компании",
+    title: "Главная страница становится центром внутренних новостей",
+    text: "Теперь на главной странице можно публиковать важные объявления, новости подразделений и ключевые обновления по компании вместо технической заглушки.",
+    meta: "Сегодня · Продуктовая команда",
   },
   {
     id: "news-2",
-    tag: "Infrastructure",
-    title: "Authorization is now connected to Active Directory",
-    text: "Employees can use their work account to sign in. The next step is to enrich local profiles with data from the domain automatically.",
-    meta: "Today · IT Department",
+    tag: "Инфраструктура",
+    title: "Авторизация уже работает через Active Directory",
+    text: "Сотрудники могут входить в систему с рабочей учетной записью. Следующий шаг — автоматически подтягивать данные профиля из домена.",
+    meta: "Сегодня · IT-отдел",
   },
   {
     id: "news-3",
-    tag: "Roadmap",
-    title: "Next up: publishing workflow, comments, and reactions",
-    text: "After the first news block lands, we can move on to richer social features and department-driven content on the intranet.",
-    meta: "Next sprint · Frontend + Backend",
+    tag: "Планы",
+    title: "Дальше добавим публикации, комментарии и реакции",
+    text: "После запуска новостной ленты можно переходить к полноценной социальной механике: публикациям, обсуждениям и контенту по отделам.",
+    meta: "Следующий спринт · Frontend + Backend",
   },
 ];
 
 export function HomePage() {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const [apiStatus, setApiStatus] = useState("Checking API...");
   const { me } = useOutletContext<ShellContext>();
 
   const initials = useMemo(() => {
-    if (!me) return "IS";
-    return `${me.first_name?.[0] ?? ""}${me.last_name?.[0] ?? ""}`.toUpperCase() || "IS";
+    if (!me) return "ЕС";
+    return `${me.first_name?.[0] ?? ""}${me.last_name?.[0] ?? ""}`.toUpperCase() || "ЕС";
   }, [me]);
-
-  useEffect(() => {
-    fetch(`${API_URL}/health`)
-      .then((response) => response.json())
-      .then((data) => setApiStatus(data?.status === "ok" ? "Online" : "Unexpected response"))
-      .catch(() => setApiStatus("Unavailable"));
-  }, [API_URL]);
 
   return (
     <div className="homeLayout">
@@ -63,39 +54,24 @@ export function HomePage() {
 
               <div style={{ display: "grid", gap: 4 }}>
                 <div style={{ fontSize: 22, fontWeight: 700 }}>
-                  {me ? `${me.first_name} ${me.last_name}` : "Employee"}
+                  {me ? `${me.first_name} ${me.last_name}` : "Сотрудник"}
                 </div>
                 <div className="muted" style={{ fontSize: 14 }}>
-                  {me?.title || "Company employee"}
+                  {me?.title || "Сотрудник компании"}
                 </div>
-              </div>
-            </div>
-
-            <div className="quickFacts">
-              <div className="quickFact">
-                <span className="muted">API</span>
-                <strong>{apiStatus}</strong>
-              </div>
-              <div className="quickFact">
-                <span className="muted">Auth</span>
-                <strong>Active Directory</strong>
-              </div>
-              <div className="quickFact">
-                <span className="muted">Login</span>
-                <strong>{me?.email || "Signed-in user"}</strong>
               </div>
             </div>
 
             <div style={{ display: "grid", gap: 10 }}>
               <Link className="btn btnPrimary" to="/users">
-                Open employees
+                Открыть сотрудников
               </Link>
               <Link className="btn" to="/departments">
-                Browse departments
+                Открыть отделы
               </Link>
               {me && (
                 <Link className="btn" to={`/users/${me.id}`}>
-                  Open my profile
+                  Открыть мой профиль
                 </Link>
               )}
             </div>
@@ -106,10 +82,10 @@ export function HomePage() {
       <section className="homeFeed">
         <div className="newsHero card">
           <div className="cardInner">
-            <div className="newsBadge">Home</div>
-            <h1 style={{ margin: "8px 0 10px", fontSize: 34, lineHeight: 1.05 }}>Company news</h1>
+            <div className="newsBadge">Главная</div>
+            <h1 style={{ margin: "8px 0 10px", fontSize: 34, lineHeight: 1.05 }}>Новости компании</h1>
             <div className="muted" style={{ maxWidth: 720, lineHeight: 1.6 }}>
-              The homepage becomes a place for announcements, internal updates, and company-wide communication.
+              Главная страница становится местом для объявлений, внутренних обновлений и важных новостей для всей компании.
             </div>
           </div>
         </div>

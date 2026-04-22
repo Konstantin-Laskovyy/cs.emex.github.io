@@ -57,7 +57,7 @@ export function AppShell() {
           <div className="container" style={{ padding: "12px 0" }}>
             <div className="row">
               <Link to="/" style={{ fontWeight: 700, letterSpacing: 0.2 }}>
-                Intranet Social
+                Социальная сеть Emex
               </Link>
               <div className="spacer" />
               <nav className="row" style={{ gap: 10 }}>
@@ -141,7 +141,7 @@ export function AppShell() {
 
       <footer className="container" style={{ padding: "16px 0 26px" }}>
         <div className="muted" style={{ fontSize: 13 }}>
-          MVP — внутренняя социальная сеть компании.
+          Внутренняя социальная сеть компании Emex.
         </div>
       </footer>
     </div>
