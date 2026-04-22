@@ -31,6 +31,11 @@ class User(Base):
         back_populates="manager",
         foreign_keys="User.manager_id",
     )
+    news_posts: Mapped[list["NewsPost"]] = relationship(
+        "NewsPost",
+        back_populates="author",
+        cascade="all, delete-orphan",
+    )
 
     avatar_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     bio: Mapped[str | None] = mapped_column(String(2000), nullable=True)

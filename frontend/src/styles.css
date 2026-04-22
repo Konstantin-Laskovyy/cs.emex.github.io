@@ -253,6 +253,19 @@ textarea {
   gap: 12px;
 }
 
+.newsAuthor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.newsAuthorAvatar {
+  width: 44px;
+  height: 44px;
+  font-size: 14px;
+}
+
 .newsTag {
   display: inline-flex;
   align-items: center;
@@ -263,6 +276,11 @@ textarea {
   color: rgba(219, 234, 254, 0.96);
   background: rgba(37, 99, 235, 0.16);
   border: 1px solid rgba(96, 165, 250, 0.24);
+}
+
+.newsContent {
+  white-space: pre-line;
+  line-height: 1.75;
 }
 
 @media (max-width: 900px) {

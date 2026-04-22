@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.api.auth import router as auth_router
 from app.api.departments import router as departments_router
 from app.api.me import router as me_router
+from app.api.news import router as news_router
 from app.api.users import router as users_router
 
 
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router)
     app.include_router(departments_router)
     app.include_router(me_router)
+    app.include_router(news_router)
     app.include_router(users_router)
 
     @app.on_event("startup")

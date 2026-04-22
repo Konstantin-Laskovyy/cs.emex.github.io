@@ -50,3 +50,22 @@ export type DepartmentPublic = {
   parent_id?: number | null;
   employee_count: number;
 };
+
+export type NewsAuthor = {
+  id: number;
+  first_name: string;
+  last_name: string;
+  title?: string | null;
+  avatar_url?: string | null;
+};
+
+export type NewsPublic = {
+  id: number;
+  title: string;
+  summary: string;
+  content: string;
+  author_id: number;
+  author: NewsAuthor;
+  created_at: string;
+  updated_at: string;
+};
