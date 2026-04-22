@@ -130,6 +130,29 @@ textarea {
   gap: 16px;
 }
 
+.homeLayout {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.homeSidebar {
+  position: sticky;
+  top: 92px;
+}
+
+.homeFeed {
+  display: grid;
+  gap: 16px;
+}
+
+.profileCard {
+  display: grid;
+  justify-items: start;
+  gap: 14px;
+}
+
 .infoGrid,
 .formGrid {
   display: grid;
@@ -159,6 +182,16 @@ textarea {
   font-size: 28px;
 }
 
+.avatarRound {
+  border-radius: 999px;
+}
+
+.avatarHero {
+  width: 88px;
+  height: 88px;
+  font-size: 28px;
+}
+
 .avatarImage {
   width: 100%;
   height: 100%;
@@ -166,9 +199,97 @@ textarea {
   display: block;
 }
 
+.quickFacts {
+  display: grid;
+  gap: 10px;
+}
+
+.quickFact {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(6, 13, 25, 0.34);
+  border: 1px solid rgba(96, 165, 250, 0.16);
+}
+
+.newsHero {
+  position: relative;
+  overflow: hidden;
+}
+
+.newsHero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 240px at 10% 0%, rgba(96, 165, 250, 0.22), transparent 60%),
+    radial-gradient(540px 220px at 90% 10%, rgba(14, 165, 233, 0.18), transparent 58%);
+  pointer-events: none;
+}
+
+.newsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(219, 234, 254, 0.96);
+  background: rgba(59, 130, 246, 0.18);
+  border: 1px solid rgba(147, 197, 253, 0.28);
+}
+
+.newsList {
+  display: grid;
+  gap: 14px;
+}
+
+.newsCard {
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.newsCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(147, 197, 253, 0.36);
+  box-shadow: 0 24px 40px rgba(1, 10, 25, 0.42);
+}
+
+.newsCardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.newsTag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(219, 234, 254, 0.96);
+  background: rgba(37, 99, 235, 0.16);
+  border: 1px solid rgba(96, 165, 250, 0.24);
+}
+
 @media (max-width: 900px) {
   .grid2 {
     grid-template-columns: 1fr;
+  }
+
+  .homeLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .homeSidebar {
+    position: static;
   }
 }
 
