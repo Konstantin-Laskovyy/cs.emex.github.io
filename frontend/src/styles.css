@@ -147,6 +147,11 @@ textarea {
   gap: 16px;
 }
 
+.sidebarMenu {
+  display: grid;
+  gap: 10px;
+}
+
 .profileCard {
   display: grid;
   justify-items: start;

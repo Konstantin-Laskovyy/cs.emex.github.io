@@ -24,6 +24,23 @@ def list_news(
     )
 
 
+@router.get("/{news_id}", response_model=NewsPublic)
+def get_news(
+    news_id: int,
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> NewsPublic:
+    news = (
+        db.query(NewsPost)
+        .options(joinedload(NewsPost.author))
+        .filter(NewsPost.id == news_id)
+        .first()
+    )
+    if not news:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Новость не найдена")
+    return news
+
+
 @router.post("", response_model=NewsPublic, status_code=status.HTTP_201_CREATED)
 def create_news(
     payload: NewsCreate,
