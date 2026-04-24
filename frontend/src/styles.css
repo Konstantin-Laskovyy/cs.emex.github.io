@@ -373,6 +373,185 @@ textarea {
   justify-content: flex-end;
 }
 
+.orgPage {
+  display: grid;
+  gap: 16px;
+}
+
+.orgIntro {
+  border-color: #b8d3f0;
+}
+
+.orgLayout {
+  display: grid;
+  grid-template-columns: minmax(360px, 0.95fr) minmax(360px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.orgTreeCard,
+.orgDetailsCard {
+  min-height: 620px;
+}
+
+.orgDetailsCard {
+  position: sticky;
+  top: 92px;
+}
+
+.orgTree {
+  display: grid;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.orgTreeItem {
+  display: grid;
+  gap: 10px;
+}
+
+.orgTreeChildren {
+  display: grid;
+  gap: 10px;
+  margin-left: clamp(14px, calc(var(--org-level) * 8px + 18px), 42px);
+  padding-left: 16px;
+  border-left: 2px solid #dbe8f6;
+}
+
+.orgNode {
+  width: 100%;
+  display: grid;
+  gap: 5px;
+  text-align: left;
+  padding: 13px 14px;
+  border: 1px solid #cfe0f3;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.orgNode:hover,
+.orgNodeActive {
+  border-color: var(--primary);
+  box-shadow: 0 12px 28px rgba(7, 63, 127, 0.12);
+  transform: translateY(-1px);
+}
+
+.orgNodeActive {
+  background: #eef6ff;
+}
+
+.orgNodeTitle {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.orgNodeManager {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.orgNodeCount {
+  width: fit-content;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f8b21c;
+  color: #132238;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.orgMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.orgMetaBox {
+  display: grid;
+  gap: 5px;
+  padding: 13px;
+  border: 1px solid #d9e2ef;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.orgMetaBox span,
+.orgMetaBox small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.orgMetaBox strong {
+  font-size: 16px;
+}
+
+.orgPanelSection {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.orgPanelSection h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.orgPositionList,
+.orgQuickList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.orgPositionList span,
+.orgQuickButton {
+  padding: 8px 10px;
+  border: 1px solid #d9e2ef;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.orgQuickButton {
+  cursor: pointer;
+}
+
+.orgEmployeeList {
+  display: grid;
+  gap: 9px;
+}
+
+.orgEmployee {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #d9e2ef;
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.orgEmployee small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+.orgEmployeeAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #ffffff;
+}
+
 @media (max-width: 900px) {
   .grid2 {
     grid-template-columns: 1fr;
@@ -382,8 +561,20 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .orgLayout {
+    grid-template-columns: 1fr;
+  }
+
   .homeSidebar {
     position: static;
+  }
+
+  .orgDetailsCard {
+    position: static;
+  }
+
+  .orgMetaGrid {
+    grid-template-columns: 1fr;
   }
 
   .sidebarMenu {

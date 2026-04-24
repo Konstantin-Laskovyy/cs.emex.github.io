@@ -82,6 +82,9 @@ export function AppShell() {
                 <NavLink to="/departments" style={({ isActive }) => getNavStyle(isActive)}>
                   Отделы
                 </NavLink>
+                <NavLink to="/org" style={({ isActive }) => getNavStyle(isActive)}>
+                  Оргструктура
+                </NavLink>
                 {me?.role === "admin" && (
                   <NavLink to="/admin" style={({ isActive }) => getNavStyle(isActive)}>
                     Админка
