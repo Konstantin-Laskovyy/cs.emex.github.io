@@ -4,11 +4,43 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_admin
 from app.db.session import get_db
+from app.models.app_setting import AppSetting
 from app.models.department import Department
 from app.models.user import User
-from app.schemas.departments import DepartmentCreate, DepartmentPublic, DepartmentUpdate
+from app.schemas.departments import DepartmentCreate, DepartmentPublic, DepartmentUpdate, OrgRootPublic, OrgRootUpdate
 
 router = APIRouter(prefix="/departments", tags=["departments"])
+ORG_ROOT_NAME_KEY = "org_root_name"
+ORG_ROOT_MANAGER_ID_KEY = "org_root_manager_id"
+
+
+@router.get("/org-root", response_model=OrgRootPublic)
+def get_org_root(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> OrgRootPublic:
+    return _org_root_public(db)
+
+
+@router.patch("/org-root", response_model=OrgRootPublic)
+def update_org_root(
+    payload: OrgRootUpdate,
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> OrgRootPublic:
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Название верхнего узла обязательно")
+
+    if payload.manager_id is not None:
+        manager = db.get(User, payload.manager_id)
+        if not manager or not manager.is_active:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Руководитель не найден")
+
+    _set_setting(db, ORG_ROOT_NAME_KEY, name)
+    _set_setting(db, ORG_ROOT_MANAGER_ID_KEY, str(payload.manager_id) if payload.manager_id else None)
+    db.commit()
+    return _org_root_public(db)
 
 
 @router.get("", response_model=list[DepartmentPublic])
@@ -152,4 +184,25 @@ def _department_public(db: Session, department: Department) -> DepartmentPublic:
         manager=department.manager,
         employee_count=employee_count,
     )
+
+
+def _get_setting(db: Session, key: str) -> str | None:
+    setting = db.get(AppSetting, key)
+    return setting.value if setting else None
+
+
+def _set_setting(db: Session, key: str, value: str | None) -> None:
+    setting = db.get(AppSetting, key)
+    if not setting:
+        setting = AppSetting(key=key)
+    setting.value = value
+    db.add(setting)
+
+
+def _org_root_public(db: Session) -> OrgRootPublic:
+    name = _get_setting(db, ORG_ROOT_NAME_KEY) or "ТОО «EMEX»"
+    manager_id_value = _get_setting(db, ORG_ROOT_MANAGER_ID_KEY)
+    manager_id = int(manager_id_value) if manager_id_value else None
+    manager = db.get(User, manager_id) if manager_id else None
+    return OrgRootPublic(name=name, manager_id=manager_id, manager=manager)
 

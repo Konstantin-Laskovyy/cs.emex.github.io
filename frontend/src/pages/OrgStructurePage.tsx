@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
-import type { DepartmentPublic, UserPublic } from "../api/types";
+import type { DepartmentPublic, OrgRootPublic, UserPublic } from "../api/types";
 import { flattenOrg, orgStructure, type OrgNode } from "../data/orgStructure";
 
-function buildDepartmentOrg(departments: DepartmentPublic[]): OrgNode {
+function buildDepartmentOrg(departments: DepartmentPublic[], root?: OrgRootPublic | null): OrgNode {
   const byParent = new Map<number | null, DepartmentPublic[]>();
   departments.forEach((department) => {
     const key = department.parent_id ?? null;
@@ -28,9 +28,11 @@ function buildDepartmentOrg(departments: DepartmentPublic[]): OrgNode {
 
   return {
     id: "company-db",
-    title: "ТОО «EMEX»",
+    title: root?.name || "ТОО «EMEX»",
     managerTitle: "Оргструктура из базы",
-    managerName: "Управляется в админке",
+    managerName: root?.manager
+      ? `${root.manager.first_name} ${root.manager.last_name}`
+      : "Управляется в админке",
     positions: ["Отделы, руководители и подчиненность редактируются администратором"],
     children: (byParent.get(null) ?? []).sort((a, b) => a.name.localeCompare(b.name)).map(buildNode),
   };
@@ -85,6 +87,7 @@ function initials(user: UserPublic) {
 export function OrgStructurePage() {
   const [selectedNode, setSelectedNode] = useState<OrgNode>(orgStructure);
   const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
+  const [orgRoot, setOrgRoot] = useState<OrgRootPublic | null>(null);
   const [employees, setEmployees] = useState<UserPublic[]>([]);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,15 +100,16 @@ export function OrgStructurePage() {
 
   const managedOrgStructure = useMemo(() => {
     if (departments.length === 0) return orgStructure;
-    return buildDepartmentOrg(departments);
-  }, [departments]);
+    return buildDepartmentOrg(departments, orgRoot);
+  }, [departments, orgRoot]);
+
   const allNodes = useMemo(() => flattenOrg(managedOrgStructure), [managedOrgStructure]);
 
   useEffect(() => {
     if (departments.length > 0 && !selectedNode.id.startsWith("department-") && selectedNode.id !== "company-db") {
-      setSelectedNode(buildDepartmentOrg(departments));
+      setSelectedNode(buildDepartmentOrg(departments, orgRoot));
     }
-  }, [departments, selectedNode.id]);
+  }, [departments, orgRoot, selectedNode.id]);
 
   const linkedDepartment = selectedNode.departmentName
     ? selectedNode.sourceDepartmentId
@@ -115,12 +119,17 @@ export function OrgStructurePage() {
 
   useEffect(() => {
     let cancelled = false;
-    apiFetch<DepartmentPublic[]>("/departments")
-      .then((data) => {
-        if (!cancelled) setDepartments(data);
+    Promise.all([apiFetch<DepartmentPublic[]>("/departments"), apiFetch<OrgRootPublic>("/departments/org-root")])
+      .then(([departmentsData, rootData]) => {
+        if (cancelled) return;
+        setDepartments(departmentsData);
+        setOrgRoot(rootData);
       })
       .catch(() => {
-        if (!cancelled) setDepartments([]);
+        if (!cancelled) {
+          setDepartments([]);
+          setOrgRoot(null);
+        }
       });
 
     return () => {
@@ -164,8 +173,8 @@ export function OrgStructurePage() {
           <div className="newsBadge">Оргструктура</div>
           <h1 style={{ margin: "10px 0 8px" }}>Организационная структура компании</h1>
           <p className="muted" style={{ margin: 0, maxWidth: 760 }}>
-            Дерево показывает подчиненность подразделений. Выберите отдел слева, чтобы увидеть руководителя,
-            должности из оргструктуры и сотрудников, которые уже заведены в системе.
+            Дерево показывает подчиненность подразделений. Выберите отдел слева, чтобы увидеть
+            руководителя, должности из оргструктуры и сотрудников, которые уже заведены в системе.
           </p>
         </div>
       </section>

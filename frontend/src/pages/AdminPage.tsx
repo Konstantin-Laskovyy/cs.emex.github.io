@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { apiFetch } from "../api/client";
-import type { DepartmentPayload, DepartmentPublic, NewsPublic, UserPublic } from "../api/types";
+import type { DepartmentPayload, DepartmentPublic, NewsPublic, OrgRootPayload, OrgRootPublic, UserPublic } from "../api/types";
 
 type ShellContext = {
   me: UserPublic | null;
@@ -20,6 +20,7 @@ export function AdminPage() {
   const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
   const [departmentDraft, setDepartmentDraft] = useState<DepartmentPayload>(emptyDepartment);
   const [departmentEdits, setDepartmentEdits] = useState<Record<number, DepartmentPayload>>({});
+  const [orgRootDraft, setOrgRootDraft] = useState<OrgRootPayload>({ name: "ТОО «EMEX»", manager_id: null });
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,10 +29,11 @@ export function AdminPage() {
     setLoading(true);
     setError(null);
     try {
-      const [usersData, newsData, departmentsData] = await Promise.all([
+      const [usersData, newsData, departmentsData, orgRootData] = await Promise.all([
         apiFetch<UserPublic[]>("/admin/users"),
         apiFetch<NewsPublic[]>("/admin/news"),
         apiFetch<DepartmentPublic[]>("/departments"),
+        apiFetch<OrgRootPublic>("/departments/org-root"),
       ]);
       setUsers(usersData);
       setNews(newsData);
@@ -48,6 +50,10 @@ export function AdminPage() {
           ])
         )
       );
+      setOrgRootDraft({
+        name: orgRootData.name,
+        manager_id: orgRootData.manager_id ?? null,
+      });
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить админку.");
     } finally {
@@ -113,6 +119,21 @@ export function AdminPage() {
       setMessage("Отдел создан.");
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : "Не удалось создать отдел.");
+    }
+  }
+
+  async function updateOrgRoot() {
+    setMessage(null);
+    setError(null);
+    try {
+      const updated = await apiFetch<OrgRootPublic>("/departments/org-root", {
+        method: "PATCH",
+        body: JSON.stringify(orgRootDraft),
+      });
+      setOrgRootDraft({ name: updated.name, manager_id: updated.manager_id ?? null });
+      setMessage("Верхний узел оргструктуры обновлен.");
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Не удалось обновить верхний узел.");
     }
   }
 
@@ -206,6 +227,40 @@ export function AdminPage() {
           <h2 style={{ margin: 0, fontSize: 22 }}>Отделы и оргструктура</h2>
           <div className="muted" style={{ marginTop: 8 }}>
             Создавайте отделы, меняйте названия, выбирайте родительский отдел и руководителя.
+          </div>
+
+          <div className="adminOrgRoot">
+            <div>
+              <div style={{ fontWeight: 800 }}>Верхний узел оргструктуры</div>
+              <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+                Это карточка над всеми отделами, например название компании и генеральный директор.
+              </div>
+            </div>
+            <input
+              className="input"
+              value={orgRootDraft.name}
+              onChange={(event) => setOrgRootDraft((current) => ({ ...current, name: event.target.value }))}
+            />
+            <select
+              className="input"
+              value={orgRootDraft.manager_id ?? ""}
+              onChange={(event) =>
+                setOrgRootDraft((current) => ({
+                  ...current,
+                  manager_id: event.target.value ? Number(event.target.value) : null,
+                }))
+              }
+            >
+              <option value="">Руководитель не назначен</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name}
+                </option>
+              ))}
+            </select>
+            <button className="btn btnPrimary" type="button" onClick={updateOrgRoot}>
+              Сохранить верхний узел
+            </button>
           </div>
 
           <div className="adminDepartmentCreate">

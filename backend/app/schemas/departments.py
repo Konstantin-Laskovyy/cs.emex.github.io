@@ -35,3 +35,14 @@ class DepartmentUpdate(BaseModel):
     parent_id: int | None = None
     manager_id: int | None = None
 
+
+class OrgRootPublic(BaseModel):
+    name: str
+    manager_id: int | None = None
+    manager: DepartmentManagerPublic | None = None
+
+
+class OrgRootUpdate(BaseModel):
+    name: str
+    manager_id: int | None = None
+

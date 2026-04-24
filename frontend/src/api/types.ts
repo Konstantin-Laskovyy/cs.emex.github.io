@@ -61,6 +61,17 @@ export type DepartmentPayload = {
   manager_id?: number | null;
 };
 
+export type OrgRootPublic = {
+  name: string;
+  manager_id?: number | null;
+  manager?: ManagerSummary | null;
+};
+
+export type OrgRootPayload = {
+  name: string;
+  manager_id?: number | null;
+};
+
 export type NewsAuthor = {
   id: number;
   first_name: string;
