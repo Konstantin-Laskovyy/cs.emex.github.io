@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import type { DepartmentPublic, UserCreate, UserPublic } from "../api/types";
 
@@ -36,7 +36,12 @@ function getInitials(user: UserPublic) {
   return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
 }
 
+type OutletContext = {
+  me: UserPublic | null;
+};
+
 export function UsersPage() {
+  const { me } = useOutletContext<OutletContext>();
   const [params, setParams] = useSearchParams();
   const query = params.get("query") ?? "";
   const departmentId = params.get("department_id") ?? "";
@@ -51,6 +56,7 @@ export function UsersPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
   const queryTrimmed = useMemo(() => query.trim(), [query]);
+  const canCreateEmployees = me?.role === "admin";
 
   async function loadData() {
     setLoading(true);
@@ -181,6 +187,7 @@ export function UsersPage() {
           </div>
         </div>
 
+        {canCreateEmployees && (
         <section className="card" style={{ marginTop: 16, boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
           <div className="cardInner">
             <h2 style={{ margin: 0, fontSize: 20 }}>Добавить сотрудника</h2>
@@ -262,6 +269,7 @@ export function UsersPage() {
             </form>
           </div>
         </section>
+        )}
 
         <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
           {loadError && !users.length && (
