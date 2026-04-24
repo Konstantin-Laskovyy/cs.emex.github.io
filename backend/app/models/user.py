@@ -18,7 +18,7 @@ class User(Base):
     title: Mapped[str | None] = mapped_column(String(200), nullable=True)
 
     department_id: Mapped[int | None] = mapped_column(ForeignKey("departments.id"), nullable=True)
-    department = relationship("Department", back_populates="users")
+    department = relationship("Department", back_populates="users", foreign_keys=[department_id])
     manager_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     manager: Mapped["User | None"] = relationship(
         "User",

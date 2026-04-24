@@ -4,6 +4,7 @@ export type OrgNode = {
   managerTitle?: string;
   managerName?: string;
   departmentName?: string;
+  sourceDepartmentId?: number;
   positions?: string[];
   children?: OrgNode[];
 };

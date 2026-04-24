@@ -1,16 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { apiFetch } from "../api/client";
-import type { NewsPublic, UserPublic } from "../api/types";
+import type { DepartmentPayload, DepartmentPublic, NewsPublic, UserPublic } from "../api/types";
 
 type ShellContext = {
   me: UserPublic | null;
+};
+
+const emptyDepartment: DepartmentPayload = {
+  name: "",
+  parent_id: null,
+  manager_id: null,
 };
 
 export function AdminPage() {
   const { me } = useOutletContext<ShellContext>();
   const [users, setUsers] = useState<UserPublic[]>([]);
   const [news, setNews] = useState<NewsPublic[]>([]);
+  const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
+  const [departmentDraft, setDepartmentDraft] = useState<DepartmentPayload>(emptyDepartment);
+  const [departmentEdits, setDepartmentEdits] = useState<Record<number, DepartmentPayload>>({});
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -19,12 +28,26 @@ export function AdminPage() {
     setLoading(true);
     setError(null);
     try {
-      const [usersData, newsData] = await Promise.all([
+      const [usersData, newsData, departmentsData] = await Promise.all([
         apiFetch<UserPublic[]>("/admin/users"),
         apiFetch<NewsPublic[]>("/admin/news"),
+        apiFetch<DepartmentPublic[]>("/departments"),
       ]);
       setUsers(usersData);
       setNews(newsData);
+      setDepartments(departmentsData);
+      setDepartmentEdits(
+        Object.fromEntries(
+          departmentsData.map((department) => [
+            department.id,
+            {
+              name: department.name,
+              parent_id: department.parent_id ?? null,
+              manager_id: department.manager_id ?? null,
+            },
+          ])
+        )
+      );
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить админку.");
     } finally {
@@ -69,6 +92,75 @@ export function AdminPage() {
     }
   }
 
+  async function createDepartment() {
+    setMessage(null);
+    setError(null);
+    try {
+      const created = await apiFetch<DepartmentPublic>("/departments", {
+        method: "POST",
+        body: JSON.stringify(departmentDraft),
+      });
+      setDepartments((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setDepartmentEdits((current) => ({
+        ...current,
+        [created.id]: {
+          name: created.name,
+          parent_id: created.parent_id ?? null,
+          manager_id: created.manager_id ?? null,
+        },
+      }));
+      setDepartmentDraft(emptyDepartment);
+      setMessage("Отдел создан.");
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Не удалось создать отдел.");
+    }
+  }
+
+  async function updateDepartment(department: DepartmentPublic) {
+    const draft = departmentEdits[department.id];
+    if (!draft) return;
+    setMessage(null);
+    setError(null);
+    try {
+      const updated = await apiFetch<DepartmentPublic>(`/departments/${department.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(draft),
+      });
+      setDepartments((current) =>
+        current.map((item) => (item.id === updated.id ? updated : item)).sort((a, b) => a.name.localeCompare(b.name))
+      );
+      setDepartmentEdits((current) => ({
+        ...current,
+        [updated.id]: {
+          name: updated.name,
+          parent_id: updated.parent_id ?? null,
+          manager_id: updated.manager_id ?? null,
+        },
+      }));
+      setMessage("Отдел обновлен.");
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Не удалось обновить отдел.");
+    }
+  }
+
+  async function deleteDepartment(department: DepartmentPublic) {
+    if (!window.confirm(`Удалить отдел "${department.name}"?`)) return;
+    setMessage(null);
+    setError(null);
+    try {
+      await apiFetch<void>(`/departments/${department.id}`, { method: "DELETE" });
+      setDepartments((current) => current.filter((item) => item.id !== department.id));
+      setDepartmentEdits((current) => {
+        const next = { ...current };
+        delete next[department.id];
+        return next;
+      });
+      setMessage("Отдел удален.");
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : "Не удалось удалить отдел.");
+    }
+  }
+
   async function deleteNews(item: NewsPublic) {
     if (!window.confirm(`Удалить новость "${item.title}"?`)) return;
     setMessage(null);
@@ -101,11 +193,153 @@ export function AdminPage() {
         <div className="cardInner">
           <h1 style={{ margin: 0 }}>Администрирование</h1>
           <div className="muted" style={{ marginTop: 8 }}>
-            Управление ролями, доступом сотрудников и публикациями компании.
+            Управление ролями, доступом, отделами, оргструктурой и публикациями компании.
           </div>
           {loading && <div className="muted" style={{ marginTop: 14 }}>Загрузка...</div>}
-          {message && <div style={{ marginTop: 14, color: "#bfdbfe" }}>{message}</div>}
-          {error && <div style={{ marginTop: 14, color: "#fecaca" }}>{error}</div>}
+          {message && <div style={{ marginTop: 14, color: "#0b5cad" }}>{message}</div>}
+          {error && <div style={{ marginTop: 14, color: "#b42318" }}>{error}</div>}
+        </div>
+      </section>
+
+      <section className="card">
+        <div className="cardInner">
+          <h2 style={{ margin: 0, fontSize: 22 }}>Отделы и оргструктура</h2>
+          <div className="muted" style={{ marginTop: 8 }}>
+            Создавайте отделы, меняйте названия, выбирайте родительский отдел и руководителя.
+          </div>
+
+          <div className="adminDepartmentCreate">
+            <input
+              className="input"
+              placeholder="Название отдела"
+              value={departmentDraft.name}
+              onChange={(event) => setDepartmentDraft((current) => ({ ...current, name: event.target.value }))}
+            />
+            <select
+              className="input"
+              value={departmentDraft.parent_id ?? ""}
+              onChange={(event) =>
+                setDepartmentDraft((current) => ({
+                  ...current,
+                  parent_id: event.target.value ? Number(event.target.value) : null,
+                }))
+              }
+            >
+              <option value="">Без родительского отдела</option>
+              {departments.map((department) => (
+                <option key={department.id} value={department.id}>
+                  {department.name}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input"
+              value={departmentDraft.manager_id ?? ""}
+              onChange={(event) =>
+                setDepartmentDraft((current) => ({
+                  ...current,
+                  manager_id: event.target.value ? Number(event.target.value) : null,
+                }))
+              }
+            >
+              <option value="">Руководитель не назначен</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.first_name} {user.last_name}
+                </option>
+              ))}
+            </select>
+            <button className="btn btnPrimary" type="button" onClick={createDepartment}>
+              Создать отдел
+            </button>
+          </div>
+
+          <div className="adminList">
+            {departments.map((department) => {
+              const draft = departmentEdits[department.id] ?? {
+                name: department.name,
+                parent_id: department.parent_id ?? null,
+                manager_id: department.manager_id ?? null,
+              };
+              const parentName = departments.find((item) => item.id === department.parent_id)?.name;
+              return (
+                <div className="adminDepartmentRow" key={department.id}>
+                  <div>
+                    <input
+                      className="input"
+                      value={draft.name}
+                      onChange={(event) =>
+                        setDepartmentEdits((current) => ({
+                          ...current,
+                          [department.id]: { ...draft, name: event.target.value },
+                        }))
+                      }
+                    />
+                    <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>
+                      Сотрудников: {department.employee_count}
+                      {parentName ? ` · Родитель: ${parentName}` : " · Верхний уровень"}
+                    </div>
+                  </div>
+                  <select
+                    className="input"
+                    value={draft.parent_id ?? ""}
+                    onChange={(event) =>
+                      setDepartmentEdits((current) => ({
+                        ...current,
+                        [department.id]: {
+                          ...draft,
+                          parent_id: event.target.value ? Number(event.target.value) : null,
+                        },
+                      }))
+                    }
+                  >
+                    <option value="">Без родительского отдела</option>
+                    {departments
+                      .filter((item) => item.id !== department.id)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                  </select>
+                  <select
+                    className="input"
+                    value={draft.manager_id ?? ""}
+                    onChange={(event) =>
+                      setDepartmentEdits((current) => ({
+                        ...current,
+                        [department.id]: {
+                          ...draft,
+                          manager_id: event.target.value ? Number(event.target.value) : null,
+                        },
+                      }))
+                    }
+                  >
+                    <option value="">Руководитель не назначен</option>
+                    {users.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.first_name} {user.last_name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="adminActions">
+                    <button className="btn btnPrimary" type="button" onClick={() => updateDepartment(department)}>
+                      Сохранить
+                    </button>
+                    <button
+                      className="btn btnDanger"
+                      type="button"
+                      onClick={() => deleteDepartment(department)}
+                      disabled={department.employee_count > 0}
+                    >
+                      Удалить
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {!loading && departments.length === 0 && <div className="muted">Отделов пока нет.</div>}
+          </div>
         </div>
       </section>
 

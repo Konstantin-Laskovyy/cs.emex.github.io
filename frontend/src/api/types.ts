@@ -50,7 +50,15 @@ export type DepartmentPublic = {
   id: number;
   name: string;
   parent_id?: number | null;
+  manager_id?: number | null;
+  manager?: ManagerSummary | null;
   employee_count: number;
+};
+
+export type DepartmentPayload = {
+  name: string;
+  parent_id?: number | null;
+  manager_id?: number | null;
 };
 
 export type NewsAuthor = {

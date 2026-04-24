@@ -4,6 +4,38 @@ import { ApiError, apiFetch } from "../api/client";
 import type { DepartmentPublic, UserPublic } from "../api/types";
 import { flattenOrg, orgStructure, type OrgNode } from "../data/orgStructure";
 
+function buildDepartmentOrg(departments: DepartmentPublic[]): OrgNode {
+  const byParent = new Map<number | null, DepartmentPublic[]>();
+  departments.forEach((department) => {
+    const key = department.parent_id ?? null;
+    byParent.set(key, [...(byParent.get(key) ?? []), department]);
+  });
+
+  const buildNode = (department: DepartmentPublic): OrgNode => ({
+    id: `department-${department.id}`,
+    title: department.name,
+    departmentName: department.name,
+    sourceDepartmentId: department.id,
+    managerName: department.manager
+      ? `${department.manager.first_name} ${department.manager.last_name}`
+      : "Руководитель не назначен",
+    managerTitle: department.manager?.title ?? undefined,
+    positions: ["Сотрудники отдела отображаются из базы"],
+    children: (byParent.get(department.id) ?? [])
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(buildNode),
+  });
+
+  return {
+    id: "company-db",
+    title: "ТОО «EMEX»",
+    managerTitle: "Оргструктура из базы",
+    managerName: "Управляется в админке",
+    positions: ["Отделы, руководители и подчиненность редактируются администратором"],
+    children: (byParent.get(null) ?? []).sort((a, b) => a.name.localeCompare(b.name)).map(buildNode),
+  };
+}
+
 function OrgTreeNode({
   node,
   level = 0,
@@ -51,7 +83,6 @@ function initials(user: UserPublic) {
 }
 
 export function OrgStructurePage() {
-  const allNodes = useMemo(() => flattenOrg(orgStructure), []);
   const [selectedNode, setSelectedNode] = useState<OrgNode>(orgStructure);
   const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
   const [employees, setEmployees] = useState<UserPublic[]>([]);
@@ -64,8 +95,22 @@ export function OrgStructurePage() {
     return map;
   }, [departments]);
 
+  const managedOrgStructure = useMemo(() => {
+    if (departments.length === 0) return orgStructure;
+    return buildDepartmentOrg(departments);
+  }, [departments]);
+  const allNodes = useMemo(() => flattenOrg(managedOrgStructure), [managedOrgStructure]);
+
+  useEffect(() => {
+    if (departments.length > 0 && !selectedNode.id.startsWith("department-") && selectedNode.id !== "company-db") {
+      setSelectedNode(buildDepartmentOrg(departments));
+    }
+  }, [departments, selectedNode.id]);
+
   const linkedDepartment = selectedNode.departmentName
-    ? departmentByName.get(selectedNode.departmentName.toLowerCase())
+    ? selectedNode.sourceDepartmentId
+      ? departments.find((department) => department.id === selectedNode.sourceDepartmentId)
+      : departmentByName.get(selectedNode.departmentName.toLowerCase())
     : undefined;
 
   useEffect(() => {
@@ -130,7 +175,7 @@ export function OrgStructurePage() {
           <div className="cardInner">
             <div className="sectionTitle">Дерево компании</div>
             <div className="orgTree">
-              <OrgTreeNode node={orgStructure} selectedId={selectedNode.id} onSelect={setSelectedNode} />
+              <OrgTreeNode node={managedOrgStructure} selectedId={selectedNode.id} onSelect={setSelectedNode} />
             </div>
           </div>
         </section>
