@@ -22,7 +22,6 @@ export function HomePage() {
   const [news, setNews] = useState<NewsPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
 
   const initials = useMemo(() => {
     if (!me) return "ЕС";
@@ -60,7 +59,7 @@ export function HomePage() {
   return (
     <div className="homeLayout">
       <aside className="homeSidebar">
-        <section className="card">
+        <section className="card userMenuCard">
           <div className="cardInner" style={{ display: "grid", gap: 14 }}>
             <div className="profileCard">
               <div className="avatar avatarRound avatarHero">
@@ -80,18 +79,7 @@ export function HomePage() {
                 </div>
               </div>
             </div>
-
-            <button
-              className="btn"
-              type="button"
-              onClick={() => setMenuOpen((current) => !current)}
-              style={{ width: "100%" }}
-            >
-              {menuOpen ? "Скрыть меню" : "Показать меню"}
-            </button>
-
-            {menuOpen && (
-              <div className="sidebarMenu">
+            <div className="sidebarMenu">
                 <Link className="btn btnPrimary" to="/news/new">
                   Добавить новость
                 </Link>
@@ -111,8 +99,7 @@ export function HomePage() {
                     Админка
                   </Link>
                 )}
-              </div>
-            )}
+            </div>
           </div>
         </section>
       </aside>
