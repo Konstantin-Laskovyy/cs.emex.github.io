@@ -25,6 +25,8 @@ export type UserPublic = {
   bio?: string | null;
   location?: string | null;
   phone?: string | null;
+  role: "employee" | "admin";
+  is_active: boolean;
 };
 
 export type UserUpdate = {

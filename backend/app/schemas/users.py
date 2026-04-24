@@ -34,6 +34,8 @@ class UserPublic(BaseModel):
     bio: str | None = None
     location: str | None = None
     phone: str | None = None
+    role: str = "employee"
+    is_active: bool = True
 
     class Config:
         from_attributes = True
@@ -54,4 +56,9 @@ class UserUpdate(BaseModel):
 class UserCreate(UserUpdate):
     email: str
     password: str = Field(min_length=8, default="Password123!")
+
+
+class AdminUserUpdate(BaseModel):
+    role: str = Field(pattern="^(employee|admin)$")
+    is_active: bool
 

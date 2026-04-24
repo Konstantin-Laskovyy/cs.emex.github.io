@@ -75,7 +75,7 @@ def update_news(
     news = db.get(NewsPost, news_id)
     if not news:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Новость не найдена")
-    if news.author_id != current_user.id:
+    if news.author_id != current_user.id and current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Можно редактировать только свои новости",
@@ -95,3 +95,22 @@ def update_news(
         .filter(NewsPost.id == news.id)
         .first()
     )
+
+
+@router.delete("/{news_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_news(
+    news_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> None:
+    news = db.get(NewsPost, news_id)
+    if not news:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Новость не найдена")
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Удалять новости может только администратор",
+        )
+
+    db.delete(news)
+    db.commit()

@@ -166,6 +166,7 @@ export function UserProfilePage() {
   }
 
   const isOwnProfile = me?.id === profile.id;
+  const canEditProfile = isOwnProfile || me?.role === "admin";
   const fullName = `${profile.first_name} ${profile.last_name}`;
   const managerOptions = employees.filter((employee) => employee.id !== profile.id);
 
@@ -199,7 +200,7 @@ export function UserProfilePage() {
             </div>
 
             <div className="spacer" />
-            {isOwnProfile && !isEditing && (
+            {canEditProfile && !isEditing && (
               <button
                 className="btn btnPrimary"
                 type="button"
@@ -248,7 +249,7 @@ export function UserProfilePage() {
         </div>
       </section>
 
-      {isOwnProfile && isEditing ? (
+      {canEditProfile && isEditing ? (
         <section className="card">
           <div className="cardInner">
             <div className="row" style={{ alignItems: "baseline" }}>
@@ -338,7 +339,7 @@ export function UserProfilePage() {
             </form>
           </div>
         </section>
-      ) : !isOwnProfile ? (
+      ) : !canEditProfile ? (
         <section className="card">
           <div className="cardInner">
             <h2 style={{ margin: 0, fontSize: 22 }}>Профиль только для просмотра</h2>

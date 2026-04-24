@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.departments import router as departments_router
 from app.api.me import router as me_router
@@ -26,6 +27,7 @@ def create_app() -> FastAPI:
         return {"status": "ok"}
 
     app.include_router(auth_router)
+    app.include_router(admin_router)
     app.include_router(departments_router)
     app.include_router(me_router)
     app.include_router(news_router)

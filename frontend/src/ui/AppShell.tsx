@@ -11,6 +11,19 @@ const navLinkStyle: React.CSSProperties = {
   background: "rgba(255,255,255,0.05)",
 };
 
+function getNavStyle(isActive: boolean): React.CSSProperties {
+  return {
+    ...navLinkStyle,
+    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
+    background: isActive
+      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
+      : "rgba(255,255,255,0.05)",
+    boxShadow: isActive
+      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
+      : "none",
+  };
+}
+
 export function AppShell() {
   const location = useLocation();
   const [me, setMe] = useState<UserPublic | null>(null);
@@ -56,56 +69,25 @@ export function AppShell() {
         >
           <div className="container" style={{ padding: "12px 0" }}>
             <div className="row">
-              <Link to="/" style={{ fontWeight: 700, letterSpacing: 0.2 }}>
+              <Link to="/" style={{ fontWeight: 700 }}>
                 Социальная сеть Emex
               </Link>
               <div className="spacer" />
-              <nav className="row" style={{ gap: 10 }}>
-                <NavLink
-                  to="/"
-                  style={({ isActive }) => ({
-                    ...navLinkStyle,
-                    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
-                    background: isActive
-                      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
-                      : "rgba(255,255,255,0.05)",
-                    boxShadow: isActive
-                      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
-                      : "none",
-                  })}
-                >
+              <nav className="row appNav">
+                <NavLink to="/" style={({ isActive }) => getNavStyle(isActive)}>
                   Главная
                 </NavLink>
-                <NavLink
-                  to="/users"
-                  style={({ isActive }) => ({
-                    ...navLinkStyle,
-                    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
-                    background: isActive
-                      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
-                      : "rgba(255,255,255,0.05)",
-                    boxShadow: isActive
-                      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
-                      : "none",
-                  })}
-                >
+                <NavLink to="/users" style={({ isActive }) => getNavStyle(isActive)}>
                   Сотрудники
                 </NavLink>
-                <NavLink
-                  to="/departments"
-                  style={({ isActive }) => ({
-                    ...navLinkStyle,
-                    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
-                    background: isActive
-                      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
-                      : "rgba(255,255,255,0.05)",
-                    boxShadow: isActive
-                      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
-                      : "none",
-                  })}
-                >
+                <NavLink to="/departments" style={({ isActive }) => getNavStyle(isActive)}>
                   Отделы
                 </NavLink>
+                {me?.role === "admin" && (
+                  <NavLink to="/admin" style={({ isActive }) => getNavStyle(isActive)}>
+                    Админка
+                  </NavLink>
+                )}
               </nav>
               <div className="spacer" />
               {hasToken && (

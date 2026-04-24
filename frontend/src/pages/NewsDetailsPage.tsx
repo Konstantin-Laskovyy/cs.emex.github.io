@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, useOutletContext, useParams } from "react-router-dom";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import type { NewsPublic, UserPublic } from "../api/types";
 
@@ -33,6 +33,7 @@ function formatNewsDate(value: string) {
 
 export function NewsDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { me } = useOutletContext<ShellContext>();
   const newsId = useMemo(() => (id ? Number(id) : NaN), [id]);
 
@@ -40,6 +41,7 @@ export function NewsDetailsPage() {
   const [form, setForm] = useState<NewsFormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -108,6 +110,22 @@ export function NewsDetailsPage() {
     }
   }
 
+  async function handleDelete() {
+    if (!news || !window.confirm(`Удалить новость "${news.title}"?`)) return;
+
+    setDeleting(true);
+    setSaveError(null);
+
+    try {
+      await apiFetch<void>(`/news/${news.id}`, { method: "DELETE" });
+      navigate("/");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Не удалось удалить новость.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (loading) {
     return (
       <section className="card">
@@ -132,7 +150,8 @@ export function NewsDetailsPage() {
   }
 
   const fullName = `${news.author.first_name} ${news.author.last_name}`;
-  const canEdit = me?.id === news.author_id;
+  const canEdit = me?.id === news.author_id || me?.role === "admin";
+  const canDelete = me?.role === "admin";
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -152,6 +171,11 @@ export function NewsDetailsPage() {
             {canEdit && !editing && (
               <button className="btn btnPrimary" type="button" onClick={() => setEditing(true)}>
                 Редактировать
+              </button>
+            )}
+            {canDelete && (
+              <button className="btn btnDanger" type="button" onClick={handleDelete} disabled={deleting}>
+                {deleting ? "Удаляем..." : "Удалить"}
               </button>
             )}
           </div>

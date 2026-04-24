@@ -106,6 +106,11 @@ export function HomePage() {
                     Открыть мой профиль
                   </Link>
                 )}
+                {me?.role === "admin" && (
+                  <Link className="btn" to="/admin">
+                    Админка
+                  </Link>
+                )}
               </div>
             )}
           </div>

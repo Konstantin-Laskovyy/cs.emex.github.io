@@ -110,6 +110,16 @@ textarea {
   box-shadow: 0 14px 28px rgba(37, 99, 235, 0.34);
 }
 
+.btnDanger {
+  border-color: rgba(248, 113, 113, 0.62);
+  background: rgba(239, 68, 68, 0.14);
+}
+
+.btnDanger:hover {
+  border-color: rgba(252, 165, 165, 0.78);
+  background: rgba(239, 68, 68, 0.2);
+}
+
 .input {
   width: 100%;
   border-radius: 12px;
@@ -149,6 +159,10 @@ textarea {
 
 .sidebarMenu {
   display: grid;
+  gap: 10px;
+}
+
+.appNav {
   gap: 10px;
 }
 
@@ -288,6 +302,31 @@ textarea {
   line-height: 1.75;
 }
 
+.adminList {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.adminRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.adminActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 @media (max-width: 900px) {
   .grid2 {
     grid-template-columns: 1fr;
@@ -299,6 +338,15 @@ textarea {
 
   .homeSidebar {
     position: static;
+  }
+
+  .appNav,
+  .adminActions {
+    justify-content: flex-start;
+  }
+
+  .adminRow {
+    grid-template-columns: 1fr;
   }
 }
 
