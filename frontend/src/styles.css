@@ -348,6 +348,140 @@ textarea {
   line-height: 1.75;
 }
 
+.reactionBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.reactionButton {
+  padding: 9px 12px;
+  border: 1px solid #cfe0f3;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.reactionButtonActive {
+  border-color: var(--primary);
+  background: #eef6ff;
+  color: var(--primary-dark);
+}
+
+.commentForm {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.commentList {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.commentItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #d9e2ef;
+  border-radius: 14px;
+  background: #f8fbff;
+}
+
+.commentAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.notificationsMenu {
+  position: relative;
+}
+
+.notificationButton {
+  position: relative;
+}
+
+.notificationBadge {
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #f8b21c;
+  color: #132238;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.notificationsDropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(340px, 90vw);
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid #cfe0f3;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(7, 63, 127, 0.16);
+  z-index: 30;
+}
+
+.notificationItem {
+  display: grid;
+  gap: 4px;
+  padding: 10px;
+  border-radius: 10px;
+  color: var(--ink);
+}
+
+.notificationItemUnread {
+  background: #eef6ff;
+}
+
+.notificationItem span,
+.notificationEmpty {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.profileInfoCard {
+  border: 1px solid #d9e2ef;
+  border-radius: 14px;
+  background: #f8fbff;
+  box-shadow: none;
+}
+
+.profileWorkGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.profilePersonLink,
+.profileReports {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.profilePersonLink span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .adminList {
   display: grid;
   gap: 10px;
@@ -605,6 +739,10 @@ textarea {
   }
 
   .orgMetaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileWorkGrid {
     grid-template-columns: 1fr;
   }
 

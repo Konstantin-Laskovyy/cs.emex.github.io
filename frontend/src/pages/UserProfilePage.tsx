@@ -169,6 +169,7 @@ export function UserProfilePage() {
   const canEditProfile = isOwnProfile || me?.role === "admin";
   const fullName = `${profile.first_name} ${profile.last_name}`;
   const managerOptions = employees.filter((employee) => employee.id !== profile.id);
+  const reports = employees.filter((employee) => employee.manager_id === profile.id);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -223,7 +224,7 @@ export function UserProfilePage() {
             <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
               <div className="cardInner">
                 <div className="muted" style={{ fontSize: 13 }}>Email</div>
-                <div style={{ marginTop: 6 }}>{profile.email}</div>
+                <a style={{ marginTop: 6, display: "block" }} href={`mailto:${profile.email}`}>{profile.email}</a>
               </div>
             </div>
             <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
@@ -235,7 +236,41 @@ export function UserProfilePage() {
             <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
               <div className="cardInner">
                 <div className="muted" style={{ fontSize: 13 }}>Телефон</div>
-                <div style={{ marginTop: 6 }}>{profile.phone ?? "—"}</div>
+                {profile.phone ? (
+                  <a style={{ marginTop: 6, display: "block" }} href={`tel:${profile.phone}`}>{profile.phone}</a>
+                ) : (
+                  <div style={{ marginTop: 6 }}>—</div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="profileWorkGrid">
+            <div className="profileInfoCard">
+              <div className="cardInner">
+                <h3 style={{ margin: 0, fontSize: 16 }}>Руководитель</h3>
+                {profile.manager ? (
+                  <Link className="profilePersonLink" to={`/users/${profile.manager.id}`}>
+                    {profile.manager.first_name} {profile.manager.last_name}
+                    <span>{profile.manager.title || "Должность не указана"}</span>
+                  </Link>
+                ) : (
+                  <div className="muted" style={{ marginTop: 10 }}>Не назначен</div>
+                )}
+              </div>
+            </div>
+            <div className="profileInfoCard">
+              <div className="cardInner">
+                <h3 style={{ margin: 0, fontSize: 16 }}>Подчиненные</h3>
+                <div className="profileReports">
+                  {reports.slice(0, 6).map((employee) => (
+                    <Link key={employee.id} to={`/users/${employee.id}`}>
+                      {employee.first_name} {employee.last_name}
+                    </Link>
+                  ))}
+                  {reports.length === 0 && <div className="muted">Нет подчиненных в системе.</div>}
+                  {reports.length > 6 && <div className="muted">Еще {reports.length - 6}</div>}
+                </div>
               </div>
             </div>
           </div>

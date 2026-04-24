@@ -2,7 +2,7 @@ import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { ApiError, apiFetch, getToken, setToken } from "../api/client";
-import type { UserPublic } from "../api/types";
+import type { NotificationPublic, UserPublic } from "../api/types";
 
 const navLinkStyle: React.CSSProperties = {
   padding: "10px 12px",
@@ -27,6 +27,8 @@ export function AppShell() {
   const location = useLocation();
   const [me, setMe] = useState<UserPublic | null>(null);
   const [meError, setMeError] = useState<string | null>(null);
+  const [notifications, setNotifications] = useState<NotificationPublic[]>([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const hasToken = useMemo(() => Boolean(getToken()), [location.key]);
 
@@ -55,6 +57,31 @@ export function AppShell() {
       cancelled = true;
     };
   }, [location.key]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!getToken()) return;
+
+    apiFetch<NotificationPublic[]>("/notifications")
+      .then((data) => {
+        if (!cancelled) setNotifications(data);
+      })
+      .catch(() => {
+        if (!cancelled) setNotifications([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.key]);
+
+  async function markNotificationsRead() {
+    setNotificationsOpen((current) => !current);
+    if (notifications.some((item) => !item.is_read)) {
+      await apiFetch<void>("/notifications/read-all", { method: "POST" });
+      setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
+    }
+  }
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -94,6 +121,30 @@ export function AppShell() {
               <div className="spacer" />
               {hasToken && (
                 <div className="row" style={{ gap: 10 }}>
+                  <div className="notificationsMenu">
+                    <button className="btn notificationButton" type="button" onClick={markNotificationsRead}>
+                      Уведомления
+                      {notifications.filter((item) => !item.is_read).length > 0 && (
+                        <span className="notificationBadge">{notifications.filter((item) => !item.is_read).length}</span>
+                      )}
+                    </button>
+                    {notificationsOpen && (
+                      <div className="notificationsDropdown">
+                        {notifications.map((item) => (
+                          <Link
+                            className={`notificationItem ${item.is_read ? "" : "notificationItemUnread"}`}
+                            key={item.id}
+                            to={item.link || "/"}
+                            onClick={() => setNotificationsOpen(false)}
+                          >
+                            <strong>{item.title}</strong>
+                            <span>{item.body}</span>
+                          </Link>
+                        ))}
+                        {notifications.length === 0 && <div className="notificationEmpty">Пока уведомлений нет.</div>}
+                      </div>
+                    )}
+                  </div>
                   <div className="muted" style={{ fontSize: 13 }}>
                     {me ? `${me.first_name} ${me.last_name}` : meError ?? "..."}
                   </div>

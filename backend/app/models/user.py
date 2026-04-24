@@ -36,6 +36,14 @@ class User(Base):
         back_populates="author",
         cascade="all, delete-orphan",
     )
+    news_comments: Mapped[list["NewsComment"]] = relationship("NewsComment", back_populates="author")
+    news_reactions: Mapped[list["NewsReaction"]] = relationship("NewsReaction", back_populates="user")
+    notifications: Mapped[list["Notification"]] = relationship(
+        "Notification",
+        back_populates="recipient",
+        cascade="all, delete-orphan",
+        foreign_keys="Notification.recipient_id",
+    )
 
     avatar_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     bio: Mapped[str | None] = mapped_column(String(2000), nullable=True)

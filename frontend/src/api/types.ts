@@ -90,3 +90,27 @@ export type NewsPublic = {
   created_at: string;
   updated_at: string;
 };
+
+export type NewsComment = {
+  id: number;
+  news_id: number;
+  author_id: number;
+  author: NewsAuthor;
+  content: string;
+  created_at: string;
+};
+
+export type NewsReactionSummary = {
+  reaction: "like" | "important" | "read";
+  count: number;
+  reacted_by_me: boolean;
+};
+
+export type NotificationPublic = {
+  id: number;
+  title: string;
+  body: string;
+  link?: string | null;
+  is_read: boolean;
+  created_at: string;
+};
