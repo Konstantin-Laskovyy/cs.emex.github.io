@@ -189,6 +189,34 @@ textarea {
   gap: 14px;
 }
 
+.menuTrigger {
+  width: 100%;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(7, 63, 127, 0.06);
+}
+
+.menuTriggerIcon {
+  color: var(--primary);
+  letter-spacing: -4px;
+  transform: translateY(-1px);
+  transition: transform 160ms ease;
+}
+
+.userMenuCard:hover .menuTriggerIcon,
+.userMenuCard:focus-within .menuTriggerIcon {
+  transform: translateY(1px);
+}
+
 .infoGrid,
 .formGrid {
   display: grid;

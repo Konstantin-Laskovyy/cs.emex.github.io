@@ -79,6 +79,10 @@ export function HomePage() {
                 </div>
               </div>
             </div>
+            <div className="menuTrigger" aria-hidden="true">
+              <span>Меню</span>
+              <span className="menuTriggerIcon">⌄⌄</span>
+            </div>
             <div className="sidebarMenu">
                 <Link className="btn btnPrimary" to="/news/new">
                   Добавить новость
