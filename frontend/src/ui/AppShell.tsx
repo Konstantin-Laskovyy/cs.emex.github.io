@@ -6,21 +6,20 @@ import type { UserPublic } from "../api/types";
 
 const navLinkStyle: React.CSSProperties = {
   padding: "10px 12px",
-  borderRadius: 12,
-  border: "1px solid rgba(96,165,250,0.18)",
-  background: "rgba(255,255,255,0.05)",
+  borderRadius: 8,
+  border: "1px solid transparent",
+  background: "transparent",
 };
 
 function getNavStyle(isActive: boolean): React.CSSProperties {
   return {
     ...navLinkStyle,
-    borderColor: isActive ? "rgba(147,197,253,0.9)" : "rgba(96,165,250,0.18)",
+    borderColor: isActive ? "#0b5cad" : "transparent",
     background: isActive
-      ? "linear-gradient(180deg, rgba(59,130,246,0.34), rgba(29,78,216,0.26))"
-      : "rgba(255,255,255,0.05)",
-    boxShadow: isActive
-      ? "0 0 0 1px rgba(96,165,250,0.16), 0 10px 24px rgba(37,99,235,0.18)"
-      : "none",
+      ? "#eef6ff"
+      : "transparent",
+    boxShadow: "none",
+    color: isActive ? "#073f7f" : "#132238",
   };
 }
 
@@ -62,15 +61,15 @@ export function AppShell() {
       <header style={{ position: "sticky", top: 0, zIndex: 10 }}>
         <div
           style={{
-            borderBottom: "1px solid rgba(96,165,250,0.16)",
-            background: "linear-gradient(180deg, rgba(10,19,36,0.9), rgba(9,17,31,0.78))",
-            backdropFilter: "blur(12px)",
+            borderBottom: "1px solid #d9e2ef",
+            background: "#ffffff",
+            boxShadow: "0 6px 18px rgba(17, 37, 63, 0.06)",
           }}
         >
           <div className="container" style={{ padding: "12px 0" }}>
             <div className="row">
-              <Link to="/" style={{ fontWeight: 700 }}>
-                Социальная сеть Emex
+              <Link to="/" style={{ color: "#0b5cad", fontSize: 22, fontWeight: 800 }}>
+                EMEX Social
               </Link>
               <div className="spacer" />
               <nav className="row appNav">
