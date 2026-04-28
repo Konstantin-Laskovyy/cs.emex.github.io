@@ -75,6 +75,24 @@ textarea {
   flex: 1;
 }
 
+.brandLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #0b5cad;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.brandLogo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: block;
+  object-fit: cover;
+  box-shadow: 0 8px 16px rgba(11, 92, 173, 0.18);
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
@@ -276,6 +294,23 @@ textarea {
 
 .newsHero .muted {
   color: rgba(255, 255, 255, 0.78);
+}
+
+.homeHeroTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.homeHeroLogo {
+  width: 58px;
+  height: 58px;
+  border-radius: 14px;
+  display: block;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 14px 30px rgba(7, 63, 127, 0.22);
 }
 
 .newsBadge {

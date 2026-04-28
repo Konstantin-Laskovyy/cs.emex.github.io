@@ -95,8 +95,9 @@ export function AppShell() {
         >
           <div className="container" style={{ padding: "12px 0" }}>
             <div className="row">
-              <Link to="/" style={{ color: "#0b5cad", fontSize: 22, fontWeight: 800 }}>
-                EMEX Social
+              <Link to="/" className="brandLink">
+                <img src="/emex_logo.png" alt="EMEX" className="brandLogo" />
+                <span>EMEX Social</span>
               </Link>
               <div className="spacer" />
               <nav className="row appNav">

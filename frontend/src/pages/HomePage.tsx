@@ -111,7 +111,10 @@ export function HomePage() {
       <section className="homeFeed">
         <div className="newsHero card">
           <div className="cardInner">
-            <div className="newsBadge">Главная</div>
+            <div className="homeHeroTop">
+              <img src="/emex_logo.png" alt="EMEX" className="homeHeroLogo" />
+              <div className="newsBadge">Главная</div>
+            </div>
             <h1 style={{ margin: "8px 0 10px", fontSize: 34, lineHeight: 1.05 }}>Новости компании</h1>
             <div className="muted" style={{ maxWidth: 720, lineHeight: 1.6 }}>
               На главной странице отображаются короткие анонсы публикаций. Полный текст открывается внутри новости.
