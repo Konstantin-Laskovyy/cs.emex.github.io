@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field
 
 
 class DepartmentSummary(BaseModel):
@@ -47,7 +47,7 @@ class UserUpdate(BaseModel):
     title: str | None = None
     department_id: int | None = None
     manager_id: int | None = None
-    avatar_url: HttpUrl | None = None
+    avatar_url: str | None = Field(default=None, max_length=1000)
     bio: str | None = None
     location: str | None = None
     phone: str | None = None
