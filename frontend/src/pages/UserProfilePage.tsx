@@ -415,10 +415,6 @@ export function UserProfilePage() {
                   </select>
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фото (URL)</div>
-                  <input className="avatarUrlHidden" type="hidden" value={form.avatar_url} readOnly />
-                </label>
-                <label>
                   <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Локация</div>
                   <input className="input" value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
                 </label>
