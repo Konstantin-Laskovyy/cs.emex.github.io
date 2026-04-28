@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_current_user
+from app.core.config import settings
 from app.core.security import hash_password
 from app.db.session import get_db
 from app.models.department import Department
@@ -9,6 +13,14 @@ from app.models.user import User
 from app.schemas.users import UserCreate, UserPublic, UserUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
+
+MAX_AVATAR_BYTES = 5 * 1024 * 1024
+AVATAR_CONTENT_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+}
 
 
 @router.get("/me", response_model=UserPublic)
@@ -97,6 +109,57 @@ def update_user(
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    return (
+        db.query(User)
+        .options(joinedload(User.department), joinedload(User.manager))
+        .filter(User.id == user.id)
+        .first()
+    )
+
+
+@router.post("/{user_id}/avatar", response_model=UserPublic)
+async def upload_avatar(
+    user_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserPublic:
+    if current_user.id != user_id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only edit your own profile",
+        )
+
+    user = db.get(User, user_id)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    extension = AVATAR_CONTENT_TYPES.get(file.content_type or "")
+    if extension is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Upload an image file: JPG, PNG, WEBP or GIF",
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File is empty")
+    if len(content) > MAX_AVATAR_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="Avatar file must be 5 MB or smaller",
+        )
+
+    avatar_dir = Path(settings.upload_dir) / "avatars"
+    avatar_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"user-{user.id}-{uuid4().hex}{extension}"
+    (avatar_dir / filename).write_bytes(content)
+
+    public_base = settings.public_upload_url.rstrip("/")
+    user.avatar_url = f"{public_base}/avatars/{filename}"
+    db.add(user)
+    db.commit()
 
     return (
         db.query(User)

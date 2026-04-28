@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { DragEvent, FormEvent } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import type { DepartmentPublic, UserPublic, UserUpdate } from "../api/types";
@@ -49,6 +49,8 @@ export function UserProfilePage() {
   const [form, setForm] = useState<ProfileFormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarDragActive, setAvatarDragActive] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -135,6 +137,43 @@ export function UserProfilePage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  async function handleAvatarFile(file: File | undefined) {
+    if (!file || !profile || !form) return;
+
+    setSaveMessage(null);
+    setSaveError(null);
+
+    if (!file.type.startsWith("image/")) {
+      setSaveError("Выберите файл изображения.");
+      return;
+    }
+
+    const data = new FormData();
+    data.append("file", file);
+
+    try {
+      setAvatarUploading(true);
+      const updated = await apiFetch<UserPublic>(`/users/${profile.id}/avatar`, {
+        method: "POST",
+        body: data,
+      });
+      setProfile(updated);
+      setForm(toFormState(updated));
+      setSaveMessage("Фото профиля обновлено.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Не удалось загрузить фото.");
+    } finally {
+      setAvatarUploading(false);
+      setAvatarDragActive(false);
+    }
+  }
+
+  function handleAvatarDrop(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    void handleAvatarFile(event.dataTransfer.files[0]);
   }
 
   if (loading) {
@@ -297,6 +336,49 @@ export function UserProfilePage() {
             </div>
 
             <form onSubmit={handleSave} style={{ marginTop: 16, display: "grid", gap: 14 }}>
+              <div
+                className={`avatarDropzone ${avatarDragActive ? "avatarDropzoneActive" : ""}`}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  setAvatarDragActive(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setAvatarDragActive(true);
+                }}
+                onDragLeave={(event) => {
+                  event.preventDefault();
+                  setAvatarDragActive(false);
+                }}
+                onDrop={handleAvatarDrop}
+              >
+                <div className="avatar avatarLarge avatarRound">
+                  {form.avatar_url ? (
+                    <img src={form.avatar_url} alt={fullName} className="avatarImage" />
+                  ) : (
+                    <span>{getInitials(profile)}</span>
+                  )}
+                </div>
+                <div className="avatarDropzoneText">
+                  <strong>Фото сотрудника</strong>
+                  <span>Перетащите изображение сюда или выберите файл с компьютера.</span>
+                  <span className="muted">JPG, PNG, WEBP или GIF до 5 МБ.</span>
+                </div>
+                <input
+                  id="avatar-upload"
+                  className="avatarUploadInput"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={(event) => {
+                    void handleAvatarFile(event.target.files?.[0]);
+                    event.currentTarget.value = "";
+                  }}
+                />
+                <label className="btn btnPrimary" htmlFor="avatar-upload">
+                  {avatarUploading ? "Загрузка..." : "Выбрать фото"}
+                </label>
+              </div>
+
               <div className="formGrid">
                 <label>
                   <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Имя</div>
@@ -334,7 +416,7 @@ export function UserProfilePage() {
                 </label>
                 <label>
                   <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фото (URL)</div>
-                  <input className="input" value={form.avatar_url} onChange={(event) => setForm({ ...form, avatar_url: event.target.value })} placeholder="https://..." />
+                  <input className="avatarUrlHidden" type="hidden" value={form.avatar_url} readOnly />
                 </label>
                 <label>
                   <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Локация</div>

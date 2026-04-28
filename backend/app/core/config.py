@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     ad_bind_dn: str = ""
     ad_bind_password: str = ""
     ad_default_email_domain: str = "emex.kz"
+    upload_dir: str = "uploads"
+    public_upload_url: str = "/uploads"
 
 
 settings = Settings()
