@@ -8,6 +8,8 @@ export class ApiError extends Error {
   }
 }
 
+export const AUTH_EXPIRED_EVENT = "auth:expired";
+
 export function getApiBaseUrl() {
   return (import.meta as any).env?.VITE_API_URL || "http://localhost:8000";
 }
@@ -19,6 +21,11 @@ export function getToken(): string | null {
 export function setToken(token: string | null) {
   if (!token) localStorage.removeItem("access_token");
   else localStorage.setItem("access_token", token);
+}
+
+export function expireSession() {
+  setToken(null);
+  window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
 }
 
 export async function apiFetch<T>(
@@ -48,6 +55,9 @@ export async function apiFetch<T>(
     const body = text ? safeJsonParse(text) : undefined;
 
     if (!res.ok) {
+      if (res.status === 401 && init?.auth !== false) {
+        expireSession();
+      }
       throw new ApiError(
         getErrorMessage(body, res.status),
         res.status,

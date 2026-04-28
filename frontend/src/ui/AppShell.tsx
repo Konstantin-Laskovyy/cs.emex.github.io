@@ -1,7 +1,7 @@
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { ApiError, apiFetch, getToken, setToken } from "../api/client";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { AUTH_EXPIRED_EVENT, ApiError, apiFetch, expireSession, getToken, setToken } from "../api/client";
 import type { NotificationPublic, UserPublic } from "../api/types";
 
 const navLinkStyle: React.CSSProperties = {
@@ -25,12 +25,25 @@ function getNavStyle(isActive: boolean): React.CSSProperties {
 
 export function AppShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [me, setMe] = useState<UserPublic | null>(null);
   const [meError, setMeError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationPublic[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const hasToken = useMemo(() => Boolean(getToken()), [location.key]);
+
+  useEffect(() => {
+    function handleAuthExpired() {
+      setMe(null);
+      setNotifications([]);
+      setNotificationsOpen(false);
+      navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
+    }
+
+    window.addEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, handleAuthExpired);
+  }, [location.pathname, location.search, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,6 +61,7 @@ export function AppShell() {
         if (cancelled) return;
         if (error instanceof ApiError && error.status === 401) {
           setToken(null);
+          navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
         } else {
           setMeError(error?.message || "Профиль недоступен");
         }
@@ -157,8 +171,9 @@ export function AppShell() {
                   <button
                     className="btn"
                     onClick={() => {
-                      setToken(null);
+                      expireSession();
                       setMe(null);
+                      navigate("/login", { replace: true });
                     }}
                     type="button"
                   >
