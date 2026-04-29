@@ -151,32 +151,33 @@ textarea {
 
 .sidebarPinButton {
   position: absolute;
-  top: 6px;
-  right: -24px;
-  width: 26px;
-  height: 30px;
+  top: 2px;
+  right: 0;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
-  border: 1px solid #d9e2ef;
-  border-left: 0;
-  border-radius: 0 999px 999px 0;
-  background: #ffffff;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #f8fbff;
   color: #0b5cad;
-  font-size: 24px;
+  font-size: 18px;
+  font-weight: 800;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 8px 0 18px rgba(17, 37, 63, 0.08);
-  transition: transform 180ms ease, background 160ms ease;
+  box-shadow: none;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
 .sidebarPinButton:hover {
   background: #eef6ff;
+  border-color: #cfe0f3;
 }
 
 .appSidebar:hover .sidebarPinButton,
 .appSidebar:focus-within .sidebarPinButton,
 .appSidebarPinned .sidebarPinButton {
-  transform: rotate(180deg);
+  transform: none;
 }
 
 .sidebarNav,
