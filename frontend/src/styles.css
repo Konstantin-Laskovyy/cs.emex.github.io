@@ -218,6 +218,30 @@ textarea {
   font-weight: 900;
 }
 
+.topIconButton svg,
+.languageIcon svg,
+.topUserArrow svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.topIconButton svg {
+  width: 20px;
+  height: 20px;
+}
+
+.languageIcon {
+  display: inline-grid;
+  place-items: center;
+  color: var(--primary);
+}
+
 .topIconButton:hover,
 .topHeaderIcon:hover,
 .languageSelectWrap:hover {
@@ -350,10 +374,17 @@ textarea {
   font-weight: 900;
   display: grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   border-radius: 999px;
-  background: #eef6ff;
+  background: var(--surface-blue);
+  border: 1px solid #d4e6f7;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.topUserButton:hover .topUserArrow {
+  background: #ffffff;
+  transform: translateY(1px);
 }
 
 .topUserDropdown,

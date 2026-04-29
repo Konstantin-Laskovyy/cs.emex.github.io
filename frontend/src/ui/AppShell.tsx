@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AUTH_EXPIRED_EVENT, ApiError, apiFetch, expireSession, getToken, setToken } from "../api/client";
 import { availableLanguages, useLanguage } from "../i18n";
@@ -79,6 +79,33 @@ function NavIcon({ labelKey }: { labelKey: string }) {
   );
 }
 
+function LanguageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.8 12h16.4M12 3.5c2.2 2.2 3.3 5 3.3 8.5S14.2 18.3 12 20.5C9.8 18.3 8.7 15.5 8.7 12S9.8 5.7 12 3.5Z" />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6.8 10.7a5.2 5.2 0 0 1 10.4 0v3.8l1.7 2.6H5.1l1.7-2.6v-3.8Z" />
+      <path d="M10 19.2c.5.8 1.1 1.3 2 1.3s1.5-.5 2-1.3" />
+      <path d="M12 4.2v-1" />
+    </svg>
+  );
+}
+
+function ChevronDownIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m7.5 9.5 4.5 4.7 4.5-4.7" />
+    </svg>
+  );
+}
+
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -89,6 +116,7 @@ export function AppShell() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userPanelOpen, setUserPanelOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => localStorage.getItem("sidebar_pinned") === "true");
+  const topActionsRef = useRef<HTMLDivElement | null>(null);
 
   const hasToken = useMemo(() => Boolean(getToken()), [location.key]);
   const unreadCount = notifications.filter((item) => !item.is_read).length;
@@ -149,6 +177,29 @@ export function AppShell() {
       cancelled = true;
     };
   }, [location.key]);
+
+  useEffect(() => {
+    function handlePointerDown(event: PointerEvent) {
+      if (!topActionsRef.current?.contains(event.target as Node)) {
+        setNotificationsOpen(false);
+        setUserPanelOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setNotificationsOpen(false);
+        setUserPanelOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   async function markNotificationsRead() {
     setNotificationsOpen((current) => !current);
@@ -216,9 +267,11 @@ export function AppShell() {
       {hasToken && (
         <header className="topHeader">
           <div className="topHeaderSpacer" />
-          <div className="topHeaderActions">
+          <div className="topHeaderActions" ref={topActionsRef}>
             <label className="languageSelectWrap" title={t("top.language")}>
-              <span className="languageIcon">◎</span>
+              <span className="languageIcon">
+                <LanguageIcon />
+              </span>
               <select
                 className="languageSelect"
                 value={language}
@@ -235,7 +288,7 @@ export function AppShell() {
             </label>
             <div className="topUserPanel">
               <button className="topIconButton" type="button" onClick={markNotificationsRead} title={t("top.notifications")}>
-                !
+                <BellIcon />
                 {unreadCount > 0 && <span className="topPanelBadge">{unreadCount}</span>}
               </button>
               <button className="topUserButton" type="button" onClick={() => setUserPanelOpen((current) => !current)}>
@@ -250,7 +303,9 @@ export function AppShell() {
                     getInitials(me)
                   )}
                 </span>
-                <span className="topUserArrow">⌄</span>
+                <span className="topUserArrow">
+                  <ChevronDownIcon />
+                </span>
               </button>
 
               {notificationsOpen && (
