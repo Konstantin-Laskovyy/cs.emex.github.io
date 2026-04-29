@@ -119,7 +119,6 @@ export function HomePage() {
                 </div>
 
                 <div className="newsSummary">
-                  <span className="newsSummaryLabel">Кратко</span>
                   <p>{item.summary}</p>
                 </div>
 
