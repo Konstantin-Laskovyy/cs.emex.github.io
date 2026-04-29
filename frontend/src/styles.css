@@ -1,19 +1,24 @@
 :root {
   color-scheme: light;
-  --bg: #f4f7fb;
+  --bg: #eef3f8;
   --surface: #ffffff;
-  --surface-soft: #f8fbff;
-  --text: #132238;
-  --muted: #64748b;
-  --border: #d9e2ef;
-  --primary: #0b5cad;
-  --primary-dark: #073f7f;
+  --surface-soft: #f7faff;
+  --surface-blue: #eef6ff;
+  --text: #071f3d;
+  --ink: #071f3d;
+  --muted: #60738d;
+  --border: #d6e2ef;
+  --line: #d6e2ef;
+  --primary: #075fab;
+  --primary-dark: #063f7d;
+  --primary-deep: #052f63;
   --accent: #f8b21c;
   --accent-dark: #e18b00;
   --danger: #d92d20;
-  --shadow: 0 12px 28px rgba(17, 37, 63, 0.08);
-  --radius: 8px;
-  font-family: "Trebuchet MS", Tahoma, Arial, sans-serif;
+  --shadow: 0 18px 44px rgba(7, 31, 61, 0.08);
+  --shadow-strong: 0 24px 60px rgba(7, 31, 61, 0.14);
+  --radius: 18px;
+  font-family: "Manrope", "Trebuchet MS", Tahoma, Arial, sans-serif;
 }
 
 * {
@@ -28,7 +33,9 @@ body {
 body {
   margin: 0;
   background:
-    linear-gradient(180deg, #ffffff 0, #f4f7fb 240px),
+    radial-gradient(circle at 12% -10%, rgba(7, 95, 171, 0.16), transparent 34rem),
+    radial-gradient(circle at 88% 8%, rgba(248, 178, 28, 0.13), transparent 30rem),
+    linear-gradient(180deg, #fbfdff 0, #f4f8fc 280px, #eef3f8 100%),
     var(--bg);
   color: var(--text);
 }
@@ -58,7 +65,7 @@ textarea {
 }
 
 .cardInner {
-  padding: 16px;
+  padding: 22px;
 }
 
 .muted {
@@ -83,39 +90,40 @@ textarea {
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
-  width: 64px;
+  width: 68px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 14px 10px;
+  gap: 18px;
+  padding: 16px 10px;
   overflow: visible;
-  border-right: 1px solid #d9e2ef;
-  background: #ffffff;
-  box-shadow: 10px 0 28px rgba(17, 37, 63, 0.08);
+  border-right: 1px solid rgba(214, 226, 239, 0.9);
+  background:
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 58%, #f1f6fb 100%);
+  box-shadow: 14px 0 38px rgba(7, 31, 61, 0.08);
   transition: width 180ms ease, box-shadow 180ms ease;
 }
 
 .appSidebar:hover,
 .appSidebar:focus-within,
 .appSidebarPinned {
-  width: 248px;
-  box-shadow: 18px 0 38px rgba(17, 37, 63, 0.12);
+  width: 260px;
+  box-shadow: 22px 0 54px rgba(7, 31, 61, 0.13);
 }
 
 .appMainFrame {
   min-height: 100vh;
-  margin-left: 64px;
+  margin-left: 68px;
   transition: margin-left 180ms ease;
 }
 
 .appSidebar:hover ~ .appMainFrame,
 .appSidebar:focus-within ~ .appMainFrame,
 .appSidebarPinned ~ .appMainFrame {
-  margin-left: 248px;
+  margin-left: 260px;
 }
 
 .appMain {
-  padding: 74px 0 40px;
+  padding: 84px 0 42px;
 }
 
 .appFooter {
@@ -126,25 +134,25 @@ textarea {
 .topHeader {
   position: fixed;
   top: 0;
-  left: 64px;
+  left: 68px;
   right: 0;
   z-index: 70;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  min-height: 54px;
-  padding: 8px 22px;
-  border-bottom: 1px solid #d9e2ef;
-  background: rgba(255, 255, 255, 0.94);
-  box-shadow: 0 8px 22px rgba(17, 37, 63, 0.08);
-  backdrop-filter: blur(12px);
+  min-height: 64px;
+  padding: 10px 28px;
+  border-bottom: 1px solid rgba(214, 226, 239, 0.86);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 34px rgba(7, 31, 61, 0.08);
+  backdrop-filter: blur(18px);
   transition: left 180ms ease;
 }
 
 .appSidebar:hover ~ .topHeader,
 .appSidebar:focus-within ~ .topHeader,
 .appSidebarPinned ~ .topHeader {
-  left: 248px;
+  left: 260px;
 }
 
 .topHeaderSpacer {
@@ -158,22 +166,23 @@ textarea {
 }
 
 .topHeaderActions {
-  gap: 4px;
-  padding: 5px;
-  border: 1px solid rgba(207, 224, 243, 0.92);
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid rgba(207, 224, 243, 0.9);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 12px 30px rgba(17, 37, 63, 0.1);
-  backdrop-filter: blur(14px);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 251, 255, 0.9));
+  box-shadow: 0 18px 42px rgba(7, 31, 61, 0.11);
+  backdrop-filter: blur(16px);
 }
 
 .topHeaderActions::before {
   content: "";
   width: 1px;
-  height: 24px;
+  height: 28px;
   order: 2;
   margin: 0 2px;
-  background: #d9e2ef;
+  background: rgba(214, 226, 239, 0.9);
 }
 
 .topUserPanel {
@@ -200,31 +209,32 @@ textarea {
 .topIconButton,
 .topHeaderIcon {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
   border-radius: 999px;
-  color: var(--primary);
+  color: var(--primary-dark);
   font-weight: 900;
 }
 
 .topIconButton:hover,
 .topHeaderIcon:hover,
 .languageSelectWrap:hover {
-  background: #eef6ff;
-  border-color: #cfe0f3;
+  background: var(--surface-blue);
+  border-color: #bfd8f2;
+  box-shadow: 0 8px 20px rgba(7, 95, 171, 0.09);
 }
 
 .languageSelectWrap {
   position: relative;
-  min-height: 36px;
+  min-height: 38px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 0 12px;
   border-radius: 999px;
-  color: #53657d;
+  color: #415875;
   font-weight: 700;
 }
 
@@ -276,28 +286,28 @@ textarea {
 }
 
 .topUserButton {
-  min-width: 230px;
-  min-height: 44px;
+  min-width: 252px;
+  min-height: 48px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 10px;
-  padding: 4px 8px 4px 14px;
+  padding: 5px 8px 5px 16px;
   border-radius: 999px;
   background:
-    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-  border-color: #cfe0f3;
+    linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  border-color: #bfd8f2;
 }
 
 .topUserButton:hover {
-  border-color: #9fc3e8;
-  box-shadow: 0 10px 24px rgba(11, 92, 173, 0.12);
+  border-color: #8eb9e4;
+  box-shadow: 0 14px 30px rgba(7, 95, 171, 0.15);
   transform: translateY(-1px);
 }
 
 .topUserAvatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -306,7 +316,7 @@ textarea {
   color: #ffffff;
   font-weight: 900;
   border: 2px solid #ffffff;
-  box-shadow: 0 7px 16px rgba(11, 92, 173, 0.2);
+  box-shadow: 0 8px 18px rgba(7, 95, 171, 0.22);
 }
 
 .topUserAvatar img {
@@ -332,7 +342,7 @@ textarea {
 
 .topUserText small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .topUserArrow {
@@ -354,14 +364,14 @@ textarea {
 }
 
 .topUserDropdown {
-  width: 240px;
+  width: 260px;
   display: grid;
   gap: 4px;
-  padding: 8px;
-  border: 1px solid #cfe0f3;
-  border-radius: 16px;
+  padding: 10px;
+  border: 1px solid #bfd8f2;
+  border-radius: 18px;
   background: #ffffff;
-  box-shadow: 0 18px 42px rgba(7, 63, 127, 0.16);
+  box-shadow: var(--shadow-strong);
 }
 
 .topUserDropdown a,
@@ -390,8 +400,8 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding-bottom: 34px;
+  min-height: 46px;
+  padding-bottom: 32px;
 }
 
 .appSidebar:hover .sidebarBrand,
@@ -406,37 +416,37 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #0b5cad;
+  color: var(--primary-dark);
   font-size: 18px;
   font-weight: 900;
 }
 
 .sidebarLogo {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 auto;
-  border-radius: 10px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 12px;
   object-fit: cover;
-  box-shadow: 0 8px 16px rgba(11, 92, 173, 0.18);
+  box-shadow: 0 12px 24px rgba(7, 95, 171, 0.18);
 }
 
 .sidebarPinButton {
   position: absolute;
-  top: 46px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
+  top: 50px;
+  right: 11px;
+  width: 26px;
+  height: 26px;
   display: grid;
   place-items: center;
   border: 1px solid transparent;
-  border-radius: 8px;
-  background: #f8fbff;
-  color: #0b5cad;
-  font-size: 18px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--primary);
+  font-size: 16px;
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
-  box-shadow: none;
+  box-shadow: 0 8px 18px rgba(7, 31, 61, 0.11);
   transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
 }
 
@@ -448,8 +458,8 @@ textarea {
 }
 
 .sidebarPinButton:hover {
-  background: #eef6ff;
-  border-color: #cfe0f3;
+  background: var(--surface-blue);
+  border-color: #bfd8f2;
 }
 
 .appSidebar:hover .sidebarPinButton,
@@ -461,7 +471,7 @@ textarea {
 .sidebarNav,
 .sidebarBottom {
   display: grid;
-  gap: 6px;
+  gap: 8px;
 }
 
 .sidebarBottom {
@@ -470,8 +480,8 @@ textarea {
 
 .sidebarDivider {
   height: 1px;
-  margin: 4px 6px;
-  background: #d9e2ef;
+  margin: 8px 8px;
+  background: var(--border);
   opacity: 0;
   transition: opacity 160ms ease;
 }
@@ -479,20 +489,20 @@ textarea {
 .sidebarNavItem {
   position: relative;
   width: 100%;
-  min-height: 40px;
+  min-height: 46px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 2px;
+  padding: 8px 3px;
   overflow: hidden;
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: #40536b;
+  color: #405775;
   cursor: pointer;
   text-align: left;
   white-space: nowrap;
-  transition: background 140ms ease, color 140ms ease;
+  transition: background 140ms ease, color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
 }
 
 .sidebarNavItem::before {
@@ -510,22 +520,23 @@ textarea {
 
 .sidebarNavItem:hover,
 .sidebarNavItemActive {
-  background: #e9f6ef;
-  color: #0b7a3a;
+  background: #eaf4ff;
+  color: var(--primary-dark);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .sidebarNavItemActive::before {
   opacity: 1;
-  background: #18a957;
+  background: var(--accent);
 }
 
 .sidebarIcon {
-  width: 40px;
-  min-width: 40px;
-  height: 32px;
+  width: 42px;
+  min-width: 42px;
+  height: 34px;
   display: inline-grid;
   place-items: center;
-  color: #0b5cad;
+  color: var(--primary);
   font-size: 15px;
   font-weight: 900;
 }
@@ -555,7 +566,8 @@ textarea {
 .appSidebar:hover .sidebarNavItem,
 .appSidebar:focus-within .sidebarNavItem,
 .appSidebarPinned .sidebarNavItem {
-  padding: 8px 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
 }
 
 .sidebarButton {
@@ -647,7 +659,7 @@ textarea {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #0b5cad;
+  color: var(--primary);
   font-size: 22px;
   font-weight: 800;
 }
@@ -658,7 +670,7 @@ textarea {
   border-radius: 9px;
   display: block;
   object-fit: cover;
-  box-shadow: 0 8px 16px rgba(11, 92, 173, 0.18);
+  box-shadow: 0 10px 22px rgba(7, 95, 171, 0.18);
 }
 
 .btn {
@@ -666,8 +678,8 @@ textarea {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  border-radius: var(--radius);
-  padding: 10px 14px;
+  border-radius: 12px;
+  padding: 11px 16px;
   border: 1px solid var(--border);
   background: #ffffff;
   color: var(--text);
@@ -680,22 +692,23 @@ textarea {
 }
 .btn:hover {
   background: var(--surface-soft);
-  border-color: #b9cbe2;
-  box-shadow: 0 8px 18px rgba(17, 37, 63, 0.08);
+  border-color: #b8cce3;
+  box-shadow: 0 12px 24px rgba(7, 31, 61, 0.09);
 }
 .btn:active {
   transform: translateY(1px);
 }
 .btnPrimary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #1a2433;
-  box-shadow: 0 10px 20px rgba(248, 178, 28, 0.2);
+  background: linear-gradient(180deg, #ffc941 0%, var(--accent) 100%);
+  border-color: #f3ad12;
+  color: #17233a;
+  font-weight: 800;
+  box-shadow: 0 14px 26px rgba(248, 178, 28, 0.23);
 }
 .btnPrimary:hover {
-  background: #ffc43d;
-  border-color: #ffc43d;
-  box-shadow: 0 12px 24px rgba(248, 178, 28, 0.28);
+  background: linear-gradient(180deg, #ffd15c 0%, #ffbd22 100%);
+  border-color: #ffbd22;
+  box-shadow: 0 16px 32px rgba(248, 178, 28, 0.32);
 }
 
 .btnDanger {
@@ -711,16 +724,18 @@ textarea {
 
 .input {
   width: 100%;
-  border-radius: var(--radius);
-  padding: 10px 12px;
+  border-radius: 12px;
+  padding: 11px 13px;
   border: 1px solid var(--border);
   background: #ffffff;
   color: var(--text);
   outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 .input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(11, 92, 173, 0.14);
+  background: #fbfdff;
+  box-shadow: 0 0 0 4px rgba(7, 95, 171, 0.12);
 }
 
 .grid2 {
@@ -740,8 +755,8 @@ textarea {
 
 .homeFeed {
   display: grid;
-  gap: 16px;
-  max-width: 780px;
+  gap: 20px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
@@ -891,12 +906,30 @@ textarea {
 .newsHero {
   position: relative;
   overflow: hidden;
-  background: #0b5cad;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.16), transparent 18rem),
+    linear-gradient(135deg, #075fab 0%, #064b91 48%, #053d78 100%);
   color: #ffffff;
+  border-color: rgba(5, 61, 120, 0.18);
+  box-shadow: 0 24px 58px rgba(7, 95, 171, 0.24);
 }
 
 .newsHero::before {
-  content: none;
+  content: "";
+  position: absolute;
+  right: -70px;
+  bottom: -120px;
+  width: 270px;
+  height: 270px;
+  border-radius: 50%;
+  background: rgba(248, 178, 28, 0.18);
+  pointer-events: none;
+}
+
+.newsHero .cardInner {
+  position: relative;
+  z-index: 1;
+  padding: 28px;
 }
 
 .newsHero .muted {
@@ -911,32 +944,34 @@ textarea {
 }
 
 .homeHeroLogo {
-  width: 58px;
-  height: 58px;
-  border-radius: 14px;
+  width: 62px;
+  height: 62px;
+  border-radius: 16px;
   display: block;
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.92);
-  box-shadow: 0 14px 30px rgba(7, 63, 127, 0.22);
+  box-shadow: 0 16px 34px rgba(0, 20, 45, 0.24);
 }
 
 .newsBadge {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 10px;
+  padding: 7px 12px;
   border-radius: 999px;
   font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #1a2433;
-  background: var(--accent);
-  border: 1px solid var(--accent);
+  color: #17233a;
+  font-weight: 900;
+  background: linear-gradient(180deg, #ffd45f 0%, var(--accent) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 10px 22px rgba(0, 20, 45, 0.14);
 }
 
 .newsList {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 
 .newsCard {
@@ -948,8 +983,8 @@ textarea {
 
 .newsCard:hover {
   transform: translateY(-2px);
-  border-color: #b9cbe2;
-  box-shadow: 0 18px 34px rgba(17, 37, 63, 0.12);
+  border-color: #aecaeb;
+  box-shadow: 0 24px 48px rgba(7, 31, 61, 0.13);
 }
 
 .newsCardTop {
@@ -963,7 +998,11 @@ textarea {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 16px;
+  background: #f7fbff;
+  border: 1px solid #e3edf8;
 }
 
 .newsAuthorAvatar {
@@ -975,13 +1014,12 @@ textarea {
 .newsTag {
   display: inline-flex;
   align-items: center;
-  padding: 5px 9px;
+  padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 600;
-  color: rgba(219, 234, 254, 0.96);
+  font-weight: 800;
   color: var(--primary-dark);
-  background: #eef6ff;
+  background: var(--surface-blue);
   border: 1px solid #cfe1f6;
 }
 
@@ -1073,10 +1111,10 @@ textarea {
   display: grid;
   gap: 6px;
   padding: 10px;
-  border: 1px solid #cfe0f3;
-  border-radius: 14px;
+  border: 1px solid #bfd8f2;
+  border-radius: 18px;
   background: #ffffff;
-  box-shadow: 0 18px 42px rgba(7, 63, 127, 0.16);
+  box-shadow: var(--shadow-strong);
   z-index: 30;
 }
 
@@ -1084,12 +1122,12 @@ textarea {
   display: grid;
   gap: 4px;
   padding: 10px;
-  border-radius: 10px;
+  border-radius: 12px;
   color: var(--ink);
 }
 
 .notificationItemUnread {
-  background: #eef6ff;
+  background: var(--surface-blue);
 }
 
 .notificationItem span,
@@ -1099,8 +1137,8 @@ textarea {
 }
 
 .profileInfoCard {
-  border: 1px solid #d9e2ef;
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
   background: #f8fbff;
   box-shadow: none;
 }
@@ -1137,7 +1175,7 @@ textarea {
   align-items: center;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface-soft);
 }
 
@@ -1165,8 +1203,8 @@ textarea {
   margin-top: 16px;
   padding: 14px;
   border: 1px solid #b8d3f0;
-  border-radius: 14px;
-  background: #eef6ff;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #eef6ff 0%, #ffffff 100%);
 }
 
 .adminDepartmentRow {
@@ -1176,7 +1214,7 @@ textarea {
   align-items: center;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   background: var(--surface-soft);
 }
 
@@ -1187,6 +1225,7 @@ textarea {
 
 .orgIntro {
   border-color: #b8d3f0;
+  background: linear-gradient(135deg, #ffffff 0%, #f2f8ff 100%);
 }
 
 .orgLayout {
@@ -1232,7 +1271,7 @@ textarea {
   text-align: left;
   padding: 13px 14px;
   border: 1px solid #cfe0f3;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #ffffff;
   color: var(--ink);
   cursor: pointer;
@@ -1242,12 +1281,12 @@ textarea {
 .orgNode:hover,
 .orgNodeActive {
   border-color: var(--primary);
-  box-shadow: 0 12px 28px rgba(7, 63, 127, 0.12);
+  box-shadow: 0 16px 34px rgba(7, 95, 171, 0.13);
   transform: translateY(-1px);
 }
 
 .orgNodeActive {
-  background: #eef6ff;
+  background: linear-gradient(135deg, #eef6ff 0%, #ffffff 100%);
 }
 
 .orgNodeTitle {
@@ -1264,8 +1303,8 @@ textarea {
   width: fit-content;
   padding: 4px 8px;
   border-radius: 999px;
-  background: #f8b21c;
-  color: #132238;
+  background: linear-gradient(180deg, #ffd45f 0%, var(--accent) 100%);
+  color: #17233a;
   font-size: 12px;
   font-weight: 800;
 }
@@ -1281,8 +1320,8 @@ textarea {
   display: grid;
   gap: 5px;
   padding: 13px;
-  border: 1px solid #d9e2ef;
-  border-radius: 14px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   background: #f8fbff;
 }
 
