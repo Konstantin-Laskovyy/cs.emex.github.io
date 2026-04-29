@@ -1,21 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AUTH_EXPIRED_EVENT, ApiError, apiFetch, expireSession, getToken, setToken } from "../api/client";
+import { availableLanguages, useLanguage } from "../i18n";
+import type { Language } from "../i18n";
 import type { NotificationPublic, UserPublic } from "../api/types";
 
 type NavItem = {
   to: string;
-  label: string;
+  labelKey: string;
   icon: string;
   adminOnly?: boolean;
 };
 
 const navItems: NavItem[] = [
-  { to: "/", label: "Главная", icon: "⌂" },
-  { to: "/users", label: "Сотрудники", icon: "С" },
-  { to: "/departments", label: "Отделы", icon: "О" },
-  { to: "/org", label: "Оргструктура", icon: "◇" },
-  { to: "/admin", label: "Админка", icon: "А", adminOnly: true },
+  { to: "/", labelKey: "nav.home", icon: "⌂" },
+  { to: "/users", labelKey: "nav.users", icon: "С" },
+  { to: "/departments", labelKey: "nav.departments", icon: "О" },
+  { to: "/org", labelKey: "nav.org", icon: "◇" },
+  { to: "/admin", labelKey: "nav.admin", icon: "А", adminOnly: true },
 ];
 
 function getInitials(user: UserPublic | null) {
@@ -26,6 +28,7 @@ function getInitials(user: UserPublic | null) {
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { language, languageLabel, setLanguage, t } = useLanguage();
   const [me, setMe] = useState<UserPublic | null>(null);
   const [meError, setMeError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationPublic[]>([]);
@@ -67,14 +70,14 @@ export function AppShell() {
           setToken(null);
           navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
         } else {
-          setMeError(error?.message || "Профиль недоступен");
+          setMeError(error?.message || t("top.profile"));
         }
       });
 
     return () => {
       cancelled = true;
     };
-  }, [location.key, location.pathname, location.search, navigate]);
+  }, [location.key, location.pathname, location.search, navigate, t]);
 
   useEffect(() => {
     let cancelled = false;
@@ -129,7 +132,7 @@ export function AppShell() {
             className="sidebarPinButton"
             type="button"
             aria-pressed={isSidebarPinned}
-            title={isSidebarPinned ? "Открепить панель" : "Закрепить панель"}
+            title={isSidebarPinned ? t("sidebar.unpin") : t("sidebar.pin")}
             onClick={toggleSidebarPinned}
           >
             {isSidebarPinned ? "×" : "›"}
@@ -145,77 +148,102 @@ export function AppShell() {
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) => `sidebarNavItem ${isActive ? "sidebarNavItemActive" : ""}`}
-                title={item.label}
+                title={t(item.labelKey)}
               >
                 <span className="sidebarIcon">{item.icon}</span>
-                <span className="sidebarText">{item.label}</span>
+                <span className="sidebarText">{t(item.labelKey)}</span>
               </NavLink>
             ))}
         </nav>
       </aside>
 
       {hasToken && (
-        <div className="topUserPanel">
-          <button className="topIconButton" type="button" onClick={markNotificationsRead} title="Уведомления">
-            !
-            {unreadCount > 0 && <span className="topPanelBadge">{unreadCount}</span>}
-          </button>
-          <button className="topUserButton" type="button" onClick={() => setUserPanelOpen((current) => !current)}>
-            <span className="topUserAvatar">
-              {me?.avatar_url ? (
-                <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
-              ) : (
-                getInitials(me)
-              )}
-            </span>
-            <span className="topUserText">
-              <strong>{me ? `${me.first_name} ${me.last_name}` : meError ?? "Профиль"}</strong>
-              <small>{me?.title || "Сотрудник компании"}</small>
-            </span>
-            <span className="topUserArrow">⌄</span>
-          </button>
-
-          {notificationsOpen && (
-            <div className="notificationsDropdown topNotificationsDropdown">
-              {notifications.map((item) => (
-                <Link
-                  className={`notificationItem ${item.is_read ? "" : "notificationItemUnread"}`}
-                  key={item.id}
-                  to={item.link || "/"}
-                  onClick={() => setNotificationsOpen(false)}
-                >
-                  <strong>{item.title}</strong>
-                  <span>{item.body}</span>
-                </Link>
-              ))}
-              {notifications.length === 0 && <div className="notificationEmpty">Пока уведомлений нет.</div>}
-            </div>
-          )}
-
-          {userPanelOpen && (
-            <div className="topUserDropdown">
-              <Link to="/news/new" onClick={() => setUserPanelOpen(false)}>
-                Добавить новость
-              </Link>
-              {me && (
-                <Link to={`/users/${me.id}`} onClick={() => setUserPanelOpen(false)}>
-                  Мой профиль
-                </Link>
-              )}
-              <Link to="/users" onClick={() => setUserPanelOpen(false)}>
-                Сотрудники
-              </Link>
-              {me?.role === "admin" && (
-                <Link to="/admin" onClick={() => setUserPanelOpen(false)}>
-                  Админка
-                </Link>
-              )}
-              <button type="button" onClick={handleLogout}>
-                Выйти
+        <header className="topHeader">
+          <div className="topHeaderSpacer" />
+          <div className="topHeaderActions">
+            <button className="topHeaderIcon" type="button" title={t("top.help")}>
+              ?
+            </button>
+            <label className="languageSelectWrap" title={t("top.language")}>
+              <span className="languageIcon">◎</span>
+              <select
+                className="languageSelect"
+                value={language}
+                onChange={(event) => setLanguage(event.target.value as Language)}
+                aria-label={t("top.language")}
+              >
+                {availableLanguages.map((item) => (
+                  <option key={item.value} value={item.value}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              <span className="languageLabel">{languageLabel}</span>
+            </label>
+            <span className="topPlanBadge">{t("top.planBadge")} 🪙</span>
+            <div className="topUserPanel">
+              <button className="topIconButton" type="button" onClick={markNotificationsRead} title={t("top.notifications")}>
+                !
+                {unreadCount > 0 && <span className="topPanelBadge">{unreadCount}</span>}
               </button>
+              <button className="topUserButton" type="button" onClick={() => setUserPanelOpen((current) => !current)}>
+                <span className="topUserAvatar">
+                  {me?.avatar_url ? (
+                    <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
+                  ) : (
+                    getInitials(me)
+                  )}
+                </span>
+                <span className="topUserText">
+                  <strong>{me ? `${me.first_name} ${me.last_name}` : meError ?? t("top.profile")}</strong>
+                  <small>{me?.title || t("top.employee")}</small>
+                </span>
+                <span className="topUserArrow">⌄</span>
+              </button>
+
+              {notificationsOpen && (
+                <div className="notificationsDropdown topNotificationsDropdown">
+                  {notifications.map((item) => (
+                    <Link
+                      className={`notificationItem ${item.is_read ? "" : "notificationItemUnread"}`}
+                      key={item.id}
+                      to={item.link || "/"}
+                      onClick={() => setNotificationsOpen(false)}
+                    >
+                      <strong>{item.title}</strong>
+                      <span>{item.body}</span>
+                    </Link>
+                  ))}
+                  {notifications.length === 0 && <div className="notificationEmpty">{t("top.noNotifications")}</div>}
+                </div>
+              )}
+
+              {userPanelOpen && (
+                <div className="topUserDropdown">
+                  <Link to="/news/new" onClick={() => setUserPanelOpen(false)}>
+                    {t("top.addNews")}
+                  </Link>
+                  {me && (
+                    <Link to={`/users/${me.id}`} onClick={() => setUserPanelOpen(false)}>
+                      {t("top.myProfile")}
+                    </Link>
+                  )}
+                  <Link to="/users" onClick={() => setUserPanelOpen(false)}>
+                    {t("nav.users")}
+                  </Link>
+                  {me?.role === "admin" && (
+                    <Link to="/admin" onClick={() => setUserPanelOpen(false)}>
+                      {t("nav.admin")}
+                    </Link>
+                  )}
+                  <button type="button" onClick={handleLogout}>
+                    {t("top.logout")}
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </div>
+        </header>
       )}
 
       <div className="appMainFrame">
@@ -224,7 +252,7 @@ export function AppShell() {
         </main>
 
         <footer className="container appFooter">
-          <div className="muted">Внутренняя социальная сеть компании Emex.</div>
+          <div className="muted">{t("footer.text")}</div>
         </footer>
       </div>
     </div>

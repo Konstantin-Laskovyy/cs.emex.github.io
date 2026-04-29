@@ -115,7 +115,7 @@ textarea {
 }
 
 .appMain {
-  padding: 34px 0 40px;
+  padding: 74px 0 40px;
 }
 
 .appFooter {
@@ -123,34 +123,108 @@ textarea {
   font-size: 13px;
 }
 
-.topUserPanel {
+.topHeader {
   position: fixed;
-  top: 14px;
-  right: 22px;
+  top: 0;
+  left: 64px;
+  right: 0;
   z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 54px;
+  padding: 8px 22px;
+  border-bottom: 1px solid #d9e2ef;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 8px 22px rgba(17, 37, 63, 0.08);
+  backdrop-filter: blur(12px);
+  transition: left 180ms ease;
+}
+
+.appSidebar:hover ~ .topHeader,
+.appSidebar:focus-within ~ .topHeader,
+.appSidebarPinned ~ .topHeader {
+  left: 248px;
+}
+
+.topHeaderSpacer {
+  flex: 1;
+}
+
+.topHeaderActions,
+.topUserPanel {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.topUserPanel {
+  position: relative;
+}
+
 .topIconButton,
-.topUserButton {
+.topUserButton,
+.topHeaderIcon,
+.languageSelectWrap {
   border: 1px solid #d9e2ef;
   background: #ffffff;
   color: var(--text);
-  box-shadow: 0 10px 24px rgba(17, 37, 63, 0.09);
+  box-shadow: none;
   cursor: pointer;
 }
 
-.topIconButton {
+.topIconButton,
+.topHeaderIcon {
   position: relative;
-  width: 42px;
-  height: 42px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 999px;
   color: var(--primary);
   font-weight: 900;
+}
+
+.languageSelectWrap {
+  position: relative;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: #53657d;
+}
+
+.languageIcon {
+  color: var(--primary);
+  font-weight: 900;
+}
+
+.languageSelect {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.languageLabel {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.topPlanBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 4px;
+  background: #0b7a3a;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 5px 12px rgba(11, 122, 58, 0.24);
+  white-space: nowrap;
 }
 
 .topPanelBadge {
@@ -170,19 +244,19 @@ textarea {
 }
 
 .topUserButton {
-  min-width: 220px;
-  min-height: 48px;
+  min-width: 0;
+  min-height: 36px;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px 6px 6px;
-  border-radius: 16px;
+  gap: 7px;
+  padding: 3px 8px 3px 3px;
+  border-radius: 999px;
 }
 
 .topUserAvatar {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -200,7 +274,7 @@ textarea {
 }
 
 .topUserText {
-  display: grid;
+  display: none;
   gap: 2px;
   text-align: left;
 }
@@ -224,7 +298,7 @@ textarea {
 .topUserDropdown,
 .topNotificationsDropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
 }
 
@@ -1235,11 +1309,19 @@ textarea {
 }
 
 @media (max-width: 900px) {
-  .topUserPanel {
+  .topHeader {
     position: sticky;
-    top: 8px;
+    top: 0;
+    left: 0;
+    right: auto;
     justify-content: flex-end;
-    padding: 8px 12px 0;
+    padding: 8px 12px;
+  }
+
+  .appSidebar:hover ~ .topHeader,
+  .appSidebar:focus-within ~ .topHeader,
+  .appSidebarPinned ~ .topHeader {
+    left: 0;
   }
 
   .topUserButton {
@@ -1256,6 +1338,11 @@ textarea {
 
   .topNotificationsDropdown {
     width: min(340px, calc(100vw - 24px));
+  }
+
+  .topPlanBadge,
+  .languageLabel {
+    display: none;
   }
 
   .appSidebar {

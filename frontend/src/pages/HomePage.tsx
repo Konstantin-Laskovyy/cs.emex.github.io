@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { NewsPublic, UserPublic } from "../api/types";
 
 type ShellContext = {
@@ -19,6 +20,7 @@ function formatNewsDate(value: string) {
 
 export function HomePage() {
   useOutletContext<ShellContext>();
+  const { t } = useLanguage();
   const [news, setNews] = useState<NewsPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -36,9 +38,9 @@ export function HomePage() {
       .catch((error) => {
         if (cancelled) return;
         if (error instanceof ApiError && error.status === 401) {
-          setLoadError("Нужно войти, чтобы видеть новости компании.");
+          setLoadError(t("home.loginRequired"));
         } else {
-          setLoadError(error instanceof Error ? error.message : "Не удалось загрузить новости.");
+          setLoadError(error instanceof Error ? error.message : t("home.loadError"));
         }
       })
       .finally(() => {
@@ -49,7 +51,7 @@ export function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   return (
     <section className="homeFeed">
@@ -57,11 +59,11 @@ export function HomePage() {
         <div className="cardInner">
           <div className="homeHeroTop">
             <img src="/emex_logo.png" alt="EMEX" className="homeHeroLogo" />
-            <div className="newsBadge">Главная</div>
+            <div className="newsBadge">{t("home.badge")}</div>
           </div>
-          <h1 style={{ margin: "8px 0 10px", fontSize: 34, lineHeight: 1.05 }}>Новости компании</h1>
+          <h1 style={{ margin: "8px 0 10px", fontSize: 34, lineHeight: 1.05 }}>{t("home.title")}</h1>
           <div className="muted" style={{ maxWidth: 720, lineHeight: 1.6 }}>
-            На главной странице отображаются короткие анонсы публикаций. Полный текст открывается внутри новости.
+            {t("home.subtitle")}
           </div>
         </div>
       </div>
@@ -79,11 +81,11 @@ export function HomePage() {
         </div>
       )}
 
-      {loading && <div className="muted">Загрузка новостей...</div>}
+      {loading && <div className="muted">{t("home.loading")}</div>}
 
       {!loading && !loadError && news.length === 0 && (
         <div className="card">
-          <div className="cardInner muted">Пока новостей нет. Опубликуйте первую запись через панель пользователя.</div>
+          <div className="cardInner muted">{t("home.empty")}</div>
         </div>
       )}
 
@@ -95,7 +97,7 @@ export function HomePage() {
             <article key={item.id} className="card newsCard">
               <div className="cardInner">
                 <div className="newsCardTop">
-                  <span className="newsTag">Новость</span>
+                  <span className="newsTag">{t("home.newsTag")}</span>
                   <span className="muted" style={{ fontSize: 13 }}>
                     {formatNewsDate(item.created_at)}
                   </span>
@@ -114,7 +116,7 @@ export function HomePage() {
                   <div>
                     <div style={{ fontWeight: 600 }}>{fullName}</div>
                     <div className="muted" style={{ fontSize: 13 }}>
-                      {item.author.title || "Сотрудник компании"}
+                      {item.author.title || t("home.employee")}
                     </div>
                   </div>
                 </div>
@@ -123,7 +125,7 @@ export function HomePage() {
 
                 <div className="row" style={{ marginTop: 16 }}>
                   <Link className="btn btnPrimary" to={`/news/${item.id}`}>
-                    Читать новость
+                    {t("home.read")}
                   </Link>
                 </div>
               </div>
