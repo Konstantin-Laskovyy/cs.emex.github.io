@@ -83,11 +83,11 @@ textarea {
   position: fixed;
   inset: 0 auto 0 0;
   z-index: 50;
-  width: 58px;
+  width: 64px;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 14px 8px;
+  padding: 14px 10px;
   overflow: visible;
   border-right: 1px solid #d9e2ef;
   background: #ffffff;
@@ -96,19 +96,21 @@ textarea {
 }
 
 .appSidebar:hover,
-.appSidebar:focus-within {
+.appSidebar:focus-within,
+.appSidebarPinned {
   width: 248px;
   box-shadow: 18px 0 38px rgba(17, 37, 63, 0.12);
 }
 
 .appMainFrame {
   min-height: 100vh;
-  margin-left: 58px;
+  margin-left: 64px;
   transition: margin-left 180ms ease;
 }
 
 .appSidebar:hover ~ .appMainFrame,
-.appSidebar:focus-within ~ .appMainFrame {
+.appSidebar:focus-within ~ .appMainFrame,
+.appSidebarPinned ~ .appMainFrame {
   margin-left: 248px;
 }
 
@@ -147,7 +149,7 @@ textarea {
   box-shadow: 0 8px 16px rgba(11, 92, 173, 0.18);
 }
 
-.sidebarChevron {
+.sidebarPinButton {
   position: absolute;
   top: 6px;
   right: -24px;
@@ -162,12 +164,18 @@ textarea {
   color: #0b5cad;
   font-size: 24px;
   line-height: 1;
+  cursor: pointer;
   box-shadow: 8px 0 18px rgba(17, 37, 63, 0.08);
-  transition: transform 180ms ease;
+  transition: transform 180ms ease, background 160ms ease;
 }
 
-.appSidebar:hover .sidebarChevron,
-.appSidebar:focus-within .sidebarChevron {
+.sidebarPinButton:hover {
+  background: #eef6ff;
+}
+
+.appSidebar:hover .sidebarPinButton,
+.appSidebar:focus-within .sidebarPinButton,
+.appSidebarPinned .sidebarPinButton {
   transform: rotate(180deg);
 }
 
@@ -185,16 +193,18 @@ textarea {
   height: 1px;
   margin: 4px 6px;
   background: #d9e2ef;
+  opacity: 0;
+  transition: opacity 160ms ease;
 }
 
 .sidebarNavItem {
   position: relative;
   width: 100%;
-  min-height: 38px;
+  min-height: 40px;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 8px 10px;
+  padding: 8px 2px;
   overflow: hidden;
   border: 0;
   border-radius: 0;
@@ -231,13 +241,14 @@ textarea {
 }
 
 .sidebarIcon {
-  width: 34px;
-  min-width: 34px;
-  height: 28px;
+  width: 40px;
+  min-width: 40px;
+  height: 32px;
   display: inline-grid;
   place-items: center;
   color: #0b5cad;
-  font-size: 18px;
+  font-size: 15px;
+  font-weight: 900;
 }
 
 .sidebarText {
@@ -249,10 +260,23 @@ textarea {
 }
 
 .appSidebar:hover .sidebarText,
-.appSidebar:focus-within .sidebarText {
+.appSidebar:focus-within .sidebarText,
+.appSidebarPinned .sidebarText {
   opacity: 1;
   transform: translateX(0);
   pointer-events: auto;
+}
+
+.appSidebar:hover .sidebarDivider,
+.appSidebar:focus-within .sidebarDivider,
+.appSidebarPinned .sidebarDivider {
+  opacity: 1;
+}
+
+.appSidebar:hover .sidebarNavItem,
+.appSidebar:focus-within .sidebarNavItem,
+.appSidebarPinned .sidebarNavItem {
+  padding: 8px 10px;
 }
 
 .sidebarButton {
@@ -275,7 +299,8 @@ textarea {
 }
 
 .appSidebar:hover .sidebarNotificationsDropdown,
-.appSidebar:focus-within .sidebarNotificationsDropdown {
+.appSidebar:focus-within .sidebarNotificationsDropdown,
+.appSidebarPinned .sidebarNotificationsDropdown {
   left: 0;
   bottom: calc(100% + 8px);
 }
@@ -284,10 +309,21 @@ textarea {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px;
+  justify-content: center;
+  padding: 8px 0;
   border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 160ms ease, border-color 160ms ease, padding 160ms ease;
+}
+
+.appSidebar:hover .sidebarUser,
+.appSidebar:focus-within .sidebarUser,
+.appSidebarPinned .sidebarUser {
+  justify-content: flex-start;
+  padding: 10px;
   background: #f8fbff;
-  border: 1px solid #e3edf8;
+  border-color: #e3edf8;
 }
 
 .sidebarUserAvatar {
@@ -1059,13 +1095,15 @@ textarea {
   }
 
   .appSidebar:hover,
-  .appSidebar:focus-within {
+  .appSidebar:focus-within,
+  .appSidebarPinned {
     width: 100%;
   }
 
   .appMainFrame,
   .appSidebar:hover ~ .appMainFrame,
-  .appSidebar:focus-within ~ .appMainFrame {
+  .appSidebar:focus-within ~ .appMainFrame,
+  .appSidebarPinned ~ .appMainFrame {
     margin-left: 0;
   }
 
@@ -1073,7 +1111,7 @@ textarea {
     flex: 0 0 auto;
   }
 
-  .sidebarChevron,
+  .sidebarPinButton,
   .sidebarText,
   .appSidebar:hover .sidebarText,
   .appSidebar:focus-within .sidebarText {

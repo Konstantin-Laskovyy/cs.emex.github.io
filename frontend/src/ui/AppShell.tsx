@@ -12,11 +12,16 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/", label: "Главная", icon: "⌂" },
-  { to: "/users", label: "Сотрудники", icon: "👥" },
-  { to: "/departments", label: "Отделы", icon: "▦" },
+  { to: "/users", label: "Сотрудники", icon: "С" },
+  { to: "/departments", label: "Отделы", icon: "О" },
   { to: "/org", label: "Оргструктура", icon: "◇" },
-  { to: "/admin", label: "Админка", icon: "⚙", adminOnly: true },
+  { to: "/admin", label: "Админка", icon: "А", adminOnly: true },
 ];
+
+function getInitials(user: UserPublic | null) {
+  if (!user) return "...";
+  return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
+}
 
 export function AppShell() {
   const location = useLocation();
@@ -25,6 +30,7 @@ export function AppShell() {
   const [meError, setMeError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationPublic[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(() => localStorage.getItem("sidebar_pinned") === "true");
 
   const hasToken = useMemo(() => Boolean(getToken()), [location.key]);
   const unreadCount = notifications.filter((item) => !item.is_read).length;
@@ -99,15 +105,31 @@ export function AppShell() {
     navigate("/login", { replace: true });
   }
 
+  function toggleSidebarPinned() {
+    setIsSidebarPinned((current) => {
+      const next = !current;
+      localStorage.setItem("sidebar_pinned", String(next));
+      return next;
+    });
+  }
+
   return (
     <div className="appLayout">
-      <aside className="appSidebar" aria-label="Основная навигация">
+      <aside className={`appSidebar ${isSidebarPinned ? "appSidebarPinned" : ""}`} aria-label="Основная навигация">
         <div className="sidebarBrand">
           <Link to="/" className="sidebarBrandLink" aria-label="EMEX Social">
             <img src="/emex_logo.png" alt="EMEX" className="sidebarLogo" />
             <span className="sidebarText">EMEX Social</span>
           </Link>
-          <span className="sidebarChevron">›</span>
+          <button
+            className="sidebarPinButton"
+            type="button"
+            aria-pressed={isSidebarPinned}
+            title={isSidebarPinned ? "Открепить панель" : "Закрепить панель"}
+            onClick={toggleSidebarPinned}
+          >
+            {isSidebarPinned ? "×" : "›"}
+          </button>
         </div>
 
         <nav className="sidebarNav">
@@ -133,7 +155,7 @@ export function AppShell() {
 
             <div className="notificationsMenu sidebarNotifications">
               <button className="sidebarNavItem sidebarButton" type="button" onClick={markNotificationsRead} title="Уведомления">
-                <span className="sidebarIcon">●</span>
+                <span className="sidebarIcon">!</span>
                 <span className="sidebarText">Уведомления</span>
                 {unreadCount > 0 && <span className="notificationBadge sidebarBadge">{unreadCount}</span>}
               </button>
@@ -160,7 +182,7 @@ export function AppShell() {
                 {me?.avatar_url ? (
                   <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
                 ) : (
-                  <span>{me ? `${me.first_name[0] ?? ""}${me.last_name[0] ?? ""}`.toUpperCase() : "…"}</span>
+                  <span>{getInitials(me)}</span>
                 )}
               </div>
               <div className="sidebarUserInfo sidebarText">
@@ -171,13 +193,13 @@ export function AppShell() {
 
             {me && (
               <Link className="sidebarNavItem" to={`/users/${me.id}`} title="Мой профиль">
-                <span className="sidebarIcon">◉</span>
+                <span className="sidebarIcon">П</span>
                 <span className="sidebarText">Мой профиль</span>
               </Link>
             )}
 
             <button className="sidebarNavItem sidebarButton" type="button" onClick={handleLogout} title="Выйти">
-              <span className="sidebarIcon">⎋</span>
+              <span className="sidebarIcon">↗</span>
               <span className="sidebarText">Выйти</span>
             </button>
           </div>
