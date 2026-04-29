@@ -30,6 +30,7 @@ export function AppShell() {
   const [meError, setMeError] = useState<string | null>(null);
   const [notifications, setNotifications] = useState<NotificationPublic[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [userPanelOpen, setUserPanelOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => localStorage.getItem("sidebar_pinned") === "true");
 
   const hasToken = useMemo(() => Boolean(getToken()), [location.key]);
@@ -40,6 +41,7 @@ export function AppShell() {
       setMe(null);
       setNotifications([]);
       setNotificationsOpen(false);
+      setUserPanelOpen(false);
       navigate("/login", { replace: true, state: { from: location.pathname + location.search } });
     }
 
@@ -93,6 +95,7 @@ export function AppShell() {
 
   async function markNotificationsRead() {
     setNotificationsOpen((current) => !current);
+    setUserPanelOpen(false);
     if (notifications.some((item) => !item.is_read)) {
       await apiFetch<void>("/notifications/read-all", { method: "POST" });
       setNotifications((current) => current.map((item) => ({ ...item, is_read: true })));
@@ -102,6 +105,7 @@ export function AppShell() {
   function handleLogout() {
     expireSession();
     setMe(null);
+    setUserPanelOpen(false);
     navigate("/login", { replace: true });
   }
 
@@ -148,63 +152,71 @@ export function AppShell() {
               </NavLink>
             ))}
         </nav>
-
-        {hasToken && (
-          <div className="sidebarBottom">
-            <div className="sidebarDivider" />
-
-            <div className="notificationsMenu sidebarNotifications">
-              <button className="sidebarNavItem sidebarButton" type="button" onClick={markNotificationsRead} title="Уведомления">
-                <span className="sidebarIcon">!</span>
-                <span className="sidebarText">Уведомления</span>
-                {unreadCount > 0 && <span className="notificationBadge sidebarBadge">{unreadCount}</span>}
-              </button>
-              {notificationsOpen && (
-                <div className="notificationsDropdown sidebarNotificationsDropdown">
-                  {notifications.map((item) => (
-                    <Link
-                      className={`notificationItem ${item.is_read ? "" : "notificationItemUnread"}`}
-                      key={item.id}
-                      to={item.link || "/"}
-                      onClick={() => setNotificationsOpen(false)}
-                    >
-                      <strong>{item.title}</strong>
-                      <span>{item.body}</span>
-                    </Link>
-                  ))}
-                  {notifications.length === 0 && <div className="notificationEmpty">Пока уведомлений нет.</div>}
-                </div>
-              )}
-            </div>
-
-            <div className="sidebarUser">
-              <div className="sidebarUserAvatar">
-                {me?.avatar_url ? (
-                  <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
-                ) : (
-                  <span>{getInitials(me)}</span>
-                )}
-              </div>
-              <div className="sidebarUserInfo sidebarText">
-                <strong>{me ? `${me.first_name} ${me.last_name}` : meError ?? "Профиль"}</strong>
-                {me && <span>{me.title || "Сотрудник компании"}</span>}
-              </div>
-            </div>
-
-            {me && (
-              <Link className="sidebarNavItem" to={`/users/${me.id}`} title="Мой профиль">
-                <span className="sidebarIcon">П</span>
-                <span className="sidebarText">Мой профиль</span>
-              </Link>
-            )}
-
-            <button className="sidebarNavItem sidebarButton" type="button" onClick={handleLogout} title="Выйти">
-              <span className="sidebarIcon">↗</span>
-              <span className="sidebarText">Выйти</span>
-            </button>
-          </div>
-        )}
       </aside>
+
+      {hasToken && (
+        <div className="topUserPanel">
+          <button className="topIconButton" type="button" onClick={markNotificationsRead} title="Уведомления">
+            !
+            {unreadCount > 0 && <span className="topPanelBadge">{unreadCount}</span>}
+          </button>
+          <button className="topUserButton" type="button" onClick={() => setUserPanelOpen((current) => !current)}>
+            <span className="topUserAvatar">
+              {me?.avatar_url ? (
+                <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
+              ) : (
+                getInitials(me)
+              )}
+            </span>
+            <span className="topUserText">
+              <strong>{me ? `${me.first_name} ${me.last_name}` : meError ?? "Профиль"}</strong>
+              <small>{me?.title || "Сотрудник компании"}</small>
+            </span>
+            <span className="topUserArrow">⌄</span>
+          </button>
+
+          {notificationsOpen && (
+            <div className="notificationsDropdown topNotificationsDropdown">
+              {notifications.map((item) => (
+                <Link
+                  className={`notificationItem ${item.is_read ? "" : "notificationItemUnread"}`}
+                  key={item.id}
+                  to={item.link || "/"}
+                  onClick={() => setNotificationsOpen(false)}
+                >
+                  <strong>{item.title}</strong>
+                  <span>{item.body}</span>
+                </Link>
+              ))}
+              {notifications.length === 0 && <div className="notificationEmpty">Пока уведомлений нет.</div>}
+            </div>
+          )}
+
+          {userPanelOpen && (
+            <div className="topUserDropdown">
+              <Link to="/news/new" onClick={() => setUserPanelOpen(false)}>
+                Добавить новость
+              </Link>
+              {me && (
+                <Link to={`/users/${me.id}`} onClick={() => setUserPanelOpen(false)}>
+                  Мой профиль
+                </Link>
+              )}
+              <Link to="/users" onClick={() => setUserPanelOpen(false)}>
+                Сотрудники
+              </Link>
+              {me?.role === "admin" && (
+                <Link to="/admin" onClick={() => setUserPanelOpen(false)}>
+                  Админка
+                </Link>
+              )}
+              <button type="button" onClick={handleLogout}>
+                Выйти
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="appMainFrame">
         <main className="container appMain">
