@@ -161,9 +161,6 @@ export function AppShell() {
         <header className="topHeader">
           <div className="topHeaderSpacer" />
           <div className="topHeaderActions">
-            <button className="topHeaderIcon" type="button" title={t("top.help")}>
-              ?
-            </button>
             <label className="languageSelectWrap" title={t("top.language")}>
               <span className="languageIcon">◎</span>
               <select
@@ -180,7 +177,6 @@ export function AppShell() {
               </select>
               <span className="languageLabel">{languageLabel}</span>
             </label>
-            <span className="topPlanBadge">{t("top.planBadge")} 🪙</span>
             <div className="topUserPanel">
               <button className="topIconButton" type="button" onClick={markNotificationsRead} title={t("top.notifications")}>
                 !
