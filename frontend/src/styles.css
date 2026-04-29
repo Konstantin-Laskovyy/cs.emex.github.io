@@ -123,12 +123,29 @@ textarea {
 }
 
 .appMain {
-  padding: 84px 0 42px;
+  padding: 84px 0 78px;
 }
 
 .appFooter {
-  padding: 16px 0 26px;
+  position: fixed;
+  left: 68px;
+  right: 0;
+  bottom: 0;
+  z-index: 35;
+  display: flex;
+  justify-content: center;
+  padding: 14px 18px 18px;
   font-size: 13px;
+  text-align: center;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(238, 243, 248, 0), rgba(238, 243, 248, 0.94) 42%);
+  transition: left 180ms ease;
+}
+
+.appSidebar:hover ~ .appMainFrame .appFooter,
+.appSidebar:focus-within ~ .appMainFrame .appFooter,
+.appSidebarPinned ~ .appMainFrame .appFooter {
+  left: 260px;
 }
 
 .topHeader {
@@ -1491,6 +1508,13 @@ textarea {
   .topUserText,
   .topUserArrow {
     display: none;
+  }
+
+  .appFooter,
+  .appSidebar:hover ~ .appMainFrame .appFooter,
+  .appSidebar:focus-within ~ .appMainFrame .appFooter,
+  .appSidebarPinned ~ .appMainFrame .appFooter {
+    left: 0;
   }
 
   .topNotificationsDropdown {
