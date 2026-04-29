@@ -533,12 +533,40 @@ textarea {
 .sidebarIcon {
   width: 42px;
   min-width: 42px;
-  height: 34px;
+  height: 38px;
   display: inline-grid;
   place-items: center;
   color: var(--primary);
-  font-size: 15px;
-  font-weight: 900;
+}
+
+.sidebarIcon svg {
+  width: 30px;
+  height: 30px;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 4px 7px rgba(7, 95, 171, 0.18));
+}
+
+.sidebarIconFill {
+  fill: var(--primary);
+}
+
+.sidebarIconSecondary {
+  opacity: 0.42;
+  fill: #8db9e6;
+}
+
+.sidebarIconStroke {
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sidebarIconWindow {
+  fill: #ffffff;
+  opacity: 0.94;
 }
 
 .sidebarText {

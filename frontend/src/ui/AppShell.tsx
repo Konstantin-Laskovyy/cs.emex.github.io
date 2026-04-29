@@ -25,6 +25,60 @@ function getInitials(user: UserPublic | null) {
   return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
 }
 
+function NavIcon({ labelKey }: { labelKey: string }) {
+  if (labelKey === "nav.home") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M5 15.5 16 5l11 10.5" className="sidebarIconStroke" />
+        <path d="M8.5 14.5v12h15v-12" className="sidebarIconStroke" />
+        <path d="M13 26.5v-7h6v7" className="sidebarIconFill" />
+        <path d="M21.5 7.5v4.7" className="sidebarIconStroke" />
+      </svg>
+    );
+  }
+
+  if (labelKey === "nav.users") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="12.5" cy="10" r="5.5" className="sidebarIconFill" />
+        <path d="M4.5 26.5c.6-6.1 3.6-9.2 8-9.2s7.4 3.1 8 9.2H4.5Z" className="sidebarIconFill" />
+        <circle cx="23" cy="12" r="4" className="sidebarIconFill sidebarIconSecondary" />
+        <path d="M20.7 26.5c-.2-3.6-1.2-6.3-3-8.1a7 7 0 0 1 4.8-1.7c3.4 0 5.6 2.8 6 9.8h-7.8Z" className="sidebarIconFill sidebarIconSecondary" />
+      </svg>
+    );
+  }
+
+  if (labelKey === "nav.departments") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M8 6.5h16a2 2 0 0 1 2 2v18H6v-18a2 2 0 0 1 2-2Z" className="sidebarIconFill" />
+        <path d="M11 11h4v4h-4zM17 11h4v4h-4zM11 18h4v4h-4zM17 18h4v4h-4z" className="sidebarIconWindow" />
+        <path d="M13.5 26.5v-6h5v6" className="sidebarIconWindow" />
+      </svg>
+    );
+  }
+
+  if (labelKey === "nav.org") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 4.5 22 10l-6 5.5L10 10l6-5.5Z" className="sidebarIconStroke" />
+        <path d="M16 16v5M8 21v-3.5h16V21" className="sidebarIconStroke" />
+        <rect x="4.5" y="21" width="7" height="6.5" rx="1.4" className="sidebarIconFill" />
+        <rect x="12.5" y="21" width="7" height="6.5" rx="1.4" className="sidebarIconFill" />
+        <rect x="20.5" y="21" width="7" height="6.5" rx="1.4" className="sidebarIconFill" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <path d="M16 4.5 25 8v7.3c0 5.7-3.7 10.4-9 12.2-5.3-1.8-9-6.5-9-12.2V8l9-3.5Z" className="sidebarIconFill" />
+      <circle cx="16" cy="13" r="3.6" className="sidebarIconWindow" />
+      <path d="M10.5 23c.5-4.1 2.5-6.1 5.5-6.1s5 2 5.5 6.1h-11Z" className="sidebarIconWindow" />
+    </svg>
+  );
+}
+
 export function AppShell() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -150,7 +204,9 @@ export function AppShell() {
                 className={({ isActive }) => `sidebarNavItem ${isActive ? "sidebarNavItemActive" : ""}`}
                 title={t(item.labelKey)}
               >
-                <span className="sidebarIcon">{item.icon}</span>
+                <span className="sidebarIcon">
+                  <NavIcon labelKey={item.labelKey} />
+                </span>
                 <span className="sidebarText">{t(item.labelKey)}</span>
               </NavLink>
             ))}
