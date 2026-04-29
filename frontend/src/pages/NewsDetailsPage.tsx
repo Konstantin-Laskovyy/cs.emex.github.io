@@ -174,7 +174,7 @@ export function NewsDetailsPage() {
 
   if (loadError || !news || !form) {
     return (
-      <section className="card">
+      <section className="card pageHero">
         <div className="cardInner">
           <h1 style={{ margin: 0 }}>{loadError ?? "Новость не найдена"}</h1>
           <div style={{ marginTop: 14 }}>
@@ -193,7 +193,7 @@ export function NewsDetailsPage() {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <section className="card">
+      <section className="card pageHero">
         <div className="cardInner">
           <div className="row" style={{ alignItems: "baseline", flexWrap: "wrap" }}>
             <div>

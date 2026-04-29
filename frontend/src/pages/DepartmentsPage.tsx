@@ -37,7 +37,7 @@ export function DepartmentsPage() {
   }, []);
 
   return (
-    <section className="card">
+    <section className="card pageHero">
       <div className="cardInner">
         <h1 style={{ margin: "0 0 6px" }}>Отделы</h1>
         <div className="muted" style={{ marginBottom: 14 }}>

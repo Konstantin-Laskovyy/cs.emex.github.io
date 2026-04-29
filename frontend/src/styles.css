@@ -68,6 +68,80 @@ textarea {
   padding: 22px;
 }
 
+.pageHero {
+  position: relative;
+  overflow: hidden;
+  border-color: #bfd8f2;
+  background:
+    radial-gradient(circle at 94% 8%, rgba(7, 95, 171, 0.1), transparent 17rem),
+    linear-gradient(135deg, #ffffff 0%, #f3f9ff 62%, #eaf4ff 100%);
+  box-shadow: 0 22px 52px rgba(7, 95, 171, 0.1);
+}
+
+.pageHero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary) 0%, #1684d8 45%, #b9dcff 100%);
+}
+
+.pageHero::after {
+  content: "";
+  position: absolute;
+  right: -62px;
+  bottom: -92px;
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: rgba(7, 95, 171, 0.07);
+  pointer-events: none;
+}
+
+.pageHero .cardInner {
+  position: relative;
+  z-index: 1;
+  padding: 24px 26px;
+}
+
+.pageHero h1 {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+  padding-bottom: 12px;
+  color: var(--text);
+  font-size: clamp(28px, 3vw, 36px);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+}
+
+.pageHero h1::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 112px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary) 0 42%, rgba(7, 95, 171, 0.16) 42% 100%);
+}
+
+.pageHero .muted {
+  color: #4b6686;
+}
+
+.pageHero .input {
+  background: rgba(255, 255, 255, 0.84);
+  border-color: #c5dcf3;
+}
+
+.pageHero .newsBadge {
+  color: var(--primary-dark);
+  background: linear-gradient(180deg, #f7fbff 0%, #e7f4ff 100%);
+  border-color: #bfd8f2;
+  box-shadow: none;
+}
+
 .muted {
   color: var(--muted);
 }

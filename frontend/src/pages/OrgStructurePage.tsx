@@ -168,7 +168,7 @@ export function OrgStructurePage() {
 
   return (
     <div className="orgPage">
-      <section className="card orgIntro">
+      <section className="card orgIntro pageHero">
         <div className="cardInner">
           <div className="newsBadge">Оргструктура</div>
           <h1 style={{ margin: "10px 0 8px" }}>Организационная структура компании</h1>

@@ -188,7 +188,7 @@ export function UserProfilePage() {
 
   if (loadError || !profile || !form) {
     return (
-      <section className="card">
+      <section className="card pageHero">
         <div className="cardInner">
           <h1 style={{ margin: 0 }}>{loadError ?? "Сотрудник не найден"}</h1>
           <div className="muted" style={{ marginTop: 8 }}>

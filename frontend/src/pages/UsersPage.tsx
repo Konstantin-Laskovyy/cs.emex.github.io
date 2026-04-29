@@ -137,7 +137,7 @@ export function UsersPage() {
   }
 
   return (
-    <section className="card">
+    <section className="card pageHero">
       <div className="cardInner">
         <div className="row" style={{ alignItems: "baseline", flexWrap: "wrap" }}>
           <div>

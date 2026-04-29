@@ -197,7 +197,7 @@ export function AdminPage() {
 
   if (me?.role !== "admin") {
     return (
-      <section className="card">
+      <section className="card pageHero">
         <div className="cardInner">
           <h1 style={{ margin: 0 }}>Недостаточно прав</h1>
           <div className="muted" style={{ marginTop: 8 }}>
@@ -210,7 +210,7 @@ export function AdminPage() {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <section className="card">
+      <section className="card pageHero">
         <div className="cardInner">
           <h1 style={{ margin: 0 }}>Администрирование</h1>
           <div className="muted" style={{ marginTop: 8 }}>
