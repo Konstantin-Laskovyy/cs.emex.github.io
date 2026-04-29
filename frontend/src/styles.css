@@ -1065,26 +1065,30 @@ textarea {
 
 .newsCardTop {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 18px;
 }
 
 .newsAuthor {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: 16px;
-  background: #f7fbff;
-  border: 1px solid #e3edf8;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 230px;
+  margin-top: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  text-align: right;
 }
 
 .newsAuthorAvatar {
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   font-size: 14px;
+  order: 2;
 }
 
 .newsTag {
@@ -1604,6 +1608,20 @@ textarea {
 
   .orgMetaGrid {
     grid-template-columns: 1fr;
+  }
+
+  .newsCardTop {
+    display: grid;
+  }
+
+  .newsAuthor {
+    justify-content: flex-start;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .newsAuthorAvatar {
+    order: 0;
   }
 
   .profileWorkGrid {

@@ -97,26 +97,23 @@ export function HomePage() {
             <article key={item.id} className="card newsCard">
               <div className="cardInner">
                 <div className="newsCardTop">
-                  <span className="newsTag">{t("home.newsTag")}</span>
-                  <span className="muted" style={{ fontSize: 13 }}>
-                    {formatNewsDate(item.created_at)}
-                  </span>
-                </div>
-
-                <h2 style={{ margin: "10px 0 8px", fontSize: 22 }}>{item.title}</h2>
-
-                <div className="newsAuthor">
-                  <div className="avatar avatarRound newsAuthorAvatar">
-                    {item.author.avatar_url ? (
-                      <img src={item.author.avatar_url} alt={fullName} className="avatarImage" />
-                    ) : (
-                      `${item.author.first_name[0] ?? ""}${item.author.last_name[0] ?? ""}`.toUpperCase()
-                    )}
-                  </div>
                   <div>
-                    <div style={{ fontWeight: 600 }}>{fullName}</div>
-                    <div className="muted" style={{ fontSize: 13 }}>
-                      {item.author.title || t("home.employee")}
+                    <span className="newsTag">{t("home.newsTag")}</span>
+                    <h2 style={{ margin: "10px 0 8px", fontSize: 22 }}>{item.title}</h2>
+                  </div>
+                  <div className="newsAuthor">
+                    <div className="avatar avatarRound newsAuthorAvatar">
+                      {item.author.avatar_url ? (
+                        <img src={item.author.avatar_url} alt={fullName} className="avatarImage" />
+                      ) : (
+                        `${item.author.first_name[0] ?? ""}${item.author.last_name[0] ?? ""}`.toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{fullName}</div>
+                      <div className="muted" style={{ fontSize: 12 }}>
+                        {formatNewsDate(item.created_at)}
+                      </div>
                     </div>
                   </div>
                 </div>
