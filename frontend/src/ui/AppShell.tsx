@@ -183,16 +183,16 @@ export function AppShell() {
                 {unreadCount > 0 && <span className="topPanelBadge">{unreadCount}</span>}
               </button>
               <button className="topUserButton" type="button" onClick={() => setUserPanelOpen((current) => !current)}>
+                <span className="topUserText">
+                  <strong>{me ? `${me.first_name} ${me.last_name}` : meError ?? t("top.profile")}</strong>
+                  <small>{me?.title || t("top.employee")}</small>
+                </span>
                 <span className="topUserAvatar">
                   {me?.avatar_url ? (
                     <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
                   ) : (
                     getInitials(me)
                   )}
-                </span>
-                <span className="topUserText">
-                  <strong>{me ? `${me.first_name} ${me.last_name}` : meError ?? t("top.profile")}</strong>
-                  <small>{me?.title || t("top.employee")}</small>
                 </span>
                 <span className="topUserArrow">⌄</span>
               </button>
