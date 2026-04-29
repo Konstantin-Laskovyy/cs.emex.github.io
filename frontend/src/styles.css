@@ -127,7 +127,16 @@ textarea {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
   min-height: 40px;
+  padding-bottom: 34px;
+}
+
+.appSidebar:hover .sidebarBrand,
+.appSidebar:focus-within .sidebarBrand,
+.appSidebarPinned .sidebarBrand {
+  justify-content: flex-start;
+  padding-bottom: 0;
 }
 
 .sidebarBrandLink {
@@ -151,8 +160,8 @@ textarea {
 
 .sidebarPinButton {
   position: absolute;
-  top: 2px;
-  right: 0;
+  top: 46px;
+  right: 8px;
   width: 28px;
   height: 28px;
   display: grid;
@@ -167,6 +176,13 @@ textarea {
   cursor: pointer;
   box-shadow: none;
   transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.appSidebar:hover .sidebarPinButton,
+.appSidebar:focus-within .sidebarPinButton,
+.appSidebarPinned .sidebarPinButton {
+  top: 2px;
+  right: 0;
 }
 
 .sidebarPinButton:hover {
