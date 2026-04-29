@@ -75,6 +75,259 @@ textarea {
   flex: 1;
 }
 
+.appLayout {
+  min-height: 100vh;
+}
+
+.appSidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 50;
+  width: 58px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 8px;
+  overflow: visible;
+  border-right: 1px solid #d9e2ef;
+  background: #ffffff;
+  box-shadow: 10px 0 28px rgba(17, 37, 63, 0.08);
+  transition: width 180ms ease, box-shadow 180ms ease;
+}
+
+.appSidebar:hover,
+.appSidebar:focus-within {
+  width: 248px;
+  box-shadow: 18px 0 38px rgba(17, 37, 63, 0.12);
+}
+
+.appMainFrame {
+  min-height: 100vh;
+  margin-left: 58px;
+  transition: margin-left 180ms ease;
+}
+
+.appSidebar:hover ~ .appMainFrame,
+.appSidebar:focus-within ~ .appMainFrame {
+  margin-left: 248px;
+}
+
+.appMain {
+  padding: 18px 0 40px;
+}
+
+.appFooter {
+  padding: 16px 0 26px;
+  font-size: 13px;
+}
+
+.sidebarBrand {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+}
+
+.sidebarBrandLink {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #0b5cad;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.sidebarLogo {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 8px 16px rgba(11, 92, 173, 0.18);
+}
+
+.sidebarChevron {
+  position: absolute;
+  top: 6px;
+  right: -24px;
+  width: 26px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #d9e2ef;
+  border-left: 0;
+  border-radius: 0 999px 999px 0;
+  background: #ffffff;
+  color: #0b5cad;
+  font-size: 24px;
+  line-height: 1;
+  box-shadow: 8px 0 18px rgba(17, 37, 63, 0.08);
+  transition: transform 180ms ease;
+}
+
+.appSidebar:hover .sidebarChevron,
+.appSidebar:focus-within .sidebarChevron {
+  transform: rotate(180deg);
+}
+
+.sidebarNav,
+.sidebarBottom {
+  display: grid;
+  gap: 6px;
+}
+
+.sidebarBottom {
+  margin-top: auto;
+}
+
+.sidebarDivider {
+  height: 1px;
+  margin: 4px 6px;
+  background: #d9e2ef;
+}
+
+.sidebarNavItem {
+  position: relative;
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #40536b;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.sidebarNavItem::before {
+  content: "";
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #b9c7d8;
+  opacity: 0;
+  transform: translateY(-50%);
+}
+
+.sidebarNavItem:hover,
+.sidebarNavItemActive {
+  background: #e9f6ef;
+  color: #0b7a3a;
+}
+
+.sidebarNavItemActive::before {
+  opacity: 1;
+  background: #18a957;
+}
+
+.sidebarIcon {
+  width: 34px;
+  min-width: 34px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  color: #0b5cad;
+  font-size: 18px;
+}
+
+.sidebarText {
+  min-width: 0;
+  opacity: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+  transition: opacity 130ms ease, transform 130ms ease;
+}
+
+.appSidebar:hover .sidebarText,
+.appSidebar:focus-within .sidebarText {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.sidebarButton {
+  font: inherit;
+}
+
+.sidebarNotifications {
+  position: relative;
+}
+
+.sidebarBadge {
+  margin-left: auto;
+}
+
+.sidebarNotificationsDropdown {
+  left: calc(100% + 10px);
+  right: auto;
+  bottom: 0;
+  top: auto;
+}
+
+.appSidebar:hover .sidebarNotificationsDropdown,
+.appSidebar:focus-within .sidebarNotificationsDropdown {
+  left: 0;
+  bottom: calc(100% + 8px);
+}
+
+.sidebarUser {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: #f8fbff;
+  border: 1px solid #e3edf8;
+}
+
+.sidebarUserAvatar {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #0b5cad;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.sidebarUserAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.sidebarUserInfo {
+  display: grid;
+  gap: 2px;
+}
+
+.sidebarUserInfo strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.sidebarUserInfo span {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+}
+
 .brandLink {
   display: inline-flex;
   align-items: center;
@@ -793,6 +1046,60 @@ textarea {
 }
 
 @media (max-width: 900px) {
+  .appSidebar {
+    position: sticky;
+    top: 0;
+    width: 100%;
+    min-height: auto;
+    flex-direction: row;
+    align-items: center;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid #d9e2ef;
+  }
+
+  .appSidebar:hover,
+  .appSidebar:focus-within {
+    width: 100%;
+  }
+
+  .appMainFrame,
+  .appSidebar:hover ~ .appMainFrame,
+  .appSidebar:focus-within ~ .appMainFrame {
+    margin-left: 0;
+  }
+
+  .sidebarBrand {
+    flex: 0 0 auto;
+  }
+
+  .sidebarChevron,
+  .sidebarText,
+  .appSidebar:hover .sidebarText,
+  .appSidebar:focus-within .sidebarText {
+    display: none;
+  }
+
+  .sidebarBottom {
+    display: flex;
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+
+  .sidebarDivider,
+  .sidebarUserInfo {
+    display: none;
+  }
+
+  .sidebarNav {
+    display: flex;
+    flex: 1 0 auto;
+  }
+
+  .sidebarNavItem {
+    width: auto;
+  }
+
   .grid2 {
     grid-template-columns: 1fr;
   }

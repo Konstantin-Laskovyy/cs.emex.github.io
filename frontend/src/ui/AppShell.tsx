@@ -1,27 +1,22 @@
-import type React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { AUTH_EXPIRED_EVENT, ApiError, apiFetch, expireSession, getToken, setToken } from "../api/client";
 import type { NotificationPublic, UserPublic } from "../api/types";
 
-const navLinkStyle: React.CSSProperties = {
-  padding: "10px 12px",
-  borderRadius: 8,
-  border: "1px solid transparent",
-  background: "transparent",
+type NavItem = {
+  to: string;
+  label: string;
+  icon: string;
+  adminOnly?: boolean;
 };
 
-function getNavStyle(isActive: boolean): React.CSSProperties {
-  return {
-    ...navLinkStyle,
-    borderColor: isActive ? "#0b5cad" : "transparent",
-    background: isActive
-      ? "#eef6ff"
-      : "transparent",
-    boxShadow: "none",
-    color: isActive ? "#073f7f" : "#132238",
-  };
-}
+const navItems: NavItem[] = [
+  { to: "/", label: "Главная", icon: "⌂" },
+  { to: "/users", label: "Сотрудники", icon: "👥" },
+  { to: "/departments", label: "Отделы", icon: "▦" },
+  { to: "/org", label: "Оргструктура", icon: "◇" },
+  { to: "/admin", label: "Админка", icon: "⚙", adminOnly: true },
+];
 
 export function AppShell() {
   const location = useLocation();
@@ -32,6 +27,7 @@ export function AppShell() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const hasToken = useMemo(() => Boolean(getToken()), [location.key]);
+  const unreadCount = notifications.filter((item) => !item.is_read).length;
 
   useEffect(() => {
     function handleAuthExpired() {
@@ -70,7 +66,7 @@ export function AppShell() {
     return () => {
       cancelled = true;
     };
-  }, [location.key]);
+  }, [location.key, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,104 +93,106 @@ export function AppShell() {
     }
   }
 
+  function handleLogout() {
+    expireSession();
+    setMe(null);
+    navigate("/login", { replace: true });
+  }
+
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <header style={{ position: "sticky", top: 0, zIndex: 10 }}>
-        <div
-          style={{
-            borderBottom: "1px solid #d9e2ef",
-            background: "#ffffff",
-            boxShadow: "0 6px 18px rgba(17, 37, 63, 0.06)",
-          }}
-        >
-          <div className="container" style={{ padding: "12px 0" }}>
-            <div className="row">
-              <Link to="/" className="brandLink">
-                <img src="/emex_logo.png" alt="EMEX" className="brandLogo" />
-                <span>EMEX Social</span>
-              </Link>
-              <div className="spacer" />
-              <nav className="row appNav">
-                <NavLink to="/" style={({ isActive }) => getNavStyle(isActive)}>
-                  Главная
-                </NavLink>
-                <NavLink to="/users" style={({ isActive }) => getNavStyle(isActive)}>
-                  Сотрудники
-                </NavLink>
-                <NavLink to="/departments" style={({ isActive }) => getNavStyle(isActive)}>
-                  Отделы
-                </NavLink>
-                <NavLink to="/org" style={({ isActive }) => getNavStyle(isActive)}>
-                  Оргструктура
-                </NavLink>
-                {me?.role === "admin" && (
-                  <NavLink to="/admin" style={({ isActive }) => getNavStyle(isActive)}>
-                    Админка
-                  </NavLink>
-                )}
-              </nav>
-              <div className="spacer" />
-              {hasToken && (
-                <div className="row" style={{ gap: 10 }}>
-                  <div className="notificationsMenu">
-                    <button className="btn notificationButton" type="button" onClick={markNotificationsRead}>
-                      Уведомления
-                      {notifications.filter((item) => !item.is_read).length > 0 && (
-                        <span className="notificationBadge">{notifications.filter((item) => !item.is_read).length}</span>
-                      )}
-                    </button>
-                    {notificationsOpen && (
-                      <div className="notificationsDropdown">
-                        {notifications.map((item) => (
-                          <Link
-                            className={`notificationItem ${item.is_read ? "" : "notificationItemUnread"}`}
-                            key={item.id}
-                            to={item.link || "/"}
-                            onClick={() => setNotificationsOpen(false)}
-                          >
-                            <strong>{item.title}</strong>
-                            <span>{item.body}</span>
-                          </Link>
-                        ))}
-                        {notifications.length === 0 && <div className="notificationEmpty">Пока уведомлений нет.</div>}
-                      </div>
-                    )}
-                  </div>
-                  <div className="muted" style={{ fontSize: 13 }}>
-                    {me ? `${me.first_name} ${me.last_name}` : meError ?? "..."}
-                  </div>
-                  {me && (
-                    <Link className="btn" to={`/users/${me.id}`}>
-                      Мой профиль
+    <div className="appLayout">
+      <aside className="appSidebar" aria-label="Основная навигация">
+        <div className="sidebarBrand">
+          <Link to="/" className="sidebarBrandLink" aria-label="EMEX Social">
+            <img src="/emex_logo.png" alt="EMEX" className="sidebarLogo" />
+            <span className="sidebarText">EMEX Social</span>
+          </Link>
+          <span className="sidebarChevron">›</span>
+        </div>
+
+        <nav className="sidebarNav">
+          {navItems
+            .filter((item) => !item.adminOnly || me?.role === "admin")
+            .map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.to === "/"}
+                className={({ isActive }) => `sidebarNavItem ${isActive ? "sidebarNavItemActive" : ""}`}
+                title={item.label}
+              >
+                <span className="sidebarIcon">{item.icon}</span>
+                <span className="sidebarText">{item.label}</span>
+              </NavLink>
+            ))}
+        </nav>
+
+        {hasToken && (
+          <div className="sidebarBottom">
+            <div className="sidebarDivider" />
+
+            <div className="notificationsMenu sidebarNotifications">
+              <button className="sidebarNavItem sidebarButton" type="button" onClick={markNotificationsRead} title="Уведомления">
+                <span className="sidebarIcon">●</span>
+                <span className="sidebarText">Уведомления</span>
+                {unreadCount > 0 && <span className="notificationBadge sidebarBadge">{unreadCount}</span>}
+              </button>
+              {notificationsOpen && (
+                <div className="notificationsDropdown sidebarNotificationsDropdown">
+                  {notifications.map((item) => (
+                    <Link
+                      className={`notificationItem ${item.is_read ? "" : "notificationItemUnread"}`}
+                      key={item.id}
+                      to={item.link || "/"}
+                      onClick={() => setNotificationsOpen(false)}
+                    >
+                      <strong>{item.title}</strong>
+                      <span>{item.body}</span>
                     </Link>
-                  )}
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      expireSession();
-                      setMe(null);
-                      navigate("/login", { replace: true });
-                    }}
-                    type="button"
-                  >
-                    Выйти
-                  </button>
+                  ))}
+                  {notifications.length === 0 && <div className="notificationEmpty">Пока уведомлений нет.</div>}
                 </div>
               )}
             </div>
+
+            <div className="sidebarUser">
+              <div className="sidebarUserAvatar">
+                {me?.avatar_url ? (
+                  <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
+                ) : (
+                  <span>{me ? `${me.first_name[0] ?? ""}${me.last_name[0] ?? ""}`.toUpperCase() : "…"}</span>
+                )}
+              </div>
+              <div className="sidebarUserInfo sidebarText">
+                <strong>{me ? `${me.first_name} ${me.last_name}` : meError ?? "Профиль"}</strong>
+                {me && <span>{me.title || "Сотрудник компании"}</span>}
+              </div>
+            </div>
+
+            {me && (
+              <Link className="sidebarNavItem" to={`/users/${me.id}`} title="Мой профиль">
+                <span className="sidebarIcon">◉</span>
+                <span className="sidebarText">Мой профиль</span>
+              </Link>
+            )}
+
+            <button className="sidebarNavItem sidebarButton" type="button" onClick={handleLogout} title="Выйти">
+              <span className="sidebarIcon">⎋</span>
+              <span className="sidebarText">Выйти</span>
+            </button>
           </div>
-        </div>
-      </header>
+        )}
+      </aside>
 
-      <main className="container" style={{ padding: "18px 0 40px" }}>
-        <Outlet context={{ me }} />
-      </main>
+      <div className="appMainFrame">
+        <main className="container appMain">
+          <Outlet context={{ me }} />
+        </main>
 
-      <footer className="container" style={{ padding: "16px 0 26px" }}>
-        <div className="muted" style={{ fontSize: 13 }}>
-          Внутренняя социальная сеть компании Emex.
-        </div>
-      </footer>
+        <footer className="container appFooter">
+          <div className="muted">Внутренняя социальная сеть компании Emex.</div>
+        </footer>
+      </div>
     </div>
   );
 }
