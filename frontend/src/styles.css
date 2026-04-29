@@ -787,6 +787,20 @@ textarea {
   box-shadow: 0 16px 32px rgba(248, 178, 28, 0.32);
 }
 
+.btnNewsRead {
+  background: linear-gradient(180deg, #f8fbff 0%, #eaf5ff 100%);
+  border-color: #b9d7f4;
+  color: var(--primary-dark);
+  font-weight: 800;
+  box-shadow: 0 12px 24px rgba(7, 95, 171, 0.1);
+}
+
+.btnNewsRead:hover {
+  background: linear-gradient(180deg, #ffffff 0%, #dff0ff 100%);
+  border-color: #91bfe8;
+  box-shadow: 0 14px 28px rgba(7, 95, 171, 0.16);
+}
+
 .btnDanger {
   border-color: #f3b8b3;
   background: #fff5f4;
@@ -1088,7 +1102,7 @@ textarea {
   height: 2px;
   border-radius: 999px;
   background:
-    linear-gradient(90deg, var(--accent) 0 34%, rgba(7, 95, 171, 0.16) 34% 100%);
+    linear-gradient(90deg, #1684d8 0 34%, rgba(7, 95, 171, 0.16) 34% 100%);
 }
 
 .newsAuthor {
@@ -1126,22 +1140,24 @@ textarea {
 
 .newsSummary {
   position: relative;
+  width: fit-content;
+  max-width: 100%;
   margin: 12px 0 10px;
-  padding: 0 0 0 14px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  padding: 10px 14px 10px 16px;
+  border: 1px solid #d5e8fb;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f7fbff 0%, #eef7ff 100%);
 }
 
 .newsSummary::before {
   content: "";
   position: absolute;
   left: 0;
-  top: 4px;
-  bottom: 4px;
+  top: 10px;
+  bottom: 10px;
   width: 3px;
   border-radius: 999px;
-  background: var(--accent);
+  background: #1684d8;
 }
 
 .newsSummary p {
@@ -1149,7 +1165,7 @@ textarea {
   color: var(--text);
   font-size: 15px;
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .newsContent {

@@ -123,7 +123,7 @@ export function HomePage() {
                 </div>
 
                 <div className="row" style={{ marginTop: 16 }}>
-                  <Link className="btn btnPrimary" to={`/news/${item.id}`}>
+                  <Link className="btn btnNewsRead" to={`/news/${item.id}`}>
                     {t("home.read")}
                   </Link>
                 </div>
