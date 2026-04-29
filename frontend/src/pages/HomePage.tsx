@@ -99,7 +99,7 @@ export function HomePage() {
                 <div className="newsCardTop">
                   <div>
                     <span className="newsTag">{t("home.newsTag")}</span>
-                    <h2 style={{ margin: "10px 0 8px", fontSize: 22 }}>{item.title}</h2>
+                    <h2 className="newsCardTitle">{item.title}</h2>
                   </div>
                   <div className="newsAuthor">
                     <div className="avatar avatarRound newsAuthorAvatar">
@@ -118,7 +118,10 @@ export function HomePage() {
                   </div>
                 </div>
 
-                <p style={{ margin: "16px 0 10px", fontWeight: 600, lineHeight: 1.6 }}>{item.summary}</p>
+                <div className="newsSummary">
+                  <span className="newsSummaryLabel">Кратко</span>
+                  <p>{item.summary}</p>
+                </div>
 
                 <div className="row" style={{ marginTop: 16 }}>
                   <Link className="btn btnPrimary" to={`/news/${item.id}`}>
