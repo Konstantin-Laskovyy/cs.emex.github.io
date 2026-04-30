@@ -21,6 +21,19 @@ except ImportError:  # pragma: no cover - depends on production installation
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
+ADDRESS_DATE_COLUMN_CANDIDATES = (
+    "date_beg",
+    "DateBeg",
+    "date",
+    "Date",
+    "created_at",
+    "created",
+    "CreateDate",
+    "DateCreate",
+    "time",
+    "Time",
+)
+
 
 def _require_courier_config() -> None:
     missing = [
@@ -70,6 +83,33 @@ def _courier_connection() -> Iterator[object]:
         connection.close()
 
 
+def _quote_identifier(value: str) -> str:
+    return f"`{value.replace('`', '``')}`"
+
+
+def _get_address_date_column(cursor: object) -> str:
+    cursor.execute("SHOW COLUMNS FROM address")
+    rows = cursor.fetchall()
+    columns = {row["Field"] for row in rows if row.get("Field")}
+
+    if settings.courier_address_date_column:
+        if settings.courier_address_date_column not in columns:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=f"Column {settings.courier_address_date_column} was not found in courier.address",
+            )
+        return settings.courier_address_date_column
+
+    for candidate in ADDRESS_DATE_COLUMN_CANDIDATES:
+        if candidate in columns:
+            return candidate
+
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Could not detect a date column in courier.address. Set COURIER_ADDRESS_DATE_COLUMN.",
+    )
+
+
 @router.get("/orders/summary", response_model=OrdersSummary)
 def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
     today = date.today()
@@ -81,39 +121,37 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
     with _courier_connection() as connection:
         cursor = connection.cursor(dictionary=True)
         try:
+            date_column = _quote_identifier(_get_address_date_column(cursor))
             cursor.execute(
-                """
+                f"""
                 SELECT COUNT(*) AS count
-                FROM zakaz
-                WHERE date_beg >= %s
-                  AND date_beg < %s
-                  AND Visible = 'T'
+                FROM address
+                WHERE {date_column} >= %s
+                  AND {date_column} < %s
                 """,
                 (today_start, tomorrow_start),
             )
             today_count = int((cursor.fetchone() or {}).get("count") or 0)
 
             cursor.execute(
-                """
+                f"""
                 SELECT COUNT(*) AS count
-                FROM zakaz
-                WHERE date_beg >= %s
-                  AND date_beg < %s
-                  AND Visible = 'T'
+                FROM address
+                WHERE {date_column} >= %s
+                  AND {date_column} < %s
                 """,
                 (month_start_at, tomorrow_start),
             )
             month_count = int((cursor.fetchone() or {}).get("count") or 0)
 
             cursor.execute(
-                """
-                SELECT DATE(date_beg) AS order_date, COUNT(*) AS count
-                FROM zakaz
-                WHERE date_beg >= %s
-                  AND date_beg < %s
-                  AND Visible = 'T'
-                GROUP BY DATE(date_beg)
-                ORDER BY DATE(date_beg)
+                f"""
+                SELECT DATE({date_column}) AS order_date, COUNT(*) AS count
+                FROM address
+                WHERE {date_column} >= %s
+                  AND {date_column} < %s
+                GROUP BY DATE({date_column})
+                ORDER BY DATE({date_column})
                 """,
                 (month_start_at, tomorrow_start),
             )

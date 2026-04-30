@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     courier_db_user: str = ""
     courier_db_password: str = ""
     courier_db_name: str = "courier"
+    courier_address_date_column: str = ""
 
 
 settings = Settings()
