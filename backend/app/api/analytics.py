@@ -88,8 +88,14 @@ def _quote_identifier(value: str) -> str:
 
 
 def _get_address_date_column(cursor: object) -> str:
-    cursor.execute("SHOW COLUMNS FROM address")
-    rows = cursor.fetchall()
+    try:
+        cursor.execute("SHOW COLUMNS FROM address")
+        rows = cursor.fetchall()
+    except MySQLError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not read courier.address schema",
+        ) from exc
     columns = {row["Field"] for row in rows if row.get("Field")}
 
     if settings.courier_address_date_column:
@@ -156,6 +162,11 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
                 (month_start_at, tomorrow_start),
             )
             rows = cursor.fetchall()
+        except MySQLError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Courier address analytics query failed",
+            ) from exc
         finally:
             cursor.close()
 

@@ -95,7 +95,10 @@ function getErrorMessage(body: unknown, status: number) {
       .filter(Boolean)
       .join("; ");
   }
-  if (typeof body === "string" && body) return body;
+  if (typeof body === "string" && body) {
+    if (body.trimStart().startsWith("<")) return `Request failed: ${status}`;
+    return body;
+  }
   return `Request failed: ${status}`;
 }
 
