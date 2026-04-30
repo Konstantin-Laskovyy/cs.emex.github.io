@@ -127,13 +127,24 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
     with _courier_connection() as connection:
         cursor = connection.cursor(dictionary=True)
         try:
-            date_column = _quote_identifier(_get_address_date_column(cursor))
+            if settings.courier_address_date_column:
+                date_expression = f"a.{_quote_identifier(_get_address_date_column(cursor))}"
+                from_expression = "address a"
+                visible_filter = ""
+            else:
+                # courier.address stores delivery points, while zakaz owns the order date.
+                # This counts address rows but groups them by the linked order date.
+                date_expression = "z.date_beg"
+                from_expression = "address a JOIN zakaz z ON z.code = a.zakaz"
+                visible_filter = "AND z.Visible = 'T'"
+
             cursor.execute(
                 f"""
                 SELECT COUNT(*) AS count
-                FROM address
-                WHERE {date_column} >= %s
-                  AND {date_column} < %s
+                FROM {from_expression}
+                WHERE {date_expression} >= %s
+                  AND {date_expression} < %s
+                  {visible_filter}
                 """,
                 (today_start, tomorrow_start),
             )
@@ -142,9 +153,10 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
             cursor.execute(
                 f"""
                 SELECT COUNT(*) AS count
-                FROM address
-                WHERE {date_column} >= %s
-                  AND {date_column} < %s
+                FROM {from_expression}
+                WHERE {date_expression} >= %s
+                  AND {date_expression} < %s
+                  {visible_filter}
                 """,
                 (month_start_at, tomorrow_start),
             )
@@ -152,12 +164,13 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
 
             cursor.execute(
                 f"""
-                SELECT DATE({date_column}) AS order_date, COUNT(*) AS count
-                FROM address
-                WHERE {date_column} >= %s
-                  AND {date_column} < %s
-                GROUP BY DATE({date_column})
-                ORDER BY DATE({date_column})
+                SELECT DATE({date_expression}) AS order_date, COUNT(*) AS count
+                FROM {from_expression}
+                WHERE {date_expression} >= %s
+                  AND {date_expression} < %s
+                  {visible_filter}
+                GROUP BY DATE({date_expression})
+                ORDER BY DATE({date_expression})
                 """,
                 (month_start_at, tomorrow_start),
             )
