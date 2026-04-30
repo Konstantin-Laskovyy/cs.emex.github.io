@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     ad_default_email_domain: str = "emex.kz"
     upload_dir: str = "uploads"
     public_upload_url: str = "/uploads"
+    courier_db_host: str = ""
+    courier_db_port: int = 3306
+    courier_db_user: str = ""
+    courier_db_password: str = ""
+    courier_db_name: str = "courier"
 
 
 settings = Settings()

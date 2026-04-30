@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { DepartmentPublic, OrgRootPublic, UserPublic } from "../api/types";
 import { flattenOrg, orgStructure, type OrgNode } from "../data/orgStructure";
 
@@ -85,6 +86,7 @@ function initials(user: UserPublic) {
 }
 
 export function OrgStructurePage() {
+  const { t } = useLanguage();
   const [selectedNode, setSelectedNode] = useState<OrgNode>(orgStructure);
   const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
   const [orgRoot, setOrgRoot] = useState<OrgRootPublic | null>(null);
@@ -170,11 +172,10 @@ export function OrgStructurePage() {
     <div className="orgPage">
       <section className="card orgIntro pageHero">
         <div className="cardInner">
-          <div className="newsBadge">Оргструктура</div>
-          <h1 style={{ margin: "10px 0 8px" }}>Организационная структура компании</h1>
+          <div className="newsBadge">{t("org.badge")}</div>
+          <h1 style={{ margin: "10px 0 8px" }}>{t("org.title")}</h1>
           <p className="muted" style={{ margin: 0, maxWidth: 760 }}>
-            Дерево показывает подчиненность подразделений. Выберите отдел слева, чтобы увидеть
-            руководителя, должности из оргструктуры и сотрудников, которые уже заведены в системе.
+            {t("org.subtitle")}
           </p>
         </div>
       </section>
@@ -182,7 +183,7 @@ export function OrgStructurePage() {
       <div className="orgLayout">
         <section className="card orgTreeCard">
           <div className="cardInner">
-            <div className="sectionTitle">Дерево компании</div>
+            <div className="sectionTitle">{t("org.tree")}</div>
             <div className="orgTree">
               <OrgTreeNode node={managedOrgStructure} selectedId={selectedNode.id} onSelect={setSelectedNode} />
             </div>
@@ -191,7 +192,7 @@ export function OrgStructurePage() {
 
         <aside className="card orgDetailsCard">
           <div className="cardInner">
-            <div className="sectionTitle">Карточка подразделения</div>
+            <div className="sectionTitle">{t("org.card")}</div>
             <h2 style={{ margin: "4px 0 6px" }}>{selectedNode.title}</h2>
 
             <div className="orgMetaGrid">
@@ -208,7 +209,7 @@ export function OrgStructurePage() {
             </div>
 
             <div className="orgPanelSection">
-              <h3>Должности из оргструктуры</h3>
+              <h3>{t("org.positions")}</h3>
               {selectedNode.positions?.length ? (
                 <div className="orgPositionList">
                   {selectedNode.positions.map((position) => (
@@ -221,7 +222,7 @@ export function OrgStructurePage() {
             </div>
 
             <div className="orgPanelSection">
-              <h3>Сотрудники отдела</h3>
+              <h3>{t("org.employees")}</h3>
               {!selectedNode.departmentName && (
                 <p className="muted">Это сводный блок. Выберите конкретный отдел ниже по дереву.</p>
               )}
@@ -255,7 +256,7 @@ export function OrgStructurePage() {
             </div>
 
             <div className="orgPanelSection">
-              <h3>Быстрый переход</h3>
+              <h3>{t("org.quick")}</h3>
               <div className="orgQuickList">
                 {allNodes
                   .filter((node) => node.id !== selectedNode.id)

@@ -114,3 +114,16 @@ export type NotificationPublic = {
   is_read: boolean;
   created_at: string;
 };
+
+export type DailyOrderCount = {
+  date: string;
+  count: number;
+};
+
+export type OrdersSummary = {
+  today: string;
+  month_start: string;
+  today_count: number;
+  month_count: number;
+  daily: DailyOrderCount[];
+};

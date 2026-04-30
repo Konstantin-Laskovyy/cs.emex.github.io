@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { to: "/users", labelKey: "nav.users", icon: "С" },
   { to: "/departments", labelKey: "nav.departments", icon: "О" },
   { to: "/org", labelKey: "nav.org", icon: "◇" },
+  { to: "/analytics", labelKey: "nav.analytics", icon: "A", adminOnly: true },
   { to: "/admin", labelKey: "nav.admin", icon: "А", adminOnly: true },
 ];
 
@@ -66,6 +67,17 @@ function NavIcon({ labelKey }: { labelKey: string }) {
         <rect x="4.5" y="21" width="7" height="6.5" rx="1.4" className="sidebarIconFill" />
         <rect x="12.5" y="21" width="7" height="6.5" rx="1.4" className="sidebarIconFill" />
         <rect x="20.5" y="21" width="7" height="6.5" rx="1.4" className="sidebarIconFill" />
+      </svg>
+    );
+  }
+
+  if (labelKey === "nav.analytics") {
+    return (
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M6 25.5h20" className="sidebarIconStroke" />
+        <rect x="8" y="16" width="4.5" height="8" rx="1.2" className="sidebarIconFill sidebarIconSecondary" />
+        <rect x="14" y="10" width="4.5" height="14" rx="1.2" className="sidebarIconFill" />
+        <rect x="20" y="6.5" width="4.5" height="17.5" rx="1.2" className="sidebarIconFill sidebarIconSecondary" />
       </svg>
     );
   }

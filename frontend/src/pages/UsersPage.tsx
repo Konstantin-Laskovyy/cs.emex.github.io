@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { DepartmentPublic, UserCreate, UserPublic } from "../api/types";
 
 type CreateFormState = {
@@ -42,6 +43,7 @@ type OutletContext = {
 
 export function UsersPage() {
   const { me } = useOutletContext<OutletContext>();
+  const { t } = useLanguage();
   const [params, setParams] = useSearchParams();
   const query = params.get("query") ?? "";
   const departmentId = params.get("department_id") ?? "";
@@ -82,9 +84,9 @@ export function UsersPage() {
       .catch((e) => {
         if (cancelled) return;
         if (e instanceof ApiError && e.status === 401) {
-          setLoadError("Нужно войти, чтобы видеть базу сотрудников.");
+          setLoadError(t("users.loginRequired"));
         } else {
-          setLoadError(e?.message || "Ошибка загрузки.");
+          setLoadError(e?.message || t("departments.loadError"));
         }
       })
       .finally(() => {
@@ -95,7 +97,7 @@ export function UsersPage() {
     return () => {
       cancelled = true;
     };
-  }, [departmentId, queryTrimmed]);
+  }, [departmentId, queryTrimmed, t]);
 
   async function handleCreateEmployee(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -128,7 +130,7 @@ export function UsersPage() {
         )
       );
       setForm(emptyCreateForm);
-      setSaveMessage("Новый сотрудник добавлен в базу.");
+      setSaveMessage(t("users.addSubmit"));
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Не удалось создать сотрудника.");
     } finally {
@@ -141,16 +143,16 @@ export function UsersPage() {
       <div className="cardInner">
         <div className="row" style={{ alignItems: "baseline", flexWrap: "wrap" }}>
           <div>
-            <h1 style={{ margin: 0 }}>Сотрудники</h1>
+            <h1 style={{ margin: 0 }}>{t("users.title")}</h1>
             <div className="muted" style={{ marginTop: 6 }}>
-              База сотрудников с отделами, должностями, руководителями и фотографиями.
+              {t("users.subtitle")}
             </div>
           </div>
           <div className="spacer" />
           <div className="row" style={{ flexWrap: "wrap", justifyContent: "flex-end" }}>
             <input
               className="input"
-              placeholder="Поиск по имени, email или должности"
+              placeholder={t("users.search")}
               value={query}
               onChange={(e) => {
                 const value = e.target.value;
@@ -177,7 +179,7 @@ export function UsersPage() {
               }}
               style={{ width: 220 }}
             >
-              <option value="">Все отделы</option>
+              <option value="">{t("users.allDepartments")}</option>
               {departments.map((department) => (
                 <option key={department.id} value={department.id}>
                   {department.name}
@@ -190,37 +192,37 @@ export function UsersPage() {
         {canCreateEmployees && (
         <section className="card" style={{ marginTop: 16, boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
           <div className="cardInner">
-            <h2 style={{ margin: 0, fontSize: 20 }}>Добавить сотрудника</h2>
+            <h2 style={{ margin: 0, fontSize: 20 }}>{t("users.addTitle")}</h2>
             <div className="muted" style={{ marginTop: 6 }}>
-              Новый сотрудник сразу получит карточку, должность, отдел и руководителя. Фото можно указать ссылкой.
+              {t("users.addSubtitle")}
             </div>
 
             <form onSubmit={handleCreateEmployee} style={{ marginTop: 16, display: "grid", gap: 14 }}>
               <div className="formGrid">
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Имя</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.firstName")}</div>
                   <input className="input" value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фамилия</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.lastName")}</div>
                   <input className="input" value={form.last_name} onChange={(e) => setForm({ ...form, last_name: e.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Электронная почта</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.email")}</div>
                   <input className="input" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Временный пароль</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.tempPassword")}</div>
                   <input className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Должность</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.position")}</div>
                   <input className="input" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Отдел</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.department")}</div>
                   <select className="input" value={form.department_id} onChange={(e) => setForm({ ...form, department_id: e.target.value })}>
-                    <option value="">Не выбран</option>
+                    <option value="">{t("form.notSelected")}</option>
                     {departments.map((department) => (
                       <option key={department.id} value={department.id}>
                         {department.name}
@@ -229,9 +231,9 @@ export function UsersPage() {
                   </select>
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Руководитель</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.manager")}</div>
                   <select className="input" value={form.manager_id} onChange={(e) => setForm({ ...form, manager_id: e.target.value })}>
-                    <option value="">Не назначен</option>
+                    <option value="">{t("form.notAssigned")}</option>
                     {users.map((employee) => (
                       <option key={employee.id} value={employee.id}>
                         {employee.first_name} {employee.last_name}
@@ -244,17 +246,17 @@ export function UsersPage() {
                   <input className="input" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="https://..." />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Локация</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.location")}</div>
                   <input className="input" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Телефон</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.phone")}</div>
                   <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </label>
               </div>
 
               <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Описание</div>
+                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.description")}</div>
                 <textarea className="input" rows={4} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
               </label>
 
@@ -263,7 +265,7 @@ export function UsersPage() {
 
               <div className="row">
                 <button className="btn btnPrimary" type="submit" disabled={saving}>
-                  {saving ? "Добавляем..." : "Добавить сотрудника"}
+                  {saving ? t("users.adding") : t("users.addSubmit")}
                 </button>
               </div>
             </form>
@@ -285,14 +287,14 @@ export function UsersPage() {
                 <div>{loadError}</div>
                 <div style={{ marginTop: 10 }}>
                   <Link className="btn" to="/login" state={{ from: "/users" }}>
-                    Перейти к входу
+                    {t("common.signIn")}
                   </Link>
                 </div>
               </div>
             </div>
           )}
 
-          {loading && <div className="muted">Загрузка...</div>}
+          {loading && <div className="muted">{t("common.loading")}</div>}
 
           {!loading &&
             !loadError &&
@@ -321,22 +323,22 @@ export function UsersPage() {
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 700 }}>{fullName}</div>
                         <div className="muted" style={{ fontSize: 14, marginTop: 4 }}>
-                          {user.title ?? "Должность не указана"}
+                          {user.title ?? t("users.noPosition")}
                         </div>
                         <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
-                          {user.department?.name ?? "Без отдела"} · {user.email}
+                          {user.department?.name ?? t("users.noDepartment")} · {user.email}
                         </div>
                         <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-                          Руководитель:{" "}
+                          {t("users.manager")}{" "}
                           {user.manager
                             ? `${user.manager.first_name} ${user.manager.last_name}`
-                            : "не назначен"}
+                            : t("form.notAssigned")}
                         </div>
                       </div>
 
                       <div className="spacer" />
                       <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-                        Открыть →
+                        {t("users.open")}
                       </div>
                     </div>
                   </div>
@@ -346,7 +348,7 @@ export function UsersPage() {
 
           {!loading && !loadError && users.length === 0 && (
             <div className="muted" style={{ padding: 8 }}>
-              Ничего не найдено.
+              {t("users.notFound")}
             </div>
           )}
         </div>

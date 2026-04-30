@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { DepartmentPayload, DepartmentPublic, NewsPublic, OrgRootPayload, OrgRootPublic, UserPublic } from "../api/types";
 
 type ShellContext = {
@@ -15,6 +16,7 @@ const emptyDepartment: DepartmentPayload = {
 
 export function AdminPage() {
   const { me } = useOutletContext<ShellContext>();
+  const { t } = useLanguage();
   const [users, setUsers] = useState<UserPublic[]>([]);
   const [news, setNews] = useState<NewsPublic[]>([]);
   const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
@@ -199,9 +201,9 @@ export function AdminPage() {
     return (
       <section className="card pageHero">
         <div className="cardInner">
-          <h1 style={{ margin: 0 }}>Недостаточно прав</h1>
+          <h1 style={{ margin: 0 }}>{t("admin.noAccess")}</h1>
           <div className="muted" style={{ marginTop: 8 }}>
-            Этот раздел доступен только администраторам.
+            {t("admin.noAccessText")}
           </div>
         </div>
       </section>
@@ -212,11 +214,11 @@ export function AdminPage() {
     <div style={{ display: "grid", gap: 16 }}>
       <section className="card pageHero">
         <div className="cardInner">
-          <h1 style={{ margin: 0 }}>Администрирование</h1>
+          <h1 style={{ margin: 0 }}>{t("admin.title")}</h1>
           <div className="muted" style={{ marginTop: 8 }}>
-            Управление ролями, доступом, отделами, оргструктурой и публикациями компании.
+            {t("admin.subtitle")}
           </div>
-          {loading && <div className="muted" style={{ marginTop: 14 }}>Загрузка...</div>}
+          {loading && <div className="muted" style={{ marginTop: 14 }}>{t("common.loading")}</div>}
           {message && <div style={{ marginTop: 14, color: "#0b5cad" }}>{message}</div>}
           {error && <div style={{ marginTop: 14, color: "#b42318" }}>{error}</div>}
         </div>

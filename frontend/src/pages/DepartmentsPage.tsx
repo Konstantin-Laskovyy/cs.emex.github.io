@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { DepartmentPublic } from "../api/types";
 
 export function DepartmentsPage() {
+  const { t } = useLanguage();
   const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,9 +23,9 @@ export function DepartmentsPage() {
       .catch((fetchError) => {
         if (cancelled) return;
         if (fetchError instanceof ApiError && fetchError.status === 401) {
-          setError("Нужно войти, чтобы видеть отделы.");
+          setError(t("departments.loginRequired"));
         } else {
-          setError(fetchError?.message || "Ошибка загрузки.");
+          setError(fetchError?.message || t("departments.loadError"));
         }
       })
       .finally(() => {
@@ -34,14 +36,14 @@ export function DepartmentsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [t]);
 
   return (
     <section className="card pageHero">
       <div className="cardInner">
-        <h1 style={{ margin: "0 0 6px" }}>Отделы</h1>
+        <h1 style={{ margin: "0 0 6px" }}>{t("departments.title")}</h1>
         <div className="muted" style={{ marginBottom: 14 }}>
-          При выборе отдела откроется список всех сотрудников этого отдела.
+          {t("departments.subtitle")}
         </div>
 
         <div style={{ display: "grid", gap: 10 }}>
@@ -58,14 +60,14 @@ export function DepartmentsPage() {
                 <div>{error}</div>
                 <div style={{ marginTop: 10 }}>
                   <Link className="btn" to="/login" state={{ from: "/departments" }}>
-                    Перейти к входу
+                    {t("common.signIn")}
                   </Link>
                 </div>
               </div>
             </div>
           )}
 
-          {loading && <div className="muted">Загрузка...</div>}
+          {loading && <div className="muted">{t("common.loading")}</div>}
 
           {!loading &&
             !error &&
@@ -84,17 +86,12 @@ export function DepartmentsPage() {
                     <div>
                       <div style={{ fontWeight: 650 }}>{department.name}</div>
                       <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
-                        {department.employee_count} сотрудник
-                        {department.employee_count === 1
-                          ? ""
-                          : department.employee_count >= 2 && department.employee_count <= 4
-                            ? "а"
-                            : "ов"}
+                        {department.employee_count} {t("departments.employee")}
                       </div>
                     </div>
                     <div className="spacer" />
                     <div className="muted" style={{ fontSize: 13 }}>
-                      {department.parent_id ? "подотдел" : "отдел"} →
+                      {department.parent_id ? t("departments.subdepartment") : t("departments.department")} →
                     </div>
                   </div>
                 </div>
@@ -103,7 +100,7 @@ export function DepartmentsPage() {
 
           {!loading && !error && departments.length === 0 && (
             <div className="muted" style={{ padding: 8 }}>
-              Нет данных.
+              {t("common.noData")}
             </div>
           )}
         </div>

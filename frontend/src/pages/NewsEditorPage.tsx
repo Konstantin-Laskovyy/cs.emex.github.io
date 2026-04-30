@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { NewsPublic, UserPublic } from "../api/types";
 
 type ShellContext = {
@@ -22,6 +23,7 @@ const emptyForm: NewsFormState = {
 export function NewsEditorPage() {
   const navigate = useNavigate();
   const { me } = useOutletContext<ShellContext>();
+  const { t } = useLanguage();
   const [form, setForm] = useState<NewsFormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export function NewsEditorPage() {
       });
       navigate(`/news/${item.id}`);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Не удалось опубликовать новость.");
+      setError(saveError instanceof Error ? saveError.message : t("home.loadError"));
     } finally {
       setSaving(false);
     }
@@ -53,47 +55,47 @@ export function NewsEditorPage() {
       <div className="cardInner">
         <div className="row" style={{ alignItems: "baseline", flexWrap: "wrap" }}>
           <div>
-            <h1 style={{ margin: 0 }}>Новая новость</h1>
+            <h1 style={{ margin: 0 }}>{t("newsEditor.title")}</h1>
             <div className="muted" style={{ marginTop: 6 }}>
-              Публикация будет создана от имени {me ? `${me.first_name} ${me.last_name}` : "сотрудника"}.
+              {t("newsEditor.subtitlePrefix")} {me ? `${me.first_name} ${me.last_name}` : t("newsEditor.employee")}.
             </div>
           </div>
           <div className="spacer" />
           <Link className="btn" to="/">
-            ← На главную
+            ← {t("common.backHome")}
           </Link>
         </div>
 
         <form onSubmit={handleSubmit} style={{ marginTop: 18, display: "grid", gap: 14 }}>
           <label>
-            <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Заголовок</div>
+            <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.title")}</div>
             <input
               className="input"
               value={form.title}
               onChange={(event) => setForm({ ...form, title: event.target.value })}
-              placeholder="Короткий заголовок новости"
+              placeholder={t("newsEditor.titlePlaceholder")}
             />
           </label>
 
           <label>
-            <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Краткое описание</div>
+            <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.summary")}</div>
             <textarea
               className="input"
               rows={3}
               value={form.summary}
               onChange={(event) => setForm({ ...form, summary: event.target.value })}
-              placeholder="Коротко опишите, о чем эта публикация"
+              placeholder={t("newsEditor.summaryPlaceholder")}
             />
           </label>
 
           <label>
-            <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Полный текст новости</div>
+            <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.content")}</div>
             <textarea
               className="input"
               rows={10}
               value={form.content}
               onChange={(event) => setForm({ ...form, content: event.target.value })}
-              placeholder="Полный текст публикации"
+              placeholder={t("newsEditor.contentPlaceholder")}
             />
           </label>
 
@@ -101,7 +103,7 @@ export function NewsEditorPage() {
 
           <div className="row">
             <button className="btn btnPrimary" type="submit" disabled={saving}>
-              {saving ? "Публикуем..." : "Опубликовать новость"}
+              {saving ? t("newsEditor.publishing") : t("newsEditor.publish")}
             </button>
           </div>
         </form>

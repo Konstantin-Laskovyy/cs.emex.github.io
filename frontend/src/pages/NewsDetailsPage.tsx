@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { NewsComment, NewsPublic, NewsReactionSummary, UserPublic } from "../api/types";
 
 type ShellContext = {
@@ -45,6 +46,7 @@ export function NewsDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { me } = useOutletContext<ShellContext>();
+  const { t } = useLanguage();
   const newsId = useMemo(() => (id ? Number(id) : NaN), [id]);
 
   const [news, setNews] = useState<NewsPublic | null>(null);
@@ -167,7 +169,7 @@ export function NewsDetailsPage() {
   if (loading) {
     return (
       <section className="card">
-        <div className="cardInner muted">Загрузка новости...</div>
+        <div className="cardInner muted">{t("newsDetails.loading")}</div>
       </section>
     );
   }
@@ -176,10 +178,10 @@ export function NewsDetailsPage() {
     return (
       <section className="card pageHero">
         <div className="cardInner">
-          <h1 style={{ margin: 0 }}>{loadError ?? "Новость не найдена"}</h1>
+          <h1 style={{ margin: 0 }}>{loadError ?? t("newsDetails.notFound")}</h1>
           <div style={{ marginTop: 14 }}>
             <Link className="btn" to="/">
-              На главную
+              {t("common.backHome")}
             </Link>
           </div>
         </div>
@@ -199,21 +201,21 @@ export function NewsDetailsPage() {
             <div>
               <h1 style={{ margin: 0 }}>{news.title}</h1>
               <div className="muted" style={{ marginTop: 8 }}>
-                Опубликовано {formatNewsDate(news.created_at)}
+                {t("newsDetails.published")} {formatNewsDate(news.created_at)}
               </div>
             </div>
             <div className="spacer" />
             <Link className="btn" to="/">
-              На главную
+              {t("common.backHome")}
             </Link>
             {canEdit && !editing && (
               <button className="btn btnPrimary" type="button" onClick={() => setEditing(true)}>
-                Редактировать
+                {t("common.edit")}
               </button>
             )}
             {canDelete && (
               <button className="btn btnDanger" type="button" onClick={handleDelete} disabled={deleting}>
-                {deleting ? "Удаляем..." : "Удалить"}
+                {deleting ? `${t("common.delete")}...` : t("common.delete")}
               </button>
             )}
           </div>
@@ -229,7 +231,7 @@ export function NewsDetailsPage() {
             <div>
               <div style={{ fontWeight: 600 }}>{fullName}</div>
               <div className="muted" style={{ fontSize: 13 }}>
-                {news.author.title || "Сотрудник компании"}
+                {news.author.title || t("home.employee")}
               </div>
             </div>
           </div>
@@ -245,7 +247,7 @@ export function NewsDetailsPage() {
                 type="button"
                 onClick={() => toggleReaction(item.reaction)}
               >
-                {reactionLabels[item.reaction]} <strong>{item.count}</strong>
+                {t(`reactions.${item.reaction}`)} <strong>{item.count}</strong>
               </button>
             ))}
           </div>
@@ -255,19 +257,19 @@ export function NewsDetailsPage() {
       {canEdit && editing && (
         <section className="card">
           <div className="cardInner">
-            <h2 style={{ margin: 0, fontSize: 22 }}>Редактирование новости</h2>
+            <h2 style={{ margin: 0, fontSize: 22 }}>{t("newsDetails.editTitle")}</h2>
 
             <form onSubmit={handleSave} style={{ marginTop: 16, display: "grid", gap: 14 }}>
               <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Заголовок</div>
+                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.title")}</div>
                 <input className="input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
               </label>
               <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Краткое описание</div>
+                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.summary")}</div>
                 <textarea className="input" rows={3} value={form.summary} onChange={(event) => setForm({ ...form, summary: event.target.value })} />
               </label>
               <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Полный текст новости</div>
+                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.content")}</div>
                 <textarea className="input" rows={10} value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} />
               </label>
 
@@ -276,10 +278,10 @@ export function NewsDetailsPage() {
 
               <div className="row">
                 <button className="btn" type="button" onClick={() => setEditing(false)}>
-                  Отменить
+                  {t("common.cancel")}
                 </button>
                 <button className="btn btnPrimary" type="submit" disabled={saving}>
-                  {saving ? "Сохраняем..." : "Сохранить изменения"}
+                  {saving ? `${t("common.saveChanges")}...` : t("common.saveChanges")}
                 </button>
               </div>
             </form>
@@ -289,17 +291,17 @@ export function NewsDetailsPage() {
 
       <section className="card">
         <div className="cardInner">
-          <h2 style={{ margin: 0, fontSize: 22 }}>Комментарии</h2>
+          <h2 style={{ margin: 0, fontSize: 22 }}>{t("newsDetails.comments")}</h2>
           <form className="commentForm" onSubmit={submitComment}>
             <textarea
               className="input"
               rows={3}
-              placeholder="Напишите комментарий..."
+              placeholder={t("newsDetails.commentPlaceholder")}
               value={commentText}
               onChange={(event) => setCommentText(event.target.value)}
             />
             <button className="btn btnPrimary" type="submit">
-              Отправить
+              {t("newsDetails.send")}
             </button>
           </form>
           <div className="commentList">
@@ -321,7 +323,7 @@ export function NewsDetailsPage() {
                 </div>
               </div>
             ))}
-            {comments.length === 0 && <div className="muted">Комментариев пока нет.</div>}
+            {comments.length === 0 && <div className="muted">{t("newsDetails.noComments")}</div>}
           </div>
         </div>
       </section>

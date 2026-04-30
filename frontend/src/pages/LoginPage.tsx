@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { apiFetch, getApiBaseUrl, setToken } from "../api/client";
+import { useLanguage } from "../i18n";
 
 type LocationState = { from?: string };
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const state = (location.state ?? {}) as LocationState;
   const from = useMemo(() => state.from ?? "/", [state.from]);
   const apiBaseUrl = useMemo(() => getApiBaseUrl(), []);
@@ -19,11 +21,11 @@ export function LoginPage() {
   return (
     <section className="card" style={{ maxWidth: 520, margin: "0 auto" }}>
       <div className="cardInner">
-        <h1 style={{ margin: "0 0 6px" }}>Вход</h1>
+        <h1 style={{ margin: "0 0 6px" }}>{t("login.title")}</h1>
         <div className="muted" style={{ marginBottom: 14, lineHeight: 1.5 }}>
-          Для входа используйте корпоративную учетную запись.
+          {t("login.subtitle")}
           <br />
-          Подключение выполняется через: <code>{apiBaseUrl}</code>
+          {t("login.api")} <code>{apiBaseUrl}</code>
         </div>
 
         <form
@@ -32,7 +34,7 @@ export function LoginPage() {
             setError(null);
 
             if (!email || !password) {
-              setError("Введите логин и пароль.");
+              setError(t("login.empty"));
               return;
             }
 
@@ -48,7 +50,7 @@ export function LoginPage() {
               })
               .catch((fetchError) => {
                 setToken(null);
-                setError(fetchError?.message || "Ошибка входа.");
+                setError(fetchError?.message || t("login.error"));
               })
               .finally(() => setLoading(false));
           }}
@@ -56,7 +58,7 @@ export function LoginPage() {
         >
           <label style={{ display: "grid", gap: 6 }}>
             <span className="muted" style={{ fontSize: 13 }}>
-              Логин
+              {t("login.username")}
             </span>
             <input
               className="input"
@@ -69,7 +71,7 @@ export function LoginPage() {
 
           <label style={{ display: "grid", gap: 6 }}>
             <span className="muted" style={{ fontSize: 13 }}>
-              Пароль
+              {t("form.password")}
             </span>
             <input
               className="input"
@@ -77,7 +79,7 @@ export function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
-              placeholder="Введите пароль"
+              placeholder={t("login.passwordPlaceholder")}
             />
           </label>
 
@@ -95,7 +97,7 @@ export function LoginPage() {
           )}
 
           <button className="btn btnPrimary" type="submit" disabled={loading}>
-            {loading ? "Входим..." : "Войти"}
+            {loading ? t("login.loading") : t("login.submit")}
           </button>
         </form>
       </div>

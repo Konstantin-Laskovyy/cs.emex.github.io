@@ -9,6 +9,7 @@ import { NewsEditorPage } from "./pages/NewsEditorPage";
 import { NewsDetailsPage } from "./pages/NewsDetailsPage";
 import { AdminPage } from "./pages/AdminPage";
 import { OrgStructurePage } from "./pages/OrgStructurePage";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { getToken } from "./api/client";
 
 function ProtectedLayout() {
@@ -32,6 +33,7 @@ export const router = createBrowserRouter([
       { path: "users/:id", element: <UserProfilePage /> },
       { path: "departments", element: <DepartmentsPage /> },
       { path: "org", element: <OrgStructurePage /> },
+      { path: "analytics", element: <AnalyticsPage /> },
       { path: "news/new", element: <NewsEditorPage /> },
       { path: "news/:id", element: <NewsDetailsPage /> },
       { path: "admin", element: <AdminPage /> },

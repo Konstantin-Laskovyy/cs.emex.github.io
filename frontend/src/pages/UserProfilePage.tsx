@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { DragEvent, FormEvent } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
+import { useLanguage } from "../i18n";
 import type { DepartmentPublic, UserPublic, UserUpdate } from "../api/types";
 
 type ProfileFormState = {
@@ -39,6 +40,7 @@ type OutletContext = {
 };
 
 export function UserProfilePage() {
+  const { t } = useLanguage();
   const { id } = useParams();
   const { me } = useOutletContext<OutletContext>();
   const userId = useMemo(() => (id ? Number(id) : NaN), [id]);
@@ -180,7 +182,7 @@ export function UserProfilePage() {
     return (
       <section className="card">
         <div className="cardInner" style={{ padding: 18 }}>
-          <div className="muted">Загрузка...</div>
+          <div className="muted">{t("common.loading")}</div>
         </div>
       </section>
     );
@@ -196,7 +198,7 @@ export function UserProfilePage() {
           </div>
           <div style={{ marginTop: 14 }} className="row">
             <Link className="btn" to="/users">
-              ← К списку
+              ← {t("common.backList")}
             </Link>
           </div>
         </div>
@@ -226,7 +228,7 @@ export function UserProfilePage() {
             <div style={{ minWidth: 0 }}>
               <h1 style={{ margin: 0 }}>{fullName}</h1>
               <div className="muted" style={{ marginTop: 6 }}>
-                {profile.title ?? "Должность не указана"}
+                {profile.title ?? t("users.noPosition")}
               </div>
               <div className="muted" style={{ fontSize: 14, marginTop: 8 }}>
                 Отдел: {profile.department?.name ?? "не назначен"}
@@ -251,11 +253,11 @@ export function UserProfilePage() {
                   setIsEditing(true);
                 }}
               >
-                Редактировать профиль
+                {t("common.edit")}
               </button>
             )}
             <Link className="btn" to="/users">
-              ← К списку
+              ← {t("common.backList")}
             </Link>
           </div>
 
@@ -268,13 +270,13 @@ export function UserProfilePage() {
             </div>
             <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
               <div className="cardInner">
-                <div className="muted" style={{ fontSize: 13 }}>Локация</div>
+                <div className="muted" style={{ fontSize: 13 }}>{t("form.location")}</div>
                 <div style={{ marginTop: 6 }}>{profile.location ?? "—"}</div>
               </div>
             </div>
             <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
               <div className="cardInner">
-                <div className="muted" style={{ fontSize: 13 }}>Телефон</div>
+                <div className="muted" style={{ fontSize: 13 }}>{t("form.phone")}</div>
                 {profile.phone ? (
                   <a style={{ marginTop: 6, display: "block" }} href={`tel:${profile.phone}`}>{profile.phone}</a>
                 ) : (
@@ -287,11 +289,11 @@ export function UserProfilePage() {
           <div className="profileWorkGrid">
             <div className="profileInfoCard">
               <div className="cardInner">
-                <h3 style={{ margin: 0, fontSize: 16 }}>Руководитель</h3>
+                <h3 style={{ margin: 0, fontSize: 16 }}>{t("form.manager")}</h3>
                 {profile.manager ? (
                   <Link className="profilePersonLink" to={`/users/${profile.manager.id}`}>
                     {profile.manager.first_name} {profile.manager.last_name}
-                    <span>{profile.manager.title || "Должность не указана"}</span>
+                    <span>{profile.manager.title || t("users.noPosition")}</span>
                   </Link>
                 ) : (
                   <div className="muted" style={{ marginTop: 10 }}>Не назначен</div>
@@ -328,7 +330,7 @@ export function UserProfilePage() {
           <div className="cardInner">
             <div className="row" style={{ alignItems: "baseline" }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 22 }}>Редактирование моего профиля</h2>
+                <h2 style={{ margin: 0, fontSize: 22 }}>{t("top.myProfile")}</h2>
                 <div className="muted" style={{ marginTop: 6 }}>
                   Только владелец профиля может менять свои данные.
                 </div>
@@ -375,25 +377,25 @@ export function UserProfilePage() {
                   }}
                 />
                 <label className="btn btnPrimary" htmlFor="avatar-upload">
-                  {avatarUploading ? "Загрузка..." : "Выбрать фото"}
+                  {avatarUploading ? t("common.loading") : "Выбрать фото"}
                 </label>
               </div>
 
               <div className="formGrid">
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Имя</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.firstName")}</div>
                   <input className="input" value={form.first_name} onChange={(event) => setForm({ ...form, first_name: event.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Фамилия</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.lastName")}</div>
                   <input className="input" value={form.last_name} onChange={(event) => setForm({ ...form, last_name: event.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Должность</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.position")}</div>
                   <input className="input" value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Отдел</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.department")}</div>
                   <select className="input" value={form.department_id} onChange={(event) => setForm({ ...form, department_id: event.target.value })}>
                     <option value="">Не выбран</option>
                     {departments.map((department) => (
@@ -404,7 +406,7 @@ export function UserProfilePage() {
                   </select>
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Руководитель</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.manager")}</div>
                   <select className="input" value={form.manager_id} onChange={(event) => setForm({ ...form, manager_id: event.target.value })}>
                     <option value="">Не назначен</option>
                     {managerOptions.map((employee) => (
@@ -415,17 +417,17 @@ export function UserProfilePage() {
                   </select>
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Локация</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.location")}</div>
                   <input className="input" value={form.location} onChange={(event) => setForm({ ...form, location: event.target.value })} />
                 </label>
                 <label>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Телефон</div>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.phone")}</div>
                   <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
                 </label>
               </div>
 
               <label>
-                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Описание</div>
+                <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.description")}</div>
                 <textarea className="input" value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} rows={5} />
               </label>
 
@@ -443,10 +445,10 @@ export function UserProfilePage() {
                     setIsEditing(false);
                   }}
                 >
-                  Отмена
+                  {t("common.cancel")}
                 </button>
                 <button className="btn btnPrimary" type="submit" disabled={saving}>
-                  {saving ? "Сохраняем..." : "Сохранить изменения"}
+                  {saving ? `${t("common.saveChanges")}...` : t("common.saveChanges")}
                 </button>
               </div>
             </form>
