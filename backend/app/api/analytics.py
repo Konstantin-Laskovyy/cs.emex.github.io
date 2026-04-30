@@ -21,6 +21,12 @@ except ImportError:  # pragma: no cover - depends on production installation
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
+ADDRESS_KIND_SELECT = """
+COUNT(*) AS count,
+SUM(CASE WHEN COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0') = '0' THEN 1 ELSE 0 END) AS pickup_count,
+SUM(CASE WHEN COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0') <> '0' THEN 1 ELSE 0 END) AS waybill_count
+"""
+
 ADDRESS_DATE_COLUMN_CANDIDATES = (
     "date_beg",
     "DateBeg",
@@ -116,6 +122,10 @@ def _get_address_date_column(cursor: object) -> str:
     )
 
 
+def _count_row(row: dict | None, key: str) -> int:
+    return int((row or {}).get(key) or 0)
+
+
 @router.get("/orders/summary", response_model=OrdersSummary)
 def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
     today = date.today()
@@ -140,7 +150,7 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
 
             cursor.execute(
                 f"""
-                SELECT COUNT(*) AS count
+                SELECT {ADDRESS_KIND_SELECT}
                 FROM {from_expression}
                 WHERE {date_expression} >= %s
                   AND {date_expression} < %s
@@ -148,11 +158,14 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
                 """,
                 (today_start, tomorrow_start),
             )
-            today_count = int((cursor.fetchone() or {}).get("count") or 0)
+            today_row = cursor.fetchone()
+            today_count = _count_row(today_row, "count")
+            today_pickup_count = _count_row(today_row, "pickup_count")
+            today_waybill_count = _count_row(today_row, "waybill_count")
 
             cursor.execute(
                 f"""
-                SELECT COUNT(*) AS count
+                SELECT {ADDRESS_KIND_SELECT}
                 FROM {from_expression}
                 WHERE {date_expression} >= %s
                   AND {date_expression} < %s
@@ -160,11 +173,14 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
                 """,
                 (month_start_at, tomorrow_start),
             )
-            month_count = int((cursor.fetchone() or {}).get("count") or 0)
+            month_row = cursor.fetchone()
+            month_count = _count_row(month_row, "count")
+            month_pickup_count = _count_row(month_row, "pickup_count")
+            month_waybill_count = _count_row(month_row, "waybill_count")
 
             cursor.execute(
                 f"""
-                SELECT DATE({date_expression}) AS order_date, COUNT(*) AS count
+                SELECT DATE({date_expression}) AS order_date, {ADDRESS_KIND_SELECT}
                 FROM {from_expression}
                 WHERE {date_expression} >= %s
                   AND {date_expression} < %s
@@ -188,8 +204,17 @@ def get_orders_summary(_: User = Depends(require_admin)) -> OrdersSummary:
         month_start=month_start,
         today_count=today_count,
         month_count=month_count,
+        today_pickup_count=today_pickup_count,
+        today_waybill_count=today_waybill_count,
+        month_pickup_count=month_pickup_count,
+        month_waybill_count=month_waybill_count,
         daily=[
-            DailyOrderCount(date=row["order_date"], count=int(row["count"] or 0))
+            DailyOrderCount(
+                date=row["order_date"],
+                count=_count_row(row, "count"),
+                pickup_count=_count_row(row, "pickup_count"),
+                waybill_count=_count_row(row, "waybill_count"),
+            )
             for row in rows
             if row.get("order_date")
         ],

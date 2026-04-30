@@ -139,6 +139,8 @@ const dictionaries: Record<Language, Dictionary> = {
     "analytics.daily": "Динамика по дням",
     "analytics.empty": "За выбранный период заказов нет.",
     "analytics.orders": "записей",
+    "analytics.pickups": "Заборы",
+    "analytics.waybills": "Накладные",
     "footer.text": "Внутренняя социальная сеть компании Emex.",
   },
   kk: {
@@ -268,6 +270,8 @@ const dictionaries: Record<Language, Dictionary> = {
     "analytics.daily": "Күндер бойынша динамика",
     "analytics.empty": "Таңдалған кезеңде тапсырыстар жоқ.",
     "analytics.orders": "жазба",
+    "analytics.pickups": "Алу",
+    "analytics.waybills": "Жүкқұжаттар",
     "footer.text": "Emex компаниясының ішкі әлеуметтік желісі.",
   },
   en: {
@@ -397,6 +401,8 @@ const dictionaries: Record<Language, Dictionary> = {
     "analytics.daily": "Daily trend",
     "analytics.empty": "No orders for the selected period.",
     "analytics.orders": "records",
+    "analytics.pickups": "Pickups",
+    "analytics.waybills": "Waybills",
     "footer.text": "Emex internal social network.",
   },
 };

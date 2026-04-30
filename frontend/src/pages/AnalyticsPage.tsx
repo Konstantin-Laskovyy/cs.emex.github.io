@@ -80,6 +80,14 @@ export function AnalyticsPage() {
               <small>
                 {formatDate(summary.today, locale)} · {t("analytics.orders")}
               </small>
+              <div className="analyticsSplit">
+                <span>
+                  {t("analytics.pickups")}: <b>{summary.today_pickup_count.toLocaleString(locale)}</b>
+                </span>
+                <span>
+                  {t("analytics.waybills")}: <b>{summary.today_waybill_count.toLocaleString(locale)}</b>
+                </span>
+              </div>
             </div>
             <div className="analyticsMetric">
               <span>{t("analytics.month")}</span>
@@ -87,6 +95,14 @@ export function AnalyticsPage() {
               <small>
                 {t("analytics.since")} · {formatDate(summary.month_start, locale)}
               </small>
+              <div className="analyticsSplit">
+                <span>
+                  {t("analytics.pickups")}: <b>{summary.month_pickup_count.toLocaleString(locale)}</b>
+                </span>
+                <span>
+                  {t("analytics.waybills")}: <b>{summary.month_waybill_count.toLocaleString(locale)}</b>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -110,7 +126,12 @@ export function AnalyticsPage() {
                           style={{ width: `${Math.max(4, (item.count / maxDailyCount) * 100)}%` }}
                         />
                       </div>
-                      <strong>{item.count.toLocaleString(locale)}</strong>
+                      <strong>
+                        {item.count.toLocaleString(locale)}
+                        <small>
+                          {item.pickup_count.toLocaleString(locale)} / {item.waybill_count.toLocaleString(locale)}
+                        </small>
+                      </strong>
                     </div>
                   ))}
                 </div>

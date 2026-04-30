@@ -118,6 +118,8 @@ export type NotificationPublic = {
 export type DailyOrderCount = {
   date: string;
   count: number;
+  pickup_count: number;
+  waybill_count: number;
 };
 
 export type OrdersSummary = {
@@ -125,5 +127,9 @@ export type OrdersSummary = {
   month_start: string;
   today_count: number;
   month_count: number;
+  today_pickup_count: number;
+  today_waybill_count: number;
+  month_pickup_count: number;
+  month_waybill_count: number;
   daily: DailyOrderCount[];
 };
