@@ -127,6 +127,7 @@ export function AppShell() {
   const [notifications, setNotifications] = useState<NotificationPublic[]>([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userPanelOpen, setUserPanelOpen] = useState(false);
+  const [brokenAvatarUrl, setBrokenAvatarUrl] = useState<string | null>(null);
   const [isSidebarPinned, setIsSidebarPinned] = useState(() => localStorage.getItem("sidebar_pinned") === "true");
   const topActionsRef = useRef<HTMLDivElement | null>(null);
 
@@ -157,6 +158,7 @@ export function AppShell() {
       .then((data) => {
         if (cancelled) return;
         setMe(data);
+        setBrokenAvatarUrl(null);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -309,8 +311,12 @@ export function AppShell() {
                   <small>{me?.title || t("top.employee")}</small>
                 </span>
                 <span className="topUserAvatar">
-                  {me?.avatar_url ? (
-                    <img src={me.avatar_url} alt={`${me.first_name} ${me.last_name}`} />
+                  {me?.avatar_url && me.avatar_url !== brokenAvatarUrl ? (
+                    <img
+                      src={me.avatar_url}
+                      alt={`${me.first_name} ${me.last_name}`}
+                      onError={() => setBrokenAvatarUrl(me.avatar_url || null)}
+                    />
                   ) : (
                     getInitials(me)
                   )}
