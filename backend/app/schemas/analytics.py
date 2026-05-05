@@ -10,6 +10,13 @@ class DailyOrderCount(BaseModel):
     waybill_count: int
 
 
+class CityDailyCount(BaseModel):
+    date: date
+    city_code: str
+    city_name: str
+    count: int
+
+
 class OrdersSummary(BaseModel):
     today: date
     month_start: date
@@ -20,3 +27,5 @@ class OrdersSummary(BaseModel):
     month_pickup_count: int
     month_waybill_count: int
     daily: list[DailyOrderCount]
+    delivery_by_city: list[CityDailyCount]
+    accepted_by_city: list[CityDailyCount]

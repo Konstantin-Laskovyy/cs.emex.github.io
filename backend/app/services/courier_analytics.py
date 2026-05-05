@@ -7,7 +7,7 @@ from typing import Iterator
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.courier_analytics import CourierDailyAddressStat
+from app.models.courier_analytics import CourierCityDailyStat, CourierDailyAddressStat
 
 try:
     import mysql.connector
@@ -23,6 +23,9 @@ SUM(CASE WHEN COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0') = '0' 
 SUM(CASE WHEN COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0') <> '0' THEN 1 ELSE 0 END) AS waybill_count
 """
 
+METRIC_DELIVERY_WAYBILLS = "delivery_waybills"
+METRIC_ACCEPTED_PICKUPS = "accepted_pickups"
+
 ADDRESS_DATE_COLUMN_CANDIDATES = (
     "date_beg",
     "DateBeg",
@@ -35,6 +38,9 @@ ADDRESS_DATE_COLUMN_CANDIDATES = (
     "time",
     "Time",
 )
+
+TOWN_CODE_COLUMN_CANDIDATES = ("Code", "code", "ID", "id")
+TOWN_NAME_COLUMN_CANDIDATES = ("Name", "name", "TownName", "town", "City", "city", "Naim", "naim")
 
 
 def _require_courier_config() -> None:
@@ -103,6 +109,37 @@ def _get_address_source(cursor: object) -> tuple[str, str, str]:
     return "z.date_beg", "address a JOIN zakaz z ON z.code = a.zakaz", "AND z.Visible = 'T'"
 
 
+def _get_town_columns(cursor: object) -> tuple[str | None, str | None]:
+    try:
+        cursor.execute("SHOW COLUMNS FROM town")
+        rows = cursor.fetchall()
+    except MySQLError:
+        return None, None
+
+    columns = {row["Field"] for row in rows if row.get("Field")}
+    code_column = next((candidate for candidate in TOWN_CODE_COLUMN_CANDIDATES if candidate in columns), None)
+    name_column = next((candidate for candidate in TOWN_NAME_COLUMN_CANDIDATES if candidate in columns), None)
+    return code_column, name_column
+
+
+def _city_select(cursor: object, address_column: str, alias: str) -> tuple[str, str]:
+    code_column, name_column = _get_town_columns(cursor)
+    address_city_code = f"COALESCE(NULLIF(TRIM(CAST(a.{address_column} AS CHAR)), ''), 'unknown')"
+
+    if not code_column:
+        return (
+            f"{address_city_code} AS city_code, CONCAT('Город ', {address_city_code}) AS city_name",
+            "",
+        )
+
+    quoted_code = _quote_identifier(code_column)
+    quoted_name = _quote_identifier(name_column) if name_column else quoted_code
+    city_code = f"COALESCE(NULLIF(TRIM(CAST({alias}.{quoted_code} AS CHAR)), ''), {address_city_code})"
+    city_name = f"COALESCE(NULLIF(TRIM(CAST({alias}.{quoted_name} AS CHAR)), ''), CONCAT('Город ', {address_city_code}))"
+    join_clause = f"LEFT JOIN town {alias} ON {alias}.{quoted_code} = a.{address_column}"
+    return f"{city_code} AS city_code, {city_name} AS city_name", join_clause
+
+
 def fetch_current_month_address_stats(today: date | None = None) -> list[dict]:
     today = today or date.today()
     month_start = today.replace(day=1)
@@ -132,9 +169,65 @@ def fetch_current_month_address_stats(today: date | None = None) -> list[dict]:
             cursor.close()
 
 
+def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
+    today = today or date.today()
+    month_start = today.replace(day=1)
+    month_start_at = datetime.combine(month_start, time.min)
+    tomorrow_start = datetime.combine(today, time.min) + timedelta(days=1)
+
+    with _courier_connection() as connection:
+        cursor = connection.cursor(dictionary=True)
+        try:
+            date_expression, from_expression, visible_filter = _get_address_source(cursor)
+            delivery_city_select, delivery_town_join = _city_select(cursor, "TownTo", "tt")
+            accepted_city_select, accepted_town_join = _city_select(cursor, "TownFrom", "tf")
+            barcode_expression = "COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0')"
+            cursor.execute(
+                f"""
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_city_select}, COUNT(*) AS count
+                FROM {from_expression}
+                {delivery_town_join}
+                WHERE {date_expression} >= %s
+                  AND {date_expression} < %s
+                  {visible_filter}
+                  AND {barcode_expression} <> '0'
+                GROUP BY DATE({date_expression}), city_code, city_name
+
+                UNION ALL
+
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {accepted_city_select}, COUNT(*) AS count
+                FROM {from_expression}
+                {accepted_town_join}
+                WHERE {date_expression} >= %s
+                  AND {date_expression} < %s
+                  {visible_filter}
+                  AND {barcode_expression} = '0'
+                GROUP BY DATE({date_expression}), city_code, city_name
+
+                ORDER BY stat_date, metric_type, count DESC
+                """,
+                (
+                    METRIC_DELIVERY_WAYBILLS,
+                    month_start_at,
+                    tomorrow_start,
+                    METRIC_ACCEPTED_PICKUPS,
+                    month_start_at,
+                    tomorrow_start,
+                ),
+            )
+            return list(cursor.fetchall())
+        except MySQLError as exc:
+            raise RuntimeError("Courier city analytics query failed") from exc
+        finally:
+            cursor.close()
+
+
 def refresh_courier_daily_address_stats(db: Session, today: date | None = None) -> int:
     rows = fetch_current_month_address_stats(today=today)
+    city_rows = fetch_current_month_city_stats(today=today)
     refreshed = 0
+    today = today or date.today()
+    month_start = today.replace(day=1)
 
     for row in rows:
         stat_date = row.get("stat_date")
@@ -149,6 +242,29 @@ def refresh_courier_daily_address_stats(db: Session, today: date | None = None) 
         stat.pickup_count = int(row.get("pickup_count") or 0)
         stat.waybill_count = int(row.get("waybill_count") or 0)
         db.add(stat)
+        refreshed += 1
+
+    db.query(CourierCityDailyStat).filter(
+        CourierCityDailyStat.stat_date >= month_start,
+        CourierCityDailyStat.stat_date <= today,
+    ).delete(synchronize_session=False)
+
+    for row in city_rows:
+        stat_date = row.get("stat_date")
+        metric_type = row.get("metric_type")
+        city_code = row.get("city_code")
+        if not stat_date or not metric_type or not city_code:
+            continue
+
+        db.add(
+            CourierCityDailyStat(
+                metric_type=str(metric_type),
+                stat_date=stat_date,
+                city_code=str(city_code),
+                city_name=str(row.get("city_name") or city_code),
+                total_count=int(row.get("count") or 0),
+            )
+        )
         refreshed += 1
 
     db.commit()

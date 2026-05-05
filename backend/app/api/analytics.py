@@ -6,16 +6,28 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
 from app.db.session import get_db
-from app.models.courier_analytics import CourierDailyAddressStat
+from app.models.courier_analytics import CourierCityDailyStat, CourierDailyAddressStat
 from app.models.user import User
-from app.schemas.analytics import DailyOrderCount, OrdersSummary
+from app.schemas.analytics import CityDailyCount, DailyOrderCount, OrdersSummary
 
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
+METRIC_DELIVERY_WAYBILLS = "delivery_waybills"
+METRIC_ACCEPTED_PICKUPS = "accepted_pickups"
+
 
 def _empty_daily(stat_date: date) -> DailyOrderCount:
     return DailyOrderCount(date=stat_date, count=0, pickup_count=0, waybill_count=0)
+
+
+def _city_daily(item: CourierCityDailyStat) -> CityDailyCount:
+    return CityDailyCount(
+        date=item.stat_date,
+        city_code=item.city_code,
+        city_name=item.city_name,
+        count=item.total_count,
+    )
 
 
 @router.get("/orders/summary", response_model=OrdersSummary)
@@ -50,6 +62,19 @@ def get_orders_summary(
         )
         .one()
     )
+    city_stats = (
+        db.query(CourierCityDailyStat)
+        .filter(
+            CourierCityDailyStat.stat_date >= month_start,
+            CourierCityDailyStat.stat_date <= today,
+        )
+        .order_by(
+            CourierCityDailyStat.stat_date.desc(),
+            CourierCityDailyStat.total_count.desc(),
+            CourierCityDailyStat.city_name.asc(),
+        )
+        .all()
+    )
 
     return OrdersSummary(
         today=today,
@@ -70,4 +95,6 @@ def get_orders_summary(
             for item in stats
         ]
         or [_empty_daily(today)],
+        delivery_by_city=[_city_daily(item) for item in city_stats if item.metric_type == METRIC_DELIVERY_WAYBILLS],
+        accepted_by_city=[_city_daily(item) for item in city_stats if item.metric_type == METRIC_ACCEPTED_PICKUPS],
     )

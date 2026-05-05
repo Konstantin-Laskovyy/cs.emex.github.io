@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, apiFetch } from "../api/client";
-import type { OrdersSummary } from "../api/types";
+import type { CityDailyCount, OrdersSummary } from "../api/types";
 import { useLanguage } from "../i18n";
 
 function getLocale(language: string) {
@@ -14,6 +14,43 @@ function formatDate(value: string, locale: string) {
     day: "2-digit",
     month: "short",
   }).format(new Date(value));
+}
+
+function CityStatsTable({
+  countLabel,
+  dateLabel,
+  emptyText,
+  items,
+  locale,
+  cityLabel,
+}: {
+  countLabel: string;
+  dateLabel: string;
+  emptyText: string;
+  items: CityDailyCount[];
+  locale: string;
+  cityLabel: string;
+}) {
+  if (items.length === 0) {
+    return <p className="muted">{emptyText}</p>;
+  }
+
+  return (
+    <div className="analyticsCityTable">
+      <div className="analyticsCityHeader">
+        <span>{dateLabel}</span>
+        <span>{cityLabel}</span>
+        <span>{countLabel}</span>
+      </div>
+      {items.map((item) => (
+        <div className="analyticsCityRow" key={`${item.date}-${item.city_code}`}>
+          <span>{formatDate(item.date, locale)}</span>
+          <strong>{item.city_name}</strong>
+          <b>{item.count.toLocaleString(locale)}</b>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export function AnalyticsPage() {
@@ -136,6 +173,42 @@ export function AnalyticsPage() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="analyticsCityGrid">
+            <div className="card analyticsTrendCard">
+              <div className="cardInner">
+                <div className="analyticsSectionTitle">
+                  <h2>{t("analytics.deliveryByCity")}</h2>
+                  <span>{t("analytics.waybills")}</span>
+                </div>
+                <CityStatsTable
+                  cityLabel={t("analytics.city")}
+                  countLabel={t("analytics.count")}
+                  dateLabel={t("analytics.date")}
+                  emptyText={t("analytics.empty")}
+                  items={summary.delivery_by_city}
+                  locale={locale}
+                />
+              </div>
+            </div>
+
+            <div className="card analyticsTrendCard">
+              <div className="cardInner">
+                <div className="analyticsSectionTitle">
+                  <h2>{t("analytics.acceptedByCity")}</h2>
+                  <span>{t("analytics.pickups")}</span>
+                </div>
+                <CityStatsTable
+                  cityLabel={t("analytics.city")}
+                  countLabel={t("analytics.count")}
+                  dateLabel={t("analytics.date")}
+                  emptyText={t("analytics.empty")}
+                  items={summary.accepted_by_city}
+                  locale={locale}
+                />
+              </div>
             </div>
           </div>
         </>

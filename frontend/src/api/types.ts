@@ -122,6 +122,13 @@ export type DailyOrderCount = {
   waybill_count: number;
 };
 
+export type CityDailyCount = {
+  date: string;
+  city_code: string;
+  city_name: string;
+  count: number;
+};
+
 export type OrdersSummary = {
   today: string;
   month_start: string;
@@ -132,4 +139,6 @@ export type OrdersSummary = {
   month_pickup_count: number;
   month_waybill_count: number;
   daily: DailyOrderCount[];
+  delivery_by_city: CityDailyCount[];
+  accepted_by_city: CityDailyCount[];
 };
