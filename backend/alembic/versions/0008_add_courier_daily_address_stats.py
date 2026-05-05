@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "0008_add_courier_daily_address_stats"
+revision = "0008_courier_daily_stats"
 down_revision = "0007_add_social_interactions"
 branch_labels = None
 depends_on = None
