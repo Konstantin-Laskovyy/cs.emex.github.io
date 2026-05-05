@@ -39,6 +39,24 @@ services:
     networks:
       - intranet_net
 
+  courier_analytics_worker:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: intranet_courier_analytics_worker
+    env_file:
+      - ../backend/.env
+    command: >
+      sh -c "while true; do
+        python -m app.jobs.refresh_courier_analytics || true;
+        sleep $${COURIER_ANALYTICS_REFRESH_SECONDS:-3600};
+      done"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - intranet_net
+
   postgres:
     image: postgres:16-alpine
     container_name: intranet_postgres

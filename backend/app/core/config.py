@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     courier_db_password: str = ""
     courier_db_name: str = "courier"
     courier_address_date_column: str = ""
+    courier_analytics_refresh_seconds: int = 3600
 
 
 settings = Settings()
