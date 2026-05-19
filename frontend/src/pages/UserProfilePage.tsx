@@ -15,6 +15,10 @@ type ProfileFormState = {
   bio: string;
   location: string;
   phone: string;
+  hire_date: string;
+  vacation_days_total: string;
+  vacation_days_used: string;
+  vacation_periods_text: string;
 };
 
 function getInitials(user: Pick<UserPublic, "first_name" | "last_name">) {
@@ -32,7 +36,55 @@ function toFormState(profile: UserPublic): ProfileFormState {
     bio: profile.bio ?? "",
     location: profile.location ?? "",
     phone: profile.phone ?? "",
+    hire_date: profile.hire_date ?? "",
+    vacation_days_total: String(profile.vacation_days_total ?? 24),
+    vacation_days_used: String(profile.vacation_days_used ?? 0),
+    vacation_periods_text: (profile.vacation_periods ?? [])
+      .map((period) => `${period.start_date} — ${period.end_date}${period.note ? ` | ${period.note}` : ""}`)
+      .join("\n"),
   };
+}
+
+function parseVacationPeriods(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [range, note] = line.split("|").map((part) => part.trim());
+      const [start_date, end_date] = range.split(/\s+—\s+|\s+-\s+|\s+по\s+/i).map((part) => part.trim());
+      return {
+        start_date,
+        end_date: end_date || start_date,
+        note: note || null,
+      };
+    })
+    .filter((period) => period.start_date && period.end_date);
+}
+
+function formatRuDate(value?: string | null) {
+  if (!value) return "Не указано";
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00`));
+}
+
+function getWorkDuration(hireDate?: string | null) {
+  if (!hireDate) return "Дата приема не указана";
+  const start = new Date(`${hireDate}T00:00:00`);
+  const now = new Date();
+  let years = now.getFullYear() - start.getFullYear();
+  let months = now.getMonth() - start.getMonth();
+  if (now.getDate() < start.getDate()) months -= 1;
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+  const yearText = years ? `${years} г.` : "";
+  const monthText = months ? `${months} мес.` : "";
+  return [yearText, monthText].filter(Boolean).join(" ") || "Меньше месяца";
 }
 
 type OutletContext = {
@@ -124,6 +176,12 @@ export function UserProfilePage() {
       location: form.location.trim() || null,
       phone: form.phone.trim() || null,
     };
+    if (me?.role === "admin") {
+      payload.hire_date = form.hire_date || null;
+      payload.vacation_days_total = Number(form.vacation_days_total || 0);
+      payload.vacation_days_used = Number(form.vacation_days_used || 0);
+      payload.vacation_periods = parseVacationPeriods(form.vacation_periods_text);
+    }
 
     try {
       const updated = await apiFetch<UserPublic>(`/users/${profile.id}`, {
@@ -208,9 +266,11 @@ export function UserProfilePage() {
 
   const isOwnProfile = me?.id === profile.id;
   const canEditProfile = isOwnProfile || me?.role === "admin";
+  const canEditHr = me?.role === "admin";
   const fullName = `${profile.first_name} ${profile.last_name}`;
   const managerOptions = employees.filter((employee) => employee.id !== profile.id);
   const reports = employees.filter((employee) => employee.manager_id === profile.id);
+  const vacationRemaining = Math.max(0, (profile.vacation_days_total ?? 0) - (profile.vacation_days_used ?? 0));
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -283,6 +343,48 @@ export function UserProfilePage() {
                   <div style={{ marginTop: 6 }}>—</div>
                 )}
               </div>
+            </div>
+          </div>
+
+          <div className="employeeDashboard">
+            <div className="employeeDashboardHeader">
+              <div>
+                <span className="newsBadge">Личный дашборд</span>
+                <h2>Работа и отпуск</h2>
+              </div>
+              <p>Ключевые HR-данные сотрудника в одном месте.</p>
+            </div>
+            <div className="employeeDashboardGrid">
+              <div className="employeeDashboardCard">
+                <span>Принят на работу</span>
+                <strong>{formatRuDate(profile.hire_date)}</strong>
+              </div>
+              <div className="employeeDashboardCard">
+                <span>Стаж в компании</span>
+                <strong>{getWorkDuration(profile.hire_date)}</strong>
+              </div>
+              <div className="employeeDashboardCard">
+                <span>Отпуск доступно</span>
+                <strong>{vacationRemaining} дн.</strong>
+                <small>
+                  Всего {profile.vacation_days_total ?? 0}, использовано {profile.vacation_days_used ?? 0}
+                </small>
+              </div>
+            </div>
+            <div className="vacationTimeline">
+              <div className="vacationTimelineTitle">История отпусков</div>
+              {profile.vacation_periods?.length ? (
+                profile.vacation_periods.map((period, index) => (
+                  <div className="vacationTimelineItem" key={`${period.start_date}-${period.end_date}-${index}`}>
+                    <b>
+                      {formatRuDate(period.start_date)} — {formatRuDate(period.end_date)}
+                    </b>
+                    <span>{period.note || "Отпуск"}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="muted">История отпусков пока не заполнена.</div>
+              )}
             </div>
           </div>
 
@@ -430,6 +532,56 @@ export function UserProfilePage() {
                 <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.description")}</div>
                 <textarea className="input" value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} rows={5} />
               </label>
+
+              {canEditHr && (
+                <div className="hrEditPanel">
+                  <div>
+                    <h3>HR-данные сотрудника</h3>
+                    <p>Эти поля видит сотрудник в личном дашборде, но редактирует только администратор.</p>
+                  </div>
+                  <div className="formGrid">
+                    <label>
+                      <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Дата приема</div>
+                      <input
+                        className="input"
+                        type="date"
+                        value={form.hire_date}
+                        onChange={(event) => setForm({ ...form, hire_date: event.target.value })}
+                      />
+                    </label>
+                    <label>
+                      <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Дней отпуска всего</div>
+                      <input
+                        className="input"
+                        min="0"
+                        type="number"
+                        value={form.vacation_days_total}
+                        onChange={(event) => setForm({ ...form, vacation_days_total: event.target.value })}
+                      />
+                    </label>
+                    <label>
+                      <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Использовано дней</div>
+                      <input
+                        className="input"
+                        min="0"
+                        type="number"
+                        value={form.vacation_days_used}
+                        onChange={(event) => setForm({ ...form, vacation_days_used: event.target.value })}
+                      />
+                    </label>
+                  </div>
+                  <label>
+                    <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>История отпусков</div>
+                    <textarea
+                      className="input"
+                      rows={4}
+                      placeholder="2026-07-01 — 2026-07-14 | Ежегодный отпуск"
+                      value={form.vacation_periods_text}
+                      onChange={(event) => setForm({ ...form, vacation_periods_text: event.target.value })}
+                    />
+                  </label>
+                </div>
+              )}
 
               {saveMessage && <div style={{ color: "#bfdbfe" }}>{saveMessage}</div>}
               {saveError && <div style={{ color: "#fecaca" }}>{saveError}</div>}

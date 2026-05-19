@@ -1,6 +1,6 @@
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, JSON, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.session import Base
@@ -49,6 +49,10 @@ class User(Base):
     bio: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    hire_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    vacation_days_total: Mapped[int] = mapped_column(Integer, default=24, server_default="24")
+    vacation_days_used: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    vacation_periods: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
 
     role: Mapped[str] = mapped_column(String(40), default="employee", server_default="employee")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)

@@ -1370,6 +1370,107 @@ textarea {
   box-shadow: none;
 }
 
+.employeeDashboard {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid #bfd8f2;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(0, 94, 184, 0.12), transparent 34%),
+    linear-gradient(140deg, #ffffff, #edf7ff);
+}
+
+.employeeDashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.employeeDashboardHeader h2 {
+  margin: 8px 0 0;
+  font-size: 24px;
+}
+
+.employeeDashboardHeader p {
+  max-width: 360px;
+  margin: 0;
+  color: var(--muted);
+}
+
+.employeeDashboardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.employeeDashboardCard {
+  display: grid;
+  gap: 8px;
+  min-height: 116px;
+  padding: 16px;
+  border: 1px solid #d4e9fb;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 14px 28px rgba(0, 51, 102, 0.06);
+}
+
+.employeeDashboardCard span,
+.employeeDashboardCard small {
+  color: #4b6686;
+}
+
+.employeeDashboardCard strong {
+  color: var(--ink);
+  font-size: 22px;
+}
+
+.vacationTimeline {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #d4e9fb;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.vacationTimelineTitle {
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.vacationTimelineItem {
+  display: grid;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 3px solid var(--primary);
+}
+
+.vacationTimelineItem span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.hrEditPanel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px dashed #8ec5ff;
+  border-radius: 20px;
+  background: #f3f9ff;
+}
+
+.hrEditPanel h3 {
+  margin: 0;
+}
+
+.hrEditPanel p {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
 .profileWorkGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1962,6 +2063,14 @@ textarea {
   }
 
   .profileWorkGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .employeeDashboardHeader {
+    display: grid;
+  }
+
+  .employeeDashboardGrid {
     grid-template-columns: 1fr;
   }
 

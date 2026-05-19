@@ -25,8 +25,18 @@ export type UserPublic = {
   bio?: string | null;
   location?: string | null;
   phone?: string | null;
+  hire_date?: string | null;
+  vacation_days_total: number;
+  vacation_days_used: number;
+  vacation_periods: VacationPeriod[];
   role: "employee" | "admin";
   is_active: boolean;
+};
+
+export type VacationPeriod = {
+  start_date: string;
+  end_date: string;
+  note?: string | null;
 };
 
 export type UserUpdate = {
@@ -39,6 +49,10 @@ export type UserUpdate = {
   bio?: string | null;
   location?: string | null;
   phone?: string | null;
+  hire_date?: string | null;
+  vacation_days_total?: number | null;
+  vacation_days_used?: number | null;
+  vacation_periods?: VacationPeriod[] | null;
 };
 
 export type UserCreate = UserUpdate & {

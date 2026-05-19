@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, Field
 
 
@@ -20,6 +22,12 @@ class ManagerSummary(BaseModel):
         from_attributes = True
 
 
+class VacationPeriod(BaseModel):
+    start_date: date
+    end_date: date
+    note: str | None = None
+
+
 class UserPublic(BaseModel):
     id: int
     email: str
@@ -34,6 +42,10 @@ class UserPublic(BaseModel):
     bio: str | None = None
     location: str | None = None
     phone: str | None = None
+    hire_date: date | None = None
+    vacation_days_total: int = 24
+    vacation_days_used: int = 0
+    vacation_periods: list[VacationPeriod] = []
     role: str = "employee"
     is_active: bool = True
 
@@ -51,6 +63,10 @@ class UserUpdate(BaseModel):
     bio: str | None = None
     location: str | None = None
     phone: str | None = None
+    hire_date: date | None = None
+    vacation_days_total: int | None = Field(default=None, ge=0, le=365)
+    vacation_days_used: int | None = Field(default=None, ge=0, le=365)
+    vacation_periods: list[VacationPeriod] | None = None
 
 
 class UserCreate(UserUpdate):

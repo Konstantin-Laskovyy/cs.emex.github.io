@@ -105,6 +105,14 @@ def update_user(
     user.bio = _clean_optional(payload.bio)
     user.location = _clean_optional(payload.location)
     user.phone = _clean_optional(payload.phone)
+    if current_user.role == "admin":
+        user.hire_date = payload.hire_date
+        if payload.vacation_days_total is not None:
+            user.vacation_days_total = payload.vacation_days_total
+        if payload.vacation_days_used is not None:
+            user.vacation_days_used = payload.vacation_days_used
+        if payload.vacation_periods is not None:
+            user.vacation_periods = [period.model_dump(mode="json") for period in payload.vacation_periods]
 
     db.add(user)
     db.commit()
@@ -195,6 +203,15 @@ def create_user(
         bio=_clean_optional(payload.bio),
         location=_clean_optional(payload.location),
         phone=_clean_optional(payload.phone),
+        hire_date=payload.hire_date,
+        vacation_days_total=payload.vacation_days_total if payload.vacation_days_total is not None else 24,
+        vacation_days_used=payload.vacation_days_used if payload.vacation_days_used is not None else 0,
+        vacation_periods=[
+            period.model_dump(mode="json")
+            for period in payload.vacation_periods
+        ]
+        if payload.vacation_periods
+        else [],
     )
     db.add(user)
     db.commit()
