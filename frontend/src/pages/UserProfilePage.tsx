@@ -295,6 +295,7 @@ export function UserProfilePage() {
 
   const isOwnProfile = me?.id === profile.id;
   const canEditProfile = isOwnProfile || me?.role === "admin";
+  const canViewDashboard = isOwnProfile || me?.role === "admin";
   const canEditHr = me?.role === "admin";
   const canManageZup = canEditProfile;
   const fullName = `${profile.first_name} ${profile.last_name}`;
@@ -376,57 +377,59 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          <div className="employeeDashboard">
-            <div className="employeeDashboardHeader">
-              <div>
-                <span className="newsBadge">Личный дашборд</span>
-                <h2>Работа и отпуск</h2>
-              </div>
-              <p>
-                {profile.zup_source_updated_at
-                  ? `Данные из 1С обновлены: ${new Date(profile.zup_source_updated_at).toLocaleString()}`
-                  : "Ключевые HR-данные сотрудника в одном месте."}
-              </p>
-            </div>
-            <div className="employeeDashboardGrid">
-              <div className="employeeDashboardCard">
-                <span>Принят на работу</span>
-                <strong>{formatRuDate(profile.hire_date)}</strong>
-              </div>
-              <div className="employeeDashboardCard">
-                <span>Стаж в компании</span>
-                <strong>{getWorkDuration(profile.hire_date)}</strong>
-              </div>
-              <div className="employeeDashboardCard">
-                <span>Отпуск доступно</span>
-                <strong>{vacationRemaining} дн.</strong>
-                <small>
-                  Всего {profile.vacation_days_total ?? 0}, использовано {profile.vacation_days_used ?? 0}
-                </small>
-              </div>
-            </div>
-            <div className="vacationTimeline">
-              <div className="vacationTimelineTitle">История отпусков</div>
-              {profile.zup_last_vacation_info && (
-                <div className="vacationTimelineItem">
-                  <b>Последний отпуск из 1С</b>
-                  <span>{profile.zup_last_vacation_info}</span>
+          {canViewDashboard && (
+            <div className="employeeDashboard">
+              <div className="employeeDashboardHeader">
+                <div>
+                  <span className="newsBadge">Личный дашборд</span>
+                  <h2>Работа и отпуск</h2>
                 </div>
-              )}
-              {profile.vacation_periods?.length ? (
-                profile.vacation_periods.map((period, index) => (
-                  <div className="vacationTimelineItem" key={`${period.start_date}-${period.end_date}-${index}`}>
-                    <b>
-                      {formatRuDate(period.start_date)} — {formatRuDate(period.end_date)}
-                    </b>
-                    <span>{period.note || "Отпуск"}</span>
+                <p>
+                  {profile.zup_source_updated_at
+                    ? `Данные из 1С обновлены: ${new Date(profile.zup_source_updated_at).toLocaleString()}`
+                    : "Ключевые HR-данные сотрудника в одном месте."}
+                </p>
+              </div>
+              <div className="employeeDashboardGrid">
+                <div className="employeeDashboardCard">
+                  <span>Принят на работу</span>
+                  <strong>{formatRuDate(profile.hire_date)}</strong>
+                </div>
+                <div className="employeeDashboardCard">
+                  <span>Стаж в компании</span>
+                  <strong>{getWorkDuration(profile.hire_date)}</strong>
+                </div>
+                <div className="employeeDashboardCard">
+                  <span>Отпуск доступно</span>
+                  <strong>{vacationRemaining} дн.</strong>
+                  <small>
+                    Всего {profile.vacation_days_total ?? 0}, использовано {profile.vacation_days_used ?? 0}
+                  </small>
+                </div>
+              </div>
+              <div className="vacationTimeline">
+                <div className="vacationTimelineTitle">История отпусков</div>
+                {profile.zup_last_vacation_info && (
+                  <div className="vacationTimelineItem">
+                    <b>Последний отпуск из 1С</b>
+                    <span>{profile.zup_last_vacation_info}</span>
                   </div>
-                ))
-              ) : (
-                <div className="muted">История отпусков пока не заполнена.</div>
-              )}
+                )}
+                {profile.vacation_periods?.length ? (
+                  profile.vacation_periods.map((period, index) => (
+                    <div className="vacationTimelineItem" key={`${period.start_date}-${period.end_date}-${index}`}>
+                      <b>
+                        {formatRuDate(period.start_date)} — {formatRuDate(period.end_date)}
+                      </b>
+                      <span>{period.note || "Отпуск"}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="muted">История отпусков пока не заполнена.</div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="profileWorkGrid">
             <div className="profileInfoCard">
