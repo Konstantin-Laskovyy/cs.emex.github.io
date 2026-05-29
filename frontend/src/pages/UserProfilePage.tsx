@@ -106,7 +106,6 @@ export function UserProfilePage() {
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [zupSaving, setZupSaving] = useState(false);
-  const [zupRefreshing, setZupRefreshing] = useState(false);
   const [avatarDragActive, setAvatarDragActive] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -129,7 +128,7 @@ export function UserProfilePage() {
       return;
     }
 
-    const canLoadZupSettings = me?.role === "admin";
+    const canLoadZupSettings = Boolean(me && (me.id === userId || me.role === "admin"));
 
     Promise.all([
       apiFetch<UserPublic>(`/users/${userId}`),
@@ -184,26 +183,6 @@ export function UserProfilePage() {
       setSaveError(error instanceof Error ? error.message : "Не удалось сохранить настройки 1С ЗУП.");
     } finally {
       setZupSaving(false);
-    }
-  }
-
-  async function handleRefreshZupData() {
-    if (!profile) return;
-    setZupRefreshing(true);
-    setSaveMessage(null);
-    setSaveError(null);
-
-    try {
-      const updated = await apiFetch<UserPublic>(`/users/${profile.id}/zup-refresh`, {
-        method: "POST",
-      });
-      setProfile(updated);
-      setForm(toFormState(updated));
-      setSaveMessage("Данные из 1С ЗУП обновлены.");
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "Не удалось обновить данные из 1С ЗУП.");
-    } finally {
-      setZupRefreshing(false);
     }
   }
 
@@ -317,7 +296,7 @@ export function UserProfilePage() {
   const isOwnProfile = me?.id === profile.id;
   const canEditProfile = isOwnProfile || me?.role === "admin";
   const canEditHr = me?.role === "admin";
-  const canManageZup = me?.role === "admin";
+  const canManageZup = canEditProfile;
   const fullName = `${profile.first_name} ${profile.last_name}`;
   const managerOptions = employees.filter((employee) => employee.id !== profile.id);
   const reports = employees.filter((employee) => employee.manager_id === profile.id);
@@ -409,26 +388,6 @@ export function UserProfilePage() {
                   : "Ключевые HR-данные сотрудника в одном месте."}
               </p>
             </div>
-            {canManageZup && (
-              <div className="row" style={{ marginBottom: 14, alignItems: "flex-end", flexWrap: "wrap" }}>
-                <label style={{ minWidth: 220, flex: "1 1 220px" }}>
-                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>ИИН для запроса в 1С</div>
-                  <input
-                    className="input"
-                    value={zupIin}
-                    maxLength={12}
-                    inputMode="numeric"
-                    onChange={(event) => setZupIin(event.target.value.replace(/\D/g, "").slice(0, 12))}
-                  />
-                </label>
-                <button className="btn" type="button" onClick={handleSaveZupSettings} disabled={zupSaving || (zupIin.length > 0 && zupIin.length !== 12)}>
-                  {zupSaving ? "Сохраняем..." : "Сохранить ИИН"}
-                </button>
-                <button className="btn btnPrimary" type="button" onClick={handleRefreshZupData} disabled={zupRefreshing || zupIin.length !== 12}>
-                  {zupRefreshing ? "Обновляем..." : "Обновить из 1С"}
-                </button>
-              </div>
-            )}
             <div className="employeeDashboardGrid">
               <div className="employeeDashboardCard">
                 <span>Принят на работу</span>
@@ -613,6 +572,30 @@ export function UserProfilePage() {
                 <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.description")}</div>
                 <textarea className="input" value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} rows={5} />
               </label>
+
+              {canManageZup && (
+                <div className="hrEditPanel">
+                  <div>
+                    <h3>1С ЗУП</h3>
+                    <p>ИИН скрыт в карточке и используется для автоматического обновления данных при открытии профиля.</p>
+                  </div>
+                  <div className="row" style={{ alignItems: "flex-end", flexWrap: "wrap" }}>
+                    <label style={{ minWidth: 220, flex: "1 1 220px" }}>
+                      <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>ИИН для запроса в 1С</div>
+                      <input
+                        className="input"
+                        value={zupIin}
+                        maxLength={12}
+                        inputMode="numeric"
+                        onChange={(event) => setZupIin(event.target.value.replace(/\D/g, "").slice(0, 12))}
+                      />
+                    </label>
+                    <button className="btn" type="button" onClick={handleSaveZupSettings} disabled={zupSaving || (zupIin.length > 0 && zupIin.length !== 12)}>
+                      {zupSaving ? "Сохраняем..." : "Сохранить ИИН"}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {canEditHr && (
                 <div className="hrEditPanel">

@@ -58,7 +58,7 @@ def list_users(
 def get_user(
     user_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> UserPublic:
     user = (
         db.query(User)
@@ -68,6 +68,8 @@ def get_user(
     )
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if user.iin and (current_user.id == user.id or current_user.role == "admin"):
+        _try_refresh_user_from_zup(db, user)
     return user
 
 
@@ -77,7 +79,7 @@ def get_user_zup_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserZupSettingsPublic:
-    _require_admin(current_user)
+    _require_own_profile_or_admin(current_user, user_id)
     user = _get_active_user(db, user_id)
     return UserZupSettingsPublic(iin=user.iin)
 
@@ -89,7 +91,7 @@ def update_user_zup_settings(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserZupSettingsPublic:
-    _require_admin(current_user)
+    _require_own_profile_or_admin(current_user, user_id)
     user = _get_active_user(db, user_id)
     user.iin = _clean_optional(payload.iin)
     db.add(user)
@@ -104,7 +106,7 @@ def refresh_user_from_zup(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserPublic:
-    _require_admin(current_user)
+    _require_own_profile_or_admin(current_user, user_id)
     user = _get_active_user(db, user_id)
     if not user.iin:
         raise HTTPException(
@@ -113,25 +115,11 @@ def refresh_user_from_zup(
         )
 
     try:
-        zup_summary = fetch_employee_summary(user.iin)
+        _refresh_user_from_zup(db, user)
     except ZupConfigurationError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except ZupServiceError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
-
-    user.hire_date = zup_summary.employment_started_on
-    vacation_total = decimal_to_days(zup_summary.vacation_days_total)
-    vacation_used = decimal_to_days(zup_summary.vacation_days_used)
-    if vacation_total is not None:
-        user.vacation_days_total = vacation_total
-    if vacation_used is not None:
-        user.vacation_days_used = vacation_used
-    user.zup_last_vacation_info = zup_summary.last_vacation_info
-    user.zup_source_updated_at = zup_summary.source_updated_at
-
-    db.add(user)
-    db.commit()
-    db.refresh(user)
 
     return (
         db.query(User)
@@ -320,11 +308,11 @@ def _validate_links(db: Session, department_id: int | None, manager_id: int | No
             )
 
 
-def _require_admin(current_user: User) -> None:
-    if current_user.role != "admin":
+def _require_own_profile_or_admin(current_user: User, user_id: int) -> None:
+    if current_user.id != user_id and current_user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin access is required",
+            detail="You can only access your own profile",
         )
 
 
@@ -333,4 +321,32 @@ def _get_active_user(db: Session, user_id: int) -> User:
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
+
+
+def _try_refresh_user_from_zup(db: Session, user: User) -> None:
+    try:
+        _refresh_user_from_zup(db, user)
+    except (ZupConfigurationError, ZupServiceError):
+        db.rollback()
+
+
+def _refresh_user_from_zup(db: Session, user: User) -> None:
+    if not user.iin:
+        return
+
+    zup_summary = fetch_employee_summary(user.iin)
+
+    user.hire_date = zup_summary.employment_started_on
+    vacation_total = decimal_to_days(zup_summary.vacation_days_total)
+    vacation_used = decimal_to_days(zup_summary.vacation_days_used)
+    if vacation_total is not None:
+        user.vacation_days_total = vacation_total
+    if vacation_used is not None:
+        user.vacation_days_used = vacation_used
+    user.zup_last_vacation_info = zup_summary.last_vacation_info
+    user.zup_source_updated_at = zup_summary.source_updated_at
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
 
