@@ -29,6 +29,8 @@ export type UserPublic = {
   vacation_days_total: number;
   vacation_days_used: number;
   vacation_periods: VacationPeriod[];
+  zup_last_vacation_info?: string | null;
+  zup_source_updated_at?: string | null;
   role: "employee" | "admin";
   is_active: boolean;
 };
@@ -58,6 +60,10 @@ export type UserUpdate = {
 export type UserCreate = UserUpdate & {
   email: string;
   password?: string;
+};
+
+export type UserZupSettingsPublic = {
+  iin?: string | null;
 };
 
 export type DepartmentPublic = {

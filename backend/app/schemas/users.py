@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
@@ -46,6 +46,8 @@ class UserPublic(BaseModel):
     vacation_days_total: int = 24
     vacation_days_used: int = 0
     vacation_periods: list[VacationPeriod] = []
+    zup_last_vacation_info: str | None = None
+    zup_source_updated_at: datetime | None = None
     role: str = "employee"
     is_active: bool = True
 
@@ -77,4 +79,12 @@ class UserCreate(UserUpdate):
 class AdminUserUpdate(BaseModel):
     role: str = Field(pattern="^(employee|admin)$")
     is_active: bool
+
+
+class UserZupSettingsPublic(BaseModel):
+    iin: str | None = None
+
+
+class UserZupSettingsUpdate(BaseModel):
+    iin: str | None = Field(default=None, pattern=r"^\d{12}$")
 

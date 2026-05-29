@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     ad_default_email_domain: str = "emex.kz"
     upload_dir: str = "uploads"
     public_upload_url: str = "/uploads"
+    zup_wsdl_url: str = ""
+    zup_service_url: str = ""
+    zup_username: str = ""
+    zup_password: str = ""
+    zup_timeout_seconds: int = 20
     courier_db_host: str = ""
     courier_db_port: int = 3306
     courier_db_user: str = ""

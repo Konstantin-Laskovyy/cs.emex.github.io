@@ -7,10 +7,11 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.security import hash_password
+from app.core.zup import ZupConfigurationError, ZupServiceError, decimal_to_days, fetch_employee_summary
 from app.db.session import get_db
 from app.models.department import Department
 from app.models.user import User
-from app.schemas.users import UserCreate, UserPublic, UserUpdate
+from app.schemas.users import UserCreate, UserPublic, UserUpdate, UserZupSettingsPublic, UserZupSettingsUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -68,6 +69,76 @@ def get_user(
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
+
+
+@router.get("/{user_id}/zup-settings", response_model=UserZupSettingsPublic)
+def get_user_zup_settings(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserZupSettingsPublic:
+    _require_admin(current_user)
+    user = _get_active_user(db, user_id)
+    return UserZupSettingsPublic(iin=user.iin)
+
+
+@router.put("/{user_id}/zup-settings", response_model=UserZupSettingsPublic)
+def update_user_zup_settings(
+    user_id: int,
+    payload: UserZupSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserZupSettingsPublic:
+    _require_admin(current_user)
+    user = _get_active_user(db, user_id)
+    user.iin = _clean_optional(payload.iin)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return UserZupSettingsPublic(iin=user.iin)
+
+
+@router.post("/{user_id}/zup-refresh", response_model=UserPublic)
+def refresh_user_from_zup(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserPublic:
+    _require_admin(current_user)
+    user = _get_active_user(db, user_id)
+    if not user.iin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Employee IIN is not configured",
+        )
+
+    try:
+        zup_summary = fetch_employee_summary(user.iin)
+    except ZupConfigurationError as exc:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+    except ZupServiceError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+
+    user.hire_date = zup_summary.employment_started_on
+    vacation_total = decimal_to_days(zup_summary.vacation_days_total)
+    vacation_used = decimal_to_days(zup_summary.vacation_days_used)
+    if vacation_total is not None:
+        user.vacation_days_total = vacation_total
+    if vacation_used is not None:
+        user.vacation_days_used = vacation_used
+    user.zup_last_vacation_info = zup_summary.last_vacation_info
+    user.zup_source_updated_at = zup_summary.source_updated_at
+
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return (
+        db.query(User)
+        .options(joinedload(User.department), joinedload(User.manager))
+        .filter(User.id == user.id)
+        .first()
+    )
 
 
 @router.put("/{user_id}", response_model=UserPublic)
@@ -247,4 +318,19 @@ def _validate_links(db: Session, department_id: int | None, manager_id: int | No
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Manager not found",
             )
+
+
+def _require_admin(current_user: User) -> None:
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access is required",
+        )
+
+
+def _get_active_user(db: Session, user_id: int) -> User:
+    user = db.get(User, user_id)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
 

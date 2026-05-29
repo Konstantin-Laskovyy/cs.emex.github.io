@@ -3,7 +3,7 @@ import type { DragEvent, FormEvent } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
-import type { DepartmentPublic, UserPublic, UserUpdate } from "../api/types";
+import type { DepartmentPublic, UserPublic, UserUpdate, UserZupSettingsPublic } from "../api/types";
 
 type ProfileFormState = {
   first_name: string;
@@ -100,10 +100,13 @@ export function UserProfilePage() {
   const [profile, setProfile] = useState<UserPublic | null>(null);
   const [departments, setDepartments] = useState<DepartmentPublic[]>([]);
   const [employees, setEmployees] = useState<UserPublic[]>([]);
+  const [zupIin, setZupIin] = useState("");
   const [form, setForm] = useState<ProfileFormState | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [zupSaving, setZupSaving] = useState(false);
+  const [zupRefreshing, setZupRefreshing] = useState(false);
   const [avatarDragActive, setAvatarDragActive] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -116,6 +119,7 @@ export function UserProfilePage() {
     setLoadError(null);
     setSaveError(null);
     setProfile(null);
+    setZupIin("");
     setForm(null);
     setIsEditing(false);
 
@@ -125,16 +129,22 @@ export function UserProfilePage() {
       return;
     }
 
+    const canLoadZupSettings = me?.role === "admin";
+
     Promise.all([
       apiFetch<UserPublic>(`/users/${userId}`),
       apiFetch<DepartmentPublic[]>("/departments"),
       apiFetch<UserPublic[]>("/users"),
+      canLoadZupSettings
+        ? apiFetch<UserZupSettingsPublic>(`/users/${userId}/zup-settings`).catch(() => ({ iin: "" }))
+        : Promise.resolve(null),
     ])
-      .then(([profileData, departmentsData, employeesData]) => {
+      .then(([profileData, departmentsData, employeesData, zupSettingsData]) => {
         if (cancelled) return;
         setProfile(profileData);
         setDepartments(departmentsData);
         setEmployees(employeesData);
+        setZupIin(zupSettingsData?.iin ?? "");
         setForm(toFormState(profileData));
       })
       .catch((error) => {
@@ -155,7 +165,47 @@ export function UserProfilePage() {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, me?.id, me?.role]);
+
+  async function handleSaveZupSettings() {
+    if (!profile) return;
+    setZupSaving(true);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    try {
+      const updated = await apiFetch<UserZupSettingsPublic>(`/users/${profile.id}/zup-settings`, {
+        method: "PUT",
+        body: JSON.stringify({ iin: zupIin.trim() || null }),
+      });
+      setZupIin(updated.iin ?? "");
+      setSaveMessage("Настройки 1С ЗУП сохранены.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Не удалось сохранить настройки 1С ЗУП.");
+    } finally {
+      setZupSaving(false);
+    }
+  }
+
+  async function handleRefreshZupData() {
+    if (!profile) return;
+    setZupRefreshing(true);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    try {
+      const updated = await apiFetch<UserPublic>(`/users/${profile.id}/zup-refresh`, {
+        method: "POST",
+      });
+      setProfile(updated);
+      setForm(toFormState(updated));
+      setSaveMessage("Данные из 1С ЗУП обновлены.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Не удалось обновить данные из 1С ЗУП.");
+    } finally {
+      setZupRefreshing(false);
+    }
+  }
 
   async function handleSave(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -267,6 +317,7 @@ export function UserProfilePage() {
   const isOwnProfile = me?.id === profile.id;
   const canEditProfile = isOwnProfile || me?.role === "admin";
   const canEditHr = me?.role === "admin";
+  const canManageZup = me?.role === "admin";
   const fullName = `${profile.first_name} ${profile.last_name}`;
   const managerOptions = employees.filter((employee) => employee.id !== profile.id);
   const reports = employees.filter((employee) => employee.manager_id === profile.id);
@@ -352,8 +403,32 @@ export function UserProfilePage() {
                 <span className="newsBadge">Личный дашборд</span>
                 <h2>Работа и отпуск</h2>
               </div>
-              <p>Ключевые HR-данные сотрудника в одном месте.</p>
+              <p>
+                {profile.zup_source_updated_at
+                  ? `Данные из 1С обновлены: ${new Date(profile.zup_source_updated_at).toLocaleString()}`
+                  : "Ключевые HR-данные сотрудника в одном месте."}
+              </p>
             </div>
+            {canManageZup && (
+              <div className="row" style={{ marginBottom: 14, alignItems: "flex-end", flexWrap: "wrap" }}>
+                <label style={{ minWidth: 220, flex: "1 1 220px" }}>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>ИИН для запроса в 1С</div>
+                  <input
+                    className="input"
+                    value={zupIin}
+                    maxLength={12}
+                    inputMode="numeric"
+                    onChange={(event) => setZupIin(event.target.value.replace(/\D/g, "").slice(0, 12))}
+                  />
+                </label>
+                <button className="btn" type="button" onClick={handleSaveZupSettings} disabled={zupSaving || (zupIin.length > 0 && zupIin.length !== 12)}>
+                  {zupSaving ? "Сохраняем..." : "Сохранить ИИН"}
+                </button>
+                <button className="btn btnPrimary" type="button" onClick={handleRefreshZupData} disabled={zupRefreshing || zupIin.length !== 12}>
+                  {zupRefreshing ? "Обновляем..." : "Обновить из 1С"}
+                </button>
+              </div>
+            )}
             <div className="employeeDashboardGrid">
               <div className="employeeDashboardCard">
                 <span>Принят на работу</span>
@@ -373,6 +448,12 @@ export function UserProfilePage() {
             </div>
             <div className="vacationTimeline">
               <div className="vacationTimelineTitle">История отпусков</div>
+              {profile.zup_last_vacation_info && (
+                <div className="vacationTimelineItem">
+                  <b>Последний отпуск из 1С</b>
+                  <span>{profile.zup_last_vacation_info}</span>
+                </div>
+              )}
               {profile.vacation_periods?.length ? (
                 profile.vacation_periods.map((period, index) => (
                   <div className="vacationTimelineItem" key={`${period.start_date}-${period.end_date}-${index}`}>

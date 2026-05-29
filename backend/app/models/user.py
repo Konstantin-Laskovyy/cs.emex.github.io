@@ -49,10 +49,13 @@ class User(Base):
     bio: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    iin: Mapped[str | None] = mapped_column(String(12), nullable=True, index=True)
     hire_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     vacation_days_total: Mapped[int] = mapped_column(Integer, default=24, server_default="24")
     vacation_days_used: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     vacation_periods: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
+    zup_last_vacation_info: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    zup_source_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     role: Mapped[str] = mapped_column(String(40), default="employee", server_default="employee")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
