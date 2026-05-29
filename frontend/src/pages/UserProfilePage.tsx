@@ -124,6 +124,7 @@ export function UserProfilePage() {
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [zupSaving, setZupSaving] = useState(false);
+  const [zupRefreshing, setZupRefreshing] = useState(false);
   const [avatarDragActive, setAvatarDragActive] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -201,6 +202,26 @@ export function UserProfilePage() {
       setSaveError(error instanceof Error ? error.message : "Не удалось сохранить настройки 1С ЗУП.");
     } finally {
       setZupSaving(false);
+    }
+  }
+
+  async function handleRefreshZupData() {
+    if (!profile) return;
+    setZupRefreshing(true);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    try {
+      const updated = await apiFetch<UserPublic>(`/users/${profile.id}/zup-refresh`, {
+        method: "POST",
+      });
+      setProfile(updated);
+      setForm(toFormState(updated));
+      setSaveMessage("Данные из 1С ЗУП загружены в базу.");
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Не удалось загрузить данные из 1С ЗУП.");
+    } finally {
+      setZupRefreshing(false);
     }
   }
 
@@ -605,7 +626,7 @@ export function UserProfilePage() {
                 <div className="hrEditPanel">
                   <div>
                     <h3>1С ЗУП</h3>
-                    <p>ИИН скрыт в карточке и используется для автоматического обновления данных при открытии профиля.</p>
+                    <p>ИИН скрыт в карточке. Данные загружаются из 1С в базу и после этого быстро отображаются в профиле.</p>
                   </div>
                   <div className="row" style={{ alignItems: "flex-end", flexWrap: "wrap" }}>
                     <label style={{ minWidth: 220, flex: "1 1 220px" }}>
@@ -620,6 +641,9 @@ export function UserProfilePage() {
                     </label>
                     <button className="btn" type="button" onClick={handleSaveZupSettings} disabled={zupSaving || (zupIin.length > 0 && zupIin.length !== 12)}>
                       {zupSaving ? "Сохраняем..." : "Сохранить ИИН"}
+                    </button>
+                    <button className="btn btnPrimary" type="button" onClick={handleRefreshZupData} disabled={zupRefreshing || zupIin.length !== 12}>
+                      {zupRefreshing ? "Загружаем..." : "Загрузить из 1С"}
                     </button>
                   </div>
                 </div>

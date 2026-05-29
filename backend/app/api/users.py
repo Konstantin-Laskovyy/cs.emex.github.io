@@ -68,8 +68,6 @@ def get_user(
     )
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    if user.iin and (current_user.id == user.id or current_user.role == "admin"):
-        _try_refresh_user_from_zup(db, user)
     return user
 
 
@@ -321,13 +319,6 @@ def _get_active_user(db: Session, user_id: int) -> User:
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
-
-
-def _try_refresh_user_from_zup(db: Session, user: User) -> None:
-    try:
-        _refresh_user_from_zup(db, user)
-    except (ZupConfigurationError, ZupServiceError):
-        db.rollback()
 
 
 def _refresh_user_from_zup(db: Session, user: User) -> None:
