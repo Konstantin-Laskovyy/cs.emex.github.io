@@ -71,6 +71,24 @@ function formatRuDate(value?: string | null) {
   }).format(new Date(`${value}T00:00:00`));
 }
 
+function formatVacationDays(value: number) {
+  const mod10 = value % 10;
+  const mod100 = value % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${value} день`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${value} дня`;
+  return `${value} дней`;
+}
+
+function parseZupLastVacation(value?: string | null) {
+  if (!value) return null;
+  const match = value.trim().match(/^(\d{4}-\d{2}-\d{2})\s+(\d+(?:[.,]\d+)?)$/);
+  if (!match) return null;
+  return {
+    date: match[1],
+    days: Number(match[2].replace(",", ".")),
+  };
+}
+
 function getWorkDuration(hireDate?: string | null) {
   if (!hireDate) return "Дата приема не указана";
   const start = new Date(`${hireDate}T00:00:00`);
@@ -302,6 +320,7 @@ export function UserProfilePage() {
   const managerOptions = employees.filter((employee) => employee.id !== profile.id);
   const reports = employees.filter((employee) => employee.manager_id === profile.id);
   const vacationRemaining = Math.max(0, (profile.vacation_days_total ?? 0) - (profile.vacation_days_used ?? 0));
+  const zupLastVacation = parseZupLastVacation(profile.zup_last_vacation_info);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -412,7 +431,13 @@ export function UserProfilePage() {
                 {profile.zup_last_vacation_info && (
                   <div className="vacationTimelineItem">
                     <b>Последний отпуск из 1С</b>
-                    <span>{profile.zup_last_vacation_info}</span>
+                    {zupLastVacation ? (
+                      <span>
+                        с {formatRuDate(zupLastVacation.date)}, {formatVacationDays(zupLastVacation.days)}
+                      </span>
+                    ) : (
+                      <span>{profile.zup_last_vacation_info}</span>
+                    )}
                   </div>
                 )}
                 {profile.vacation_periods?.length ? (
