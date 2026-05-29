@@ -1,7 +1,7 @@
 """add user zup fields
 
 Revision ID: 0011_add_user_zup_fields
-Revises: 0010_add_user_hr_dashboard_fields
+Revises: 0010_user_hr_dashboard
 Create Date: 2026-05-29 00:00:00.000000
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = "0011_add_user_zup_fields"
-down_revision = "0010_add_user_hr_dashboard_fields"
+down_revision = "0010_user_hr_dashboard"
 branch_labels = None
 depends_on = None
 
