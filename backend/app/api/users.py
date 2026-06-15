@@ -68,6 +68,14 @@ def get_user(
     )
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    if (
+        user.iin
+        and user.zup_source_updated_at is None
+        and (current_user.id == user.id or current_user.role == "admin")
+    ):
+        _try_refresh_user_from_zup(db, user)
+
     return user
 
 
@@ -91,7 +99,15 @@ def update_user_zup_settings(
 ) -> UserZupSettingsPublic:
     _require_own_profile_or_admin(current_user, user_id)
     user = _get_active_user(db, user_id)
-    user.iin = _clean_optional(payload.iin)
+    new_iin = _clean_optional(payload.iin)
+    if new_iin != user.iin:
+        user.iin = new_iin
+        user.hire_date = None
+        user.vacation_days_total = 0
+        user.vacation_days_used = 0
+        user.vacation_periods = []
+        user.zup_last_vacation_info = None
+        user.zup_source_updated_at = None
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -319,6 +335,13 @@ def _get_active_user(db: Session, user_id: int) -> User:
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
+
+
+def _try_refresh_user_from_zup(db: Session, user: User) -> None:
+    try:
+        _refresh_user_from_zup(db, user)
+    except (ZupConfigurationError, ZupServiceError):
+        db.rollback()
 
 
 def _refresh_user_from_zup(db: Session, user: User) -> None:
