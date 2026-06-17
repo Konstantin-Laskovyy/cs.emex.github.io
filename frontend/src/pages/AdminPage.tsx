@@ -67,7 +67,7 @@ export function AdminPage() {
     loadAdminData();
   }, []);
 
-  async function updateUser(user: UserPublic, patch: Partial<Pick<UserPublic, "role" | "is_active">>) {
+  async function updateUser(user: UserPublic, patch: Partial<Pick<UserPublic, "role" | "is_active" | "access_enabled">>) {
     setMessage(null);
     setError(null);
     try {
@@ -76,6 +76,7 @@ export function AdminPage() {
         body: JSON.stringify({
           role: patch.role ?? user.role,
           is_active: patch.is_active ?? user.is_active,
+          access_enabled: patch.access_enabled ?? user.access_enabled,
         }),
       });
       setUsers((current) => current.map((item) => (item.id === updated.id ? updated : item)));
@@ -92,7 +93,7 @@ export function AdminPage() {
     try {
       await apiFetch<void>(`/admin/users/${user.id}`, { method: "DELETE" });
       setUsers((current) =>
-        current.map((item) => (item.id === user.id ? { ...item, is_active: false } : item))
+        current.map((item) => (item.id === user.id ? { ...item, is_active: false, access_enabled: false } : item))
       );
       setMessage("Учетная запись отключена.");
     } catch (deleteError) {
@@ -412,6 +413,9 @@ export function AdminPage() {
                   <div className="muted" style={{ fontSize: 13 }}>
                     {user.is_active ? "Активен" : "Отключен"}
                   </div>
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    {user.access_enabled ? "Доступ к порталу включен" : "Без доступа к порталу"}
+                  </div>
                 </div>
                 <div className="adminActions">
                   <select
@@ -432,6 +436,14 @@ export function AdminPage() {
                     disabled={user.id === me.id}
                   >
                     {user.is_active ? "Отключить" : "Включить"}
+                  </button>
+                  <button
+                    className="btn"
+                    type="button"
+                    onClick={() => updateUser(user, { access_enabled: !user.access_enabled })}
+                    disabled={user.id === me.id}
+                  >
+                    {user.access_enabled ? "Закрыть вход" : "Разрешить вход"}
                   </button>
                   <Link className="btn" to={`/users/${user.id}`}>
                     Редактировать

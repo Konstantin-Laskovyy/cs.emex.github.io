@@ -59,5 +59,6 @@ class User(Base):
 
     role: Mapped[str] = mapped_column(String(40), default="employee", server_default="employee")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    access_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

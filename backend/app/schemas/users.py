@@ -50,6 +50,7 @@ class UserPublic(BaseModel):
     zup_source_updated_at: datetime | None = None
     role: str = "employee"
     is_active: bool = True
+    access_enabled: bool = True
 
     class Config:
         from_attributes = True
@@ -79,6 +80,7 @@ class UserCreate(UserUpdate):
 class AdminUserUpdate(BaseModel):
     role: str = Field(pattern="^(employee|admin)$")
     is_active: bool
+    access_enabled: bool = True
 
 
 class UserZupSettingsPublic(BaseModel):

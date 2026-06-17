@@ -33,6 +33,7 @@ export type UserPublic = {
   zup_source_updated_at?: string | null;
   role: "employee" | "admin";
   is_active: boolean;
+  access_enabled: boolean;
 };
 
 export type VacationPeriod = {

@@ -19,7 +19,7 @@ def login(
     if settings.ad_enabled:
         ad_user = authenticate_ad_user(db, payload.email, payload.password)
         if ad_user is not None:
-            if not ad_user.is_active:
+            if not ad_user.is_active or not ad_user.access_enabled:
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is inactive")
             token = create_access_token(subject=ad_user.email)
             return TokenResponse(access_token=token)
@@ -27,7 +27,7 @@ def login(
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if not user.is_active:
+    if not user.is_active or not user.access_enabled:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is inactive")
 
     token = create_access_token(subject=user.email)

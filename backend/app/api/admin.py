@@ -35,7 +35,7 @@ def update_admin_user(
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Сотрудник не найден")
-    if user.id == current_user.id and not payload.is_active:
+    if user.id == current_user.id and (not payload.is_active or not payload.access_enabled):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Нельзя отключить собственную учетную запись",
@@ -43,6 +43,7 @@ def update_admin_user(
 
     user.role = payload.role
     user.is_active = payload.is_active
+    user.access_enabled = payload.access_enabled
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -71,6 +72,7 @@ def deactivate_admin_user(
         )
 
     user.is_active = False
+    user.access_enabled = False
     db.add(user)
     db.commit()
 

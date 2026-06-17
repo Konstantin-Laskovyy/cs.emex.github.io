@@ -28,7 +28,7 @@ def get_current_user(
         raise credentials_exception from e
 
     user = db.query(User).filter(User.email == subject).first()
-    if not user or not user.is_active:
+    if not user or not user.is_active or not user.access_enabled:
         raise credentials_exception
     return user
 

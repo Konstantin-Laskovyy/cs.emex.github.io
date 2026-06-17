@@ -4,7 +4,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, require_admin
 from app.core.config import settings
 from app.core.security import hash_password
 from app.core.zup import ZupConfigurationError, ZupServiceError, decimal_to_days, fetch_employee_summary
@@ -254,7 +254,7 @@ async def upload_avatar(
 def create_user(
     payload: UserCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_user),
+    _: User = Depends(require_admin),
 ) -> UserPublic:
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(
@@ -285,6 +285,7 @@ def create_user(
         ]
         if payload.vacation_periods
         else [],
+        access_enabled=False,
     )
     db.add(user)
     db.commit()
