@@ -5,6 +5,14 @@ import { useLanguage } from "../i18n";
 
 type LocationState = { from?: string };
 
+const DEFAULT_EMAIL_DOMAIN = "emex.kz";
+
+function normalizeLogin(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.includes("@") || trimmed.includes("\\")) return trimmed;
+  return `${trimmed}@${DEFAULT_EMAIL_DOMAIN}`;
+}
+
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,7 +41,9 @@ export function LoginPage() {
             event.preventDefault();
             setError(null);
 
-            if (!email || !password) {
+            const normalizedEmail = normalizeLogin(email);
+
+            if (!normalizedEmail || !password) {
               setError(t("login.empty"));
               return;
             }
@@ -41,7 +51,7 @@ export function LoginPage() {
             setLoading(true);
             apiFetch<{ access_token: string; token_type: string }>("/auth/login", {
               method: "POST",
-              body: JSON.stringify({ email, password }),
+              body: JSON.stringify({ email: normalizedEmail, password }),
               auth: false,
             })
               .then((response) => {
@@ -65,8 +75,11 @@ export function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               autoComplete="username"
-              placeholder="username@emex.kz"
+              placeholder="konstantin.laskovyy"
             />
+            <span className="muted" style={{ fontSize: 12 }}>
+              Можно без домена: система добавит @{DEFAULT_EMAIL_DOMAIN}
+            </span>
           </label>
 
           <label style={{ display: "grid", gap: 6 }}>
