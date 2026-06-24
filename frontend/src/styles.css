@@ -1370,6 +1370,38 @@ textarea {
   box-shadow: none;
 }
 
+.profileCardInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  gap: 16px;
+  align-items: start;
+}
+
+.profileCardInner > .row {
+  grid-column: 1 / -1;
+}
+
+.profileCardInner > .infoGrid,
+.profileCardInner > .profileWorkGrid,
+.profileCardInner > .profileAboutSection {
+  grid-column: 1;
+}
+
+.profileCardInner > .infoGrid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 0 !important;
+}
+
+.profileCardInner > .employeeDashboard {
+  grid-column: 2;
+  grid-row: 2 / span 3;
+  align-self: start;
+}
+
+.profileAboutSection {
+  margin-top: 18px;
+}
+
 .employeeDashboard {
   display: grid;
   gap: 14px;
@@ -1380,6 +1412,10 @@ textarea {
   background:
     radial-gradient(circle at 100% 0%, rgba(0, 94, 184, 0.12), transparent 34%),
     linear-gradient(140deg, #ffffff, #edf7ff);
+}
+
+.profileCardInner > .employeeDashboard {
+  margin-top: 0;
 }
 
 .employeeDashboardHeader {
@@ -1425,6 +1461,23 @@ textarea {
 .employeeDashboardCard strong {
   color: var(--ink);
   font-size: 22px;
+}
+
+.profileCardInner .employeeDashboardHeader {
+  display: grid;
+  gap: 10px;
+}
+
+.profileCardInner .employeeDashboardHeader p {
+  max-width: none;
+}
+
+.profileCardInner .employeeDashboardGrid {
+  grid-template-columns: 1fr;
+}
+
+.profileCardInner .employeeDashboardCard {
+  min-height: 0;
 }
 
 .vacationTimeline {
@@ -2063,6 +2116,25 @@ textarea {
   }
 
   .profileWorkGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileCardInner {
+    grid-template-columns: 1fr;
+  }
+
+  .profileCardInner > .infoGrid,
+  .profileCardInner > .profileWorkGrid,
+  .profileCardInner > .profileAboutSection,
+  .profileCardInner > .employeeDashboard {
+    grid-column: 1;
+  }
+
+  .profileCardInner > .employeeDashboard {
+    grid-row: auto;
+  }
+
+  .profileCardInner > .infoGrid {
     grid-template-columns: 1fr;
   }
 

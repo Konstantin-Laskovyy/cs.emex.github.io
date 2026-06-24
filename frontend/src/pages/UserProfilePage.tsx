@@ -346,7 +346,7 @@ export function UserProfilePage() {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <section className="card">
-        <div className="cardInner">
+        <div className={`cardInner ${canViewDashboard ? "profileCardInner" : ""}`}>
           <div className="row" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
             <div className="avatar avatarLarge">
               {profile.avatar_url ? (
@@ -507,7 +507,7 @@ export function UserProfilePage() {
             </div>
           </div>
 
-          <div style={{ marginTop: 18 }}>
+          <div className="profileAboutSection">
             <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
               О сотруднике
             </div>
