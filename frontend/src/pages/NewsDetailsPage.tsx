@@ -3,6 +3,7 @@ import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
 import type { NewsComment, NewsPublic, NewsReactionSummary, UserPublic } from "../api/types";
+import { RichTextEditor } from "../ui/RichTextEditor";
 
 type ShellContext = {
   me: UserPublic | null;
@@ -237,7 +238,7 @@ export function NewsDetailsPage() {
           </div>
 
           <p style={{ margin: "20px 0 12px", fontWeight: 600, lineHeight: 1.7 }}>{news.summary}</p>
-          <div className="newsContent">{news.content}</div>
+          <div className="newsContent" dangerouslySetInnerHTML={{ __html: news.content }} />
 
           <div className="reactionBar">
             {reactions.map((item) => (
@@ -270,7 +271,7 @@ export function NewsDetailsPage() {
               </label>
               <label>
                 <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.content")}</div>
-                <textarea className="input" rows={10} value={form.content} onChange={(event) => setForm({ ...form, content: event.target.value })} />
+                <RichTextEditor value={form.content} onChange={(content) => setForm({ ...form, content })} />
               </label>
 
               {saveMessage && <div style={{ color: "#0b5cad" }}>{saveMessage}</div>}

@@ -3,6 +3,7 @@ import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import { apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
 import type { NewsPublic, UserPublic } from "../api/types";
+import { RichTextEditor } from "../ui/RichTextEditor";
 
 type ShellContext = {
   me: UserPublic | null;
@@ -90,11 +91,9 @@ export function NewsEditorPage() {
 
           <label>
             <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.content")}</div>
-            <textarea
-              className="input"
-              rows={10}
+            <RichTextEditor
               value={form.content}
-              onChange={(event) => setForm({ ...form, content: event.target.value })}
+              onChange={(content) => setForm({ ...form, content })}
               placeholder={t("newsEditor.contentPlaceholder")}
             />
           </label>

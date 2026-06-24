@@ -1251,8 +1251,152 @@ textarea {
 }
 
 .newsContent {
-  white-space: pre-line;
   line-height: 1.75;
+}
+
+.newsContent p,
+.newsContent div,
+.newsContent ul,
+.newsContent ol,
+.newsContent blockquote,
+.newsContent figure,
+.newsContent pre {
+  margin: 0 0 14px;
+}
+
+.newsContent h2,
+.newsContent h3 {
+  margin: 18px 0 10px;
+  line-height: 1.25;
+}
+
+.newsContent h2 {
+  font-size: 24px;
+}
+
+.newsContent h3 {
+  font-size: 20px;
+}
+
+.newsContent a {
+  color: var(--primary-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.newsContent blockquote {
+  padding: 12px 14px;
+  border-left: 4px solid var(--primary);
+  border-radius: 10px;
+  background: #eef7ff;
+  color: #25466f;
+}
+
+.newsContent img {
+  display: block;
+  max-width: 100%;
+  max-height: 520px;
+  border-radius: 14px;
+  border: 1px solid #d7e5f5;
+  object-fit: contain;
+  background: #ffffff;
+}
+
+.newsContent figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.newsContent pre,
+.newsContent code {
+  border-radius: 10px;
+  background: #edf4fb;
+  font-family: "Cascadia Code", "Consolas", monospace;
+}
+
+.newsContent pre {
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.newsContent code {
+  padding: 2px 5px;
+}
+
+.richEditor {
+  border: 1px solid #bfd5f0;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.richEditorToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid #d9e7f6;
+  background: #f4f9ff;
+}
+
+.richEditorButton {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid #c9ddf3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.richEditorButton:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: #eef7ff;
+}
+
+.richEditorButton:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.richEditorSurface {
+  min-height: 260px;
+  padding: 14px;
+  outline: none;
+  line-height: 1.65;
+}
+
+.richEditorSurface:empty::before {
+  content: attr(data-placeholder);
+  color: #6f7f91;
+}
+
+.richEditorSurface img {
+  display: block;
+  max-width: 100%;
+  max-height: 420px;
+  border-radius: 12px;
+  border: 1px solid #d7e5f5;
+  object-fit: contain;
+}
+
+.richEditorSurface figure {
+  margin: 10px 0;
+}
+
+.richEditorSurface figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.richEditorStatus {
+  padding: 0 14px 12px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .reactionBar {

@@ -127,6 +127,13 @@ export type NewsReactionSummary = {
   reacted_by_me: boolean;
 };
 
+export type NewsUploadPublic = {
+  url: string;
+  name: string;
+  content_type: string;
+  is_image: boolean;
+};
+
 export type NotificationPublic = {
   id: number;
   title: string;

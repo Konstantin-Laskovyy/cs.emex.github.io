@@ -54,6 +54,13 @@ class NewsReactionToggle(BaseModel):
     reaction: str = Field(pattern="^(like|important|read)$")
 
 
+class NewsUploadPublic(BaseModel):
+    url: str
+    name: str
+    content_type: str
+    is_image: bool
+
+
 class NewsCreate(BaseModel):
     title: str = Field(min_length=3, max_length=240)
     summary: str = Field(min_length=10, max_length=500)
