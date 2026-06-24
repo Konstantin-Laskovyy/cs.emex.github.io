@@ -185,16 +185,22 @@ export function AppShell() {
     let cancelled = false;
     if (!getToken()) return;
 
-    apiFetch<NotificationPublic[]>("/notifications")
-      .then((data) => {
-        if (!cancelled) setNotifications(data);
-      })
-      .catch(() => {
-        if (!cancelled) setNotifications([]);
-      });
+    function loadNotifications() {
+      apiFetch<NotificationPublic[]>("/notifications")
+        .then((data) => {
+          if (!cancelled) setNotifications(data);
+        })
+        .catch(() => {
+          if (!cancelled) setNotifications([]);
+        });
+    }
+
+    loadNotifications();
+    const intervalId = window.setInterval(loadNotifications, 10000);
 
     return () => {
       cancelled = true;
+      window.clearInterval(intervalId);
     };
   }, [location.key]);
 

@@ -373,6 +373,11 @@ export function UserProfilePage() {
             </div>
 
             <div className="spacer" />
+            {!isOwnProfile && profile.access_enabled && (
+              <Link className="btn btnPrimary" to={`/chat?user=${profile.id}`}>
+                Написать сотруднику
+              </Link>
+            )}
             {canEditProfile && !isEditing && (
               <button
                 className="btn btnPrimary"

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.models.chat import ChatMessage
+from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.chat import ChatConversationPublic, ChatMessageCreate, ChatMessagePublic
 
@@ -90,6 +91,15 @@ def create_message(
         content=payload.content.strip(),
     )
     db.add(message)
+    db.add(
+        Notification(
+            recipient_id=other_user.id,
+            actor_id=current_user.id,
+            title="Новое сообщение",
+            body=f"{current_user.first_name} {current_user.last_name}: {message.content[:120]}",
+            link=f"/chat?user={current_user.id}",
+        )
+    )
     db.commit()
     db.refresh(message)
     return message

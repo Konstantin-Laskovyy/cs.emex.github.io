@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { apiFetch } from "../api/client";
 import type { ChatConversationPublic, ChatMessagePublic, UserPublic } from "../api/types";
 
@@ -16,6 +17,7 @@ function formatChatTime(value: string) {
 }
 
 export function ChatPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [me, setMe] = useState<UserPublic | null>(null);
   const [users, setUsers] = useState<UserPublic[]>([]);
   const [conversations, setConversations] = useState<ChatConversationPublic[]>([]);
@@ -25,6 +27,10 @@ export function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestedUserId = useMemo(() => {
+    const value = Number(searchParams.get("user"));
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }, [searchParams]);
 
   const conversationByUserId = useMemo(() => {
     return new Map(conversations.map((item) => [item.user.id, item]));
@@ -48,14 +54,14 @@ export function ChatPage() {
     setConversations(data);
   }
 
-  async function loadMessages(userId: number) {
-    setMessagesLoading(true);
+  async function loadMessages(userId: number, showLoading = true) {
+    if (showLoading) setMessagesLoading(true);
     try {
       const data = await apiFetch<ChatMessagePublic[]>(`/chat/conversations/${userId}/messages`);
       setMessages(data);
       await loadConversations();
     } finally {
-      setMessagesLoading(false);
+      if (showLoading) setMessagesLoading(false);
     }
   }
 
@@ -74,7 +80,11 @@ export function ChatPage() {
         setMe(meData);
         setUsers(usersData);
         setConversations(conversationData);
-        setSelectedUserId(conversationData[0]?.user.id ?? usersData.find((user) => user.id !== meData.id)?.id ?? null);
+        const initialUserId =
+          requestedUserId && requestedUserId !== meData.id
+            ? requestedUserId
+            : conversationData[0]?.user.id ?? usersData.find((user) => user.id !== meData.id && user.access_enabled)?.id ?? null;
+        setSelectedUserId(initialUserId);
       })
       .catch((loadError) => {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить чат.");
@@ -89,11 +99,26 @@ export function ChatPage() {
   }, []);
 
   useEffect(() => {
+    if (requestedUserId && requestedUserId !== me?.id) {
+      setSelectedUserId(requestedUserId);
+    }
+  }, [me?.id, requestedUserId]);
+
+  useEffect(() => {
     if (selectedUserId) {
+      setSearchParams({ user: String(selectedUserId) }, { replace: true });
       void loadMessages(selectedUserId);
     } else {
       setMessages([]);
     }
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    if (!selectedUserId) return;
+    const intervalId = window.setInterval(() => {
+      void loadMessages(selectedUserId, false);
+    }, 3000);
+    return () => window.clearInterval(intervalId);
   }, [selectedUserId]);
 
   async function sendMessage(event: FormEvent<HTMLFormElement>) {
@@ -134,7 +159,10 @@ export function ChatPage() {
                     className={`chatUser ${selectedUserId === user.id ? "chatUserActive" : ""}`}
                     key={user.id}
                     type="button"
-                    onClick={() => setSelectedUserId(user.id)}
+                    onClick={() => {
+                      setSelectedUserId(user.id);
+                      setSearchParams({ user: String(user.id) });
+                    }}
                   >
                     <span className="avatar chatAvatar">{initials(user)}</span>
                     <span className="chatUserText">
