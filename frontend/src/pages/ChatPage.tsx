@@ -27,6 +27,8 @@ export function ChatPage() {
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
   const requestedUserId = useMemo(() => {
     const value = Number(searchParams.get("user"));
     return Number.isFinite(value) && value > 0 ? value : null;
@@ -37,17 +39,24 @@ export function ChatPage() {
   }, [conversations]);
 
   const chatUsers = useMemo(() => {
-    const byId = new Map<number, UserPublic | ChatConversationPublic["user"]>();
-    conversations.forEach((item) => byId.set(item.user.id, item.user));
-    users.forEach((user) => {
-      if (user.id !== me?.id && user.access_enabled) byId.set(user.id, user);
-    });
-    return [...byId.values()].sort((a, b) =>
-      `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "ru")
-    );
-  }, [conversations, me?.id, users]);
+    return conversations.map((item) => item.user);
+  }, [conversations]);
 
-  const selectedUser = chatUsers.find((user) => user.id === selectedUserId) ?? null;
+  const availableUsers = useMemo(() => {
+    const query = userSearch.trim().toLowerCase();
+    return users
+      .filter((user) => user.id !== me?.id && user.access_enabled)
+      .filter((user) => {
+        if (!query) return true;
+        return `${user.first_name} ${user.last_name} ${user.email} ${user.title ?? ""}`.toLowerCase().includes(query);
+      })
+      .sort((a, b) => `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "ru"));
+  }, [me?.id, userSearch, users]);
+
+  const selectedUser =
+    chatUsers.find((user) => user.id === selectedUserId) ??
+    users.find((user) => user.id === selectedUserId) ??
+    null;
 
   async function loadConversations() {
     const data = await apiFetch<ChatConversationPublic[]>("/chat/conversations");
@@ -83,7 +92,7 @@ export function ChatPage() {
         const initialUserId =
           requestedUserId && requestedUserId !== meData.id
             ? requestedUserId
-            : conversationData[0]?.user.id ?? usersData.find((user) => user.id !== meData.id && user.access_enabled)?.id ?? null;
+            : conversationData[0]?.user.id ?? null;
         setSelectedUserId(initialUserId);
       })
       .catch((loadError) => {
@@ -162,6 +171,7 @@ export function ChatPage() {
                     onClick={() => {
                       setSelectedUserId(user.id);
                       setSearchParams({ user: String(user.id) });
+                      setNewChatOpen(false);
                     }}
                   >
                     <span className="avatar chatAvatar">{initials(user)}</span>
@@ -175,6 +185,14 @@ export function ChatPage() {
                   </button>
                 );
               })}
+              {!loading && chatUsers.length === 0 && (
+                <div className="chatEmpty">Диалогов пока нет. Начните новый чат.</div>
+              )}
+            </div>
+            <div className="chatSidebarFooter">
+              <button className="btn btnPrimary" type="button" onClick={() => setNewChatOpen(true)}>
+                Новый чат
+              </button>
             </div>
           </div>
         </aside>
@@ -232,6 +250,55 @@ export function ChatPage() {
           </div>
         </section>
       </div>
+
+      {newChatOpen && (
+        <div className="chatModalBackdrop" role="presentation" onMouseDown={() => setNewChatOpen(false)}>
+          <div className="chatModal card" role="dialog" aria-modal="true" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="cardInner">
+              <div className="chatPanelHeader">
+                <div>
+                  <h2>Новый чат</h2>
+                  <p className="muted">Найдите сотрудника или выберите из списка.</p>
+                </div>
+                <button className="btn" type="button" onClick={() => setNewChatOpen(false)}>
+                  Закрыть
+                </button>
+              </div>
+              <input
+                className="input chatSearchInput"
+                value={userSearch}
+                onChange={(event) => setUserSearch(event.target.value)}
+                placeholder="Поиск по имени, email или должности"
+                autoFocus
+              />
+              <div className="chatUserList chatUserPickerList">
+                {availableUsers.map((user) => (
+                  <button
+                    className="chatUser"
+                    key={user.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedUserId(user.id);
+                      setSearchParams({ user: String(user.id) });
+                      setNewChatOpen(false);
+                      setUserSearch("");
+                    }}
+                  >
+                    <span className="avatar chatAvatar">{initials(user)}</span>
+                    <span className="chatUserText">
+                      <strong>
+                        {user.first_name} {user.last_name}
+                      </strong>
+                      <small>{user.title || user.email}</small>
+                    </span>
+                  </button>
+                ))}
+                {availableUsers.length === 0 && <div className="chatEmpty">Сотрудники не найдены.</div>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -1581,6 +1581,16 @@ textarea {
   padding-right: 4px;
 }
 
+.chatSidebarFooter {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.chatSidebarFooter .btn {
+  width: 100%;
+}
+
 .chatUser {
   width: 100%;
   display: grid;
@@ -1717,6 +1727,30 @@ textarea {
   border-radius: 16px;
   background: #f4faff;
   color: var(--muted);
+}
+
+.chatModalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(7, 31, 61, 0.32);
+}
+
+.chatModal {
+  width: min(620px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow: hidden;
+}
+
+.chatSearchInput {
+  margin: 14px 0;
+}
+
+.chatUserPickerList {
+  max-height: 460px;
 }
 
 .adminRow {
