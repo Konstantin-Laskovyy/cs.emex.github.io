@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { to: "/users", labelKey: "nav.users", icon: "С" },
   { to: "/departments", labelKey: "nav.departments", icon: "О" },
   { to: "/org", labelKey: "nav.org", icon: "◇" },
+  { to: "/chat", labelKey: "nav.chat", icon: "C" },
   { to: "/analytics", labelKey: "nav.analytics", icon: "A", adminOnly: true },
   { to: "/admin", labelKey: "nav.admin", icon: "А", adminOnly: true },
 ];
@@ -24,6 +25,11 @@ const navItems: NavItem[] = [
 function getInitials(user: UserPublic | null) {
   if (!user) return "...";
   return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
+}
+
+function getNavLabel(labelKey: string, t: (key: string) => string) {
+  if (labelKey === "nav.chat") return "Чат";
+  return t(labelKey);
 }
 
 function NavIcon({ labelKey }: { labelKey: string }) {
@@ -267,12 +273,12 @@ export function AppShell() {
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) => `sidebarNavItem ${isActive ? "sidebarNavItemActive" : ""}`}
-                title={t(item.labelKey)}
+                title={getNavLabel(item.labelKey, t)}
               >
                 <span className="sidebarIcon">
                   <NavIcon labelKey={item.labelKey} />
                 </span>
-                <span className="sidebarText">{t(item.labelKey)}</span>
+                <span className="sidebarText">{getNavLabel(item.labelKey, t)}</span>
               </NavLink>
             ))}
         </nav>

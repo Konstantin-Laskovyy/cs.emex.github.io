@@ -136,6 +136,21 @@ export type NotificationPublic = {
   created_at: string;
 };
 
+export type ChatMessagePublic = {
+  id: number;
+  sender_id: number;
+  recipient_id: number;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type ChatConversationPublic = {
+  user: ManagerSummary;
+  last_message?: ChatMessagePublic | null;
+  unread_count: number;
+};
+
 export type DailyOrderCount = {
   date: string;
   count: number;
