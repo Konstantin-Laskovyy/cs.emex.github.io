@@ -26,6 +26,12 @@ type ProfileFormState = {
   vacation_days_total: string;
   vacation_days_used: string;
   vacation_periods_text: string;
+  education_records_text: string;
+  additional_education_records_text: string;
+  certificate_records_text: string;
+  course_records_text: string;
+  skills_text: string;
+  achievement_records_text: string;
 };
 
 function getInitials(user: Pick<UserPublic, "first_name" | "last_name">) {
@@ -49,6 +55,22 @@ function toFormState(profile: UserPublic): ProfileFormState {
     vacation_periods_text: (profile.vacation_periods ?? [])
       .map((period) => `${period.start_date} — ${period.end_date}${period.note ? ` | ${period.note}` : ""}`)
       .join("\n"),
+    education_records_text: (profile.education_records ?? [])
+      .map((item) => [item.school, item.faculty, item.specialty, item.graduationYear].join(" | "))
+      .join("\n"),
+    additional_education_records_text: (profile.additional_education_records ?? [])
+      .map((item) => [item.organization, item.course, item.date].join(" | "))
+      .join("\n"),
+    certificate_records_text: (profile.certificate_records ?? [])
+      .map((item) => [item.title, item.organization, item.issuedAt, item.validUntil ?? ""].join(" | "))
+      .join("\n"),
+    course_records_text: (profile.course_records ?? [])
+      .map((item) => [item.title, item.provider, item.duration, item.status].join(" | "))
+      .join("\n"),
+    skills_text: (profile.skills ?? []).join("\n"),
+    achievement_records_text: (profile.achievement_records ?? [])
+      .map((item) => [item.icon, item.title, item.description, item.date].join(" | "))
+      .join("\n"),
   };
 }
 
@@ -67,6 +89,51 @@ function parseVacationPeriods(value: string) {
       };
     })
     .filter((period) => period.start_date && period.end_date);
+}
+
+function splitProfileLines(value: string) {
+  return value
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => line.split("|").map((part) => part.trim()));
+}
+
+function parseEducationRecords(value: string): EducationRecord[] {
+  return splitProfileLines(value)
+    .map(([school, faculty, specialty, graduationYear]) => ({ school, faculty, specialty, graduationYear }))
+    .filter((item) => item.school || item.faculty || item.specialty || item.graduationYear);
+}
+
+function parseAdditionalEducationRecords(value: string): AdditionalEducationRecord[] {
+  return splitProfileLines(value)
+    .map(([organization, course, date]) => ({ organization, course, date }))
+    .filter((item) => item.organization || item.course || item.date);
+}
+
+function parseCertificateRecords(value: string): CertificateRecord[] {
+  return splitProfileLines(value)
+    .map(([title, organization, issuedAt, validUntil]) => ({ title, organization, issuedAt, validUntil: validUntil || null }))
+    .filter((item) => item.title || item.organization || item.issuedAt || item.validUntil);
+}
+
+function parseCourseRecords(value: string): CourseRecord[] {
+  return splitProfileLines(value)
+    .map(([title, provider, duration, status]) => ({ title, provider, duration, status }))
+    .filter((item) => item.title || item.provider || item.duration || item.status);
+}
+
+function parseSkills(value: string) {
+  return value
+    .split(/\n|,/)
+    .map((skill) => skill.trim())
+    .filter(Boolean);
+}
+
+function parseAchievementRecords(value: string): AchievementRecord[] {
+  return splitProfileLines(value)
+    .map(([icon, title, description, date]) => ({ icon, title, description, date }))
+    .filter((item) => item.icon || item.title || item.description || item.date);
 }
 
 function formatRuDate(value?: string | null) {
@@ -152,14 +219,14 @@ type CertificateRecord = {
   title: string;
   organization: string;
   issuedAt: string;
-  validUntil?: string;
+  validUntil?: string | null;
 };
 
 type CourseRecord = {
   title: string;
   provider: string;
   duration: string;
-  status: "Пройден" | "В процессе";
+  status: string;
 };
 
 type AchievementRecord = {
@@ -168,12 +235,6 @@ type AchievementRecord = {
   description: string;
   date: string;
 };
-
-const educationRecords: EducationRecord[] = [];
-const additionalEducationRecords: AdditionalEducationRecord[] = [];
-const certificateRecords: CertificateRecord[] = [];
-const courseRecords: CourseRecord[] = [];
-const achievementRecords: AchievementRecord[] = [];
 
 export function UserProfilePage() {
   const { t } = useLanguage();
@@ -194,6 +255,7 @@ export function UserProfilePage() {
   const [avatarDragActive, setAvatarDragActive] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>("general");
+  const [activeEditTab, setActiveEditTab] = useState<ProfileTab>("general");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -208,6 +270,7 @@ export function UserProfilePage() {
     setForm(null);
     setIsEditing(false);
     setActiveTab("general");
+    setActiveEditTab("general");
 
     if (!Number.isFinite(userId)) {
       setLoading(false);
@@ -311,6 +374,12 @@ export function UserProfilePage() {
       bio: form.bio.trim() || null,
       location: form.location.trim() || null,
       phone: form.phone.trim() || null,
+      education_records: parseEducationRecords(form.education_records_text),
+      additional_education_records: parseAdditionalEducationRecords(form.additional_education_records_text),
+      certificate_records: parseCertificateRecords(form.certificate_records_text),
+      course_records: parseCourseRecords(form.course_records_text),
+      skills: parseSkills(form.skills_text),
+      achievement_records: parseAchievementRecords(form.achievement_records_text),
     };
     if (me?.role === "admin") {
       payload.hire_date = form.hire_date || null;
@@ -454,6 +523,7 @@ export function UserProfilePage() {
                   setForm(toFormState(profile));
                   setSaveError(null);
                   setSaveMessage(null);
+                  setActiveEditTab("general");
                   setIsEditing(true);
                 }}
               >
@@ -484,8 +554,8 @@ export function UserProfilePage() {
             {activeTab === "general" && (
               <ProfileGeneralTab profile={profile} reports={reports} />
             )}
-            {activeTab === "education" && <EducationDevelopmentTab />}
-            {activeTab === "achievements" && <AchievementsTab />}
+            {activeTab === "education" && <EducationDevelopmentTab profile={profile} />}
+            {activeTab === "achievements" && <AchievementsTab achievements={profile.achievement_records ?? []} />}
             {activeTab === "gratitude" && <GratitudeTab profileId={profile.id} currentUserId={me?.id ?? null} />}
           </div>
 
@@ -565,6 +635,23 @@ export function UserProfilePage() {
             </div>
 
             <form onSubmit={handleSave} style={{ marginTop: 16, display: "grid", gap: 14 }}>
+              <div className="profileTabs" role="tablist" aria-label="Разделы редактирования профиля">
+                {profileTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    className={`profileTab ${activeEditTab === tab.id ? "profileTabActive" : ""}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={activeEditTab === tab.id}
+                    onClick={() => setActiveEditTab(tab.id)}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {activeEditTab === "general" && (
+                <>
               <div
                 className={`avatarDropzone ${avatarDragActive ? "avatarDropzoneActive" : ""}`}
                 onDragEnter={(event) => {
@@ -735,6 +822,65 @@ export function UserProfilePage() {
                 </div>
               )}
 
+                </>
+              )}
+
+              {activeEditTab === "education" && (
+                <div className="profileSectionGrid">
+                  <ProfileEditTextarea
+                    label="Высшее образование"
+                    hint="Формат: учебное заведение | факультет | специальность | год окончания"
+                    rows={4}
+                    value={form.education_records_text}
+                    onChange={(value) => setForm({ ...form, education_records_text: value })}
+                  />
+                  <ProfileEditTextarea
+                    label="Дополнительное образование"
+                    hint="Формат: организация | название курса | дата"
+                    rows={4}
+                    value={form.additional_education_records_text}
+                    onChange={(value) => setForm({ ...form, additional_education_records_text: value })}
+                  />
+                  <ProfileEditTextarea
+                    label="Сертификаты"
+                    hint="Формат: название | организация | дата получения | срок действия"
+                    rows={4}
+                    value={form.certificate_records_text}
+                    onChange={(value) => setForm({ ...form, certificate_records_text: value })}
+                  />
+                  <ProfileEditTextarea
+                    label="Курсы"
+                    hint="Формат: название курса | провайдер | продолжительность | статус"
+                    rows={4}
+                    value={form.course_records_text}
+                    onChange={(value) => setForm({ ...form, course_records_text: value })}
+                  />
+                  <ProfileEditTextarea
+                    label="Навыки"
+                    hint="Каждый навык с новой строки или через запятую"
+                    rows={4}
+                    value={form.skills_text}
+                    onChange={(value) => setForm({ ...form, skills_text: value })}
+                  />
+                </div>
+              )}
+
+              {activeEditTab === "achievements" && (
+                <ProfileEditTextarea
+                  label="Достижения"
+                  hint="Формат: иконка или символ | заголовок | описание | дата YYYY-MM-DD"
+                  rows={8}
+                  value={form.achievement_records_text}
+                  onChange={(value) => setForm({ ...form, achievement_records_text: value })}
+                />
+              )}
+
+              {activeEditTab === "gratitude" && (
+                <ProfileEmptyState>
+                  Благодарности оставляют другие сотрудники во вкладке просмотра профиля. Их нельзя редактировать из карточки сотрудника.
+                </ProfileEmptyState>
+              )}
+
               {saveMessage && <div style={{ color: "#bfdbfe" }}>{saveMessage}</div>}
               {saveError && <div style={{ color: "#fecaca" }}>{saveError}</div>}
 
@@ -842,23 +988,19 @@ function ProfileGeneralTab({ profile, reports }: { profile: UserPublic; reports:
   );
 }
 
-function EducationDevelopmentTab() {
-  const [skills, setSkills] = useState<string[]>([]);
-  const [newSkill, setNewSkill] = useState("");
-
-  function addSkill() {
-    const value = newSkill.trim();
-    if (!value || skills.some((skill) => skill.toLowerCase() === value.toLowerCase())) return;
-    setSkills((current) => [...current, value]);
-    setNewSkill("");
-  }
+function EducationDevelopmentTab({ profile }: { profile: UserPublic }) {
+  const educationItems = profile.education_records ?? [];
+  const additionalEducationItems = profile.additional_education_records ?? [];
+  const certificateItems = profile.certificate_records ?? [];
+  const courseItems = profile.course_records ?? [];
+  const skillItems = profile.skills ?? [];
 
   return (
     <div className="profileSectionGrid">
       <ProfileSection title="Высшее образование">
-        {educationRecords.length === 0 && <ProfileEmptyState>Данные о высшем образовании пока не заполнены.</ProfileEmptyState>}
-        {educationRecords.map((item) => (
-          <ProfileDataCard key={`${item.school}-${item.graduationYear}`}>
+        {educationItems.length === 0 && <ProfileEmptyState>Данные о высшем образовании пока не заполнены.</ProfileEmptyState>}
+        {educationItems.map((item, index) => (
+          <ProfileDataCard key={[item.school, item.graduationYear, index].join("-")}>
             <strong>{item.school}</strong>
             <span>Факультет: {item.faculty}</span>
             <span>Специальность: {item.specialty}</span>
@@ -868,9 +1010,9 @@ function EducationDevelopmentTab() {
       </ProfileSection>
 
       <ProfileSection title="Дополнительное образование">
-        {additionalEducationRecords.length === 0 && <ProfileEmptyState>Дополнительное образование пока не добавлено.</ProfileEmptyState>}
-        {additionalEducationRecords.map((item) => (
-          <ProfileDataCard key={`${item.organization}-${item.course}`}>
+        {additionalEducationItems.length === 0 && <ProfileEmptyState>Дополнительное образование пока не добавлено.</ProfileEmptyState>}
+        {additionalEducationItems.map((item, index) => (
+          <ProfileDataCard key={[item.organization, item.course, index].join("-")}>
             <strong>{item.course}</strong>
             <span>Организация: {item.organization}</span>
             <span>Дата: {item.date}</span>
@@ -879,21 +1021,21 @@ function EducationDevelopmentTab() {
       </ProfileSection>
 
       <ProfileSection title="Сертификаты">
-        {certificateRecords.length === 0 && <ProfileEmptyState>Сертификаты пока не добавлены.</ProfileEmptyState>}
-        {certificateRecords.map((item) => (
-          <ProfileDataCard key={`${item.title}-${item.issuedAt}`}>
+        {certificateItems.length === 0 && <ProfileEmptyState>Сертификаты пока не добавлены.</ProfileEmptyState>}
+        {certificateItems.map((item, index) => (
+          <ProfileDataCard key={[item.title, item.issuedAt, index].join("-")}>
             <strong>{item.title}</strong>
             <span>Организация: {item.organization}</span>
             <span>Дата получения: {item.issuedAt}</span>
-            <span>Срок действия: {item.validUntil ?? "не ограничен"}</span>
+            <span>Срок действия: {item.validUntil || "не ограничен"}</span>
           </ProfileDataCard>
         ))}
       </ProfileSection>
 
       <ProfileSection title="Курсы">
-        {courseRecords.length === 0 && <ProfileEmptyState>Курсы пока не добавлены.</ProfileEmptyState>}
-        {courseRecords.map((item) => (
-          <ProfileDataCard key={`${item.title}-${item.provider}`}>
+        {courseItems.length === 0 && <ProfileEmptyState>Курсы пока не добавлены.</ProfileEmptyState>}
+        {courseItems.map((item, index) => (
+          <ProfileDataCard key={[item.title, item.provider, index].join("-")}>
             <strong>{item.title}</strong>
             <span>Провайдер: {item.provider}</span>
             <span>Продолжительность: {item.duration}</span>
@@ -904,37 +1046,24 @@ function EducationDevelopmentTab() {
 
       <ProfileSection title="Навыки">
         <div className="profileSkillList">
-          {skills.length === 0 && <ProfileEmptyState>Навыки пока не добавлены.</ProfileEmptyState>}
-          {skills.map((skill) => (
+          {skillItems.length === 0 && <ProfileEmptyState>Навыки пока не добавлены.</ProfileEmptyState>}
+          {skillItems.map((skill) => (
             <span className="profileSkillChip" key={skill}>{skill}</span>
           ))}
-        </div>
-        <div className="profileSkillForm">
-          <input
-            className="input"
-            value={newSkill}
-            onChange={(event) => setNewSkill(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                addSkill();
-              }
-            }}
-            placeholder="Добавить навык"
-          />
-          <button className="btn" type="button" onClick={addSkill}>Добавить</button>
         </div>
       </ProfileSection>
     </div>
   );
 }
 
-function AchievementsTab() {
-  const years = Array.from(new Set(achievementRecords.map((item) => new Date(`${item.date}T00:00:00`).getFullYear()))).sort((a, b) => b - a);
+function AchievementsTab({ achievements }: { achievements: AchievementRecord[] }) {
+  const years = Array.from(new Set(achievements.map((item) => new Date(`${item.date}T00:00:00`).getFullYear())))
+    .filter((item) => Number.isFinite(item))
+    .sort((a, b) => b - a);
   const [year, setYear] = useState<string>("all");
   const filtered = year === "all"
-    ? achievementRecords
-    : achievementRecords.filter((item) => String(new Date(`${item.date}T00:00:00`).getFullYear()) === year);
+    ? achievements
+    : achievements.filter((item) => String(new Date(`${item.date}T00:00:00`).getFullYear()) === year);
 
   return (
     <div className="profileSectionGrid">
@@ -949,12 +1078,12 @@ function AchievementsTab() {
       </div>
       <div className="profileTimeline">
         {filtered.length === 0 && <ProfileEmptyState>Достижения пока не добавлены.</ProfileEmptyState>}
-        {filtered.map((item) => (
-          <div className="profileTimelineItem" key={`${item.title}-${item.date}`}>
-            <div className="profileTimelineIcon">{item.icon}</div>
+        {filtered.map((item, index) => (
+          <div className="profileTimelineItem" key={[item.title, item.date, index].join("-")}>
+            <div className="profileTimelineIcon">{item.icon || "*"}</div>
             <div className="profileInfoCard">
               <div className="cardInner">
-                <div className="muted" style={{ fontSize: 13 }}>{formatRuDate(item.date)}</div>
+                <div className="muted" style={{ fontSize: 13 }}>{item.date ? formatRuDate(item.date) : "Дата не указана"}</div>
                 <h3 style={{ margin: "6px 0 0", fontSize: 16 }}>{item.title}</h3>
                 <div style={{ marginTop: 8 }}>{item.description}</div>
               </div>
@@ -1152,6 +1281,34 @@ function ProfileSection({ title, children }: { title: string; children: ReactNod
 
 function ProfileDataCard({ children }: { children: ReactNode }) {
   return <div className="profileDataCard">{children}</div>;
+}
+
+function ProfileEditTextarea({
+  label,
+  hint,
+  rows,
+  value,
+  onChange,
+}: {
+  label: string;
+  hint: string;
+  rows: number;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label>
+      <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{label}</div>
+      <textarea
+        className="input"
+        rows={rows}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={hint}
+      />
+      <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{hint}</div>
+    </label>
+  );
 }
 
 function ProfileEmptyState({ children }: { children: ReactNode }) {

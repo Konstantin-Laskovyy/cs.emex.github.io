@@ -29,6 +29,12 @@ export type UserPublic = {
   vacation_days_total: number;
   vacation_days_used: number;
   vacation_periods: VacationPeriod[];
+  education_records: EducationRecord[];
+  additional_education_records: AdditionalEducationRecord[];
+  certificate_records: CertificateRecord[];
+  course_records: CourseRecord[];
+  skills: string[];
+  achievement_records: AchievementRecord[];
   zup_last_vacation_info?: string | null;
   zup_source_updated_at?: string | null;
   role: "employee" | "admin";
@@ -40,6 +46,40 @@ export type VacationPeriod = {
   start_date: string;
   end_date: string;
   note?: string | null;
+};
+
+export type EducationRecord = {
+  school: string;
+  faculty: string;
+  specialty: string;
+  graduationYear: string;
+};
+
+export type AdditionalEducationRecord = {
+  organization: string;
+  course: string;
+  date: string;
+};
+
+export type CertificateRecord = {
+  title: string;
+  organization: string;
+  issuedAt: string;
+  validUntil?: string | null;
+};
+
+export type CourseRecord = {
+  title: string;
+  provider: string;
+  duration: string;
+  status: string;
+};
+
+export type AchievementRecord = {
+  icon: string;
+  title: string;
+  description: string;
+  date: string;
 };
 
 export type UserUpdate = {
@@ -56,6 +96,12 @@ export type UserUpdate = {
   vacation_days_total?: number | null;
   vacation_days_used?: number | null;
   vacation_periods?: VacationPeriod[] | null;
+  education_records?: EducationRecord[] | null;
+  additional_education_records?: AdditionalEducationRecord[] | null;
+  certificate_records?: CertificateRecord[] | null;
+  course_records?: CourseRecord[] | null;
+  skills?: string[] | null;
+  achievement_records?: AchievementRecord[] | null;
 };
 
 export type UserCreate = UserUpdate & {

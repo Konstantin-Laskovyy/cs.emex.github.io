@@ -71,6 +71,12 @@ class User(Base):
     vacation_days_total: Mapped[int] = mapped_column(Integer, default=24, server_default="24")
     vacation_days_used: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     vacation_periods: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
+    education_records: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
+    additional_education_records: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
+    certificate_records: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
+    course_records: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
+    skills: Mapped[list[str]] = mapped_column(JSON, default=list, server_default="[]")
+    achievement_records: Mapped[list[dict]] = mapped_column(JSON, default=list, server_default="[]")
     zup_last_vacation_info: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     zup_source_updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

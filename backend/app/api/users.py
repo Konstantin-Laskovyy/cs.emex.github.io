@@ -306,8 +306,20 @@ def update_user(
             user.vacation_days_total = payload.vacation_days_total
         if payload.vacation_days_used is not None:
             user.vacation_days_used = payload.vacation_days_used
-        if payload.vacation_periods is not None:
-            user.vacation_periods = [period.model_dump(mode="json") for period in payload.vacation_periods]
+    if payload.vacation_periods is not None:
+        user.vacation_periods = [period.model_dump(mode="json") for period in payload.vacation_periods]
+    if payload.education_records is not None:
+        user.education_records = [record.model_dump(mode="json") for record in payload.education_records]
+    if payload.additional_education_records is not None:
+        user.additional_education_records = [record.model_dump(mode="json") for record in payload.additional_education_records]
+    if payload.certificate_records is not None:
+        user.certificate_records = [record.model_dump(mode="json") for record in payload.certificate_records]
+    if payload.course_records is not None:
+        user.course_records = [record.model_dump(mode="json") for record in payload.course_records]
+    if payload.skills is not None:
+        user.skills = [skill.strip() for skill in payload.skills if skill.strip()]
+    if payload.achievement_records is not None:
+        user.achievement_records = [record.model_dump(mode="json") for record in payload.achievement_records]
 
     db.add(user)
     db.commit()
