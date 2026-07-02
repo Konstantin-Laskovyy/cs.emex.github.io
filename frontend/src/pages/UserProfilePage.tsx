@@ -162,63 +162,12 @@ type GratitudeRecord = {
   likes: number;
 };
 
-const educationRecords: EducationRecord[] = [
-  {
-    school: "Казахский национальный университет",
-    faculty: "Информационные технологии",
-    specialty: "Информационные системы",
-    graduationYear: "2014",
-  },
-];
-
-const additionalEducationRecords: AdditionalEducationRecord[] = [
-  { organization: "EMEX Academy", course: "Управление проектами", date: "2024" },
-  { organization: "Microsoft Learn", course: "Power BI для аналитики", date: "2023" },
-];
-
-const certificateRecords: CertificateRecord[] = [
-  { title: "Linux Administration", organization: "Linux Foundation", issuedAt: "2023", validUntil: "2026" },
-  { title: "Docker Fundamentals", organization: "Docker", issuedAt: "2024" },
-];
-
-const courseRecords: CourseRecord[] = [
-  { title: "SQL для отчетности", provider: "EMEX Academy", duration: "12 часов", status: "Пройден" },
-  { title: "Автоматизация процессов", provider: "Internal Lab", duration: "8 часов", status: "В процессе" },
-];
-
-const achievementRecords: AchievementRecord[] = [
-  { icon: "🏆", title: "Лучший сотрудник месяца", description: "Отмечен за стабильную поддержку внутренних сервисов.", date: "2026-05-20" },
-  { icon: "🚀", title: "Запуск нового проекта", description: "Участвовал в запуске корпоративной социальной сети.", date: "2026-04-12" },
-  { icon: "💡", title: "Реализовал автоматизацию", description: "Сократил ручную обработку регулярных задач.", date: "2025-11-03" },
-  { icon: "🎖", title: "5 лет в компании", description: "Юбилей работы в компании EMEX.", date: "2024-02-15" },
-];
-
-const gratitudeRecords: GratitudeRecord[] = [
-  {
-    id: 1,
-    authorName: "Татьяна Воробьева",
-    authorTitle: "Генеральный директор",
-    text: "Спасибо за внимательность к деталям и быстрые решения по внутренним сервисам.",
-    date: "2026-06-18",
-    likes: 12,
-  },
-  {
-    id: 2,
-    authorName: "Dilbar Faretdinova",
-    authorTitle: "Руководитель отдела управления персоналом",
-    text: "Благодарю за помощь с данными 1С ЗУП и карточками сотрудников.",
-    date: "2026-06-10",
-    likes: 7,
-  },
-  {
-    id: 3,
-    authorName: "Sergey Revenko",
-    authorTitle: "Сотрудник IT отдела",
-    text: "Спасибо за поддержку и понятные инструкции при запуске новых функций.",
-    date: "2026-05-29",
-    likes: 5,
-  },
-];
+const educationRecords: EducationRecord[] = [];
+const additionalEducationRecords: AdditionalEducationRecord[] = [];
+const certificateRecords: CertificateRecord[] = [];
+const courseRecords: CourseRecord[] = [];
+const achievementRecords: AchievementRecord[] = [];
+const gratitudeRecords: GratitudeRecord[] = [];
 
 export function UserProfilePage() {
   const { t } = useLanguage();
@@ -888,7 +837,7 @@ function ProfileGeneralTab({ profile, reports }: { profile: UserPublic; reports:
 }
 
 function EducationDevelopmentTab() {
-  const [skills, setSkills] = useState(["Docker", "Linux", "Power BI", "Python", "SQL", "Project Management"]);
+  const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState("");
 
   function addSkill() {
@@ -901,6 +850,7 @@ function EducationDevelopmentTab() {
   return (
     <div className="profileSectionGrid">
       <ProfileSection title="Высшее образование">
+        {educationRecords.length === 0 && <ProfileEmptyState>Данные о высшем образовании пока не заполнены.</ProfileEmptyState>}
         {educationRecords.map((item) => (
           <ProfileDataCard key={`${item.school}-${item.graduationYear}`}>
             <strong>{item.school}</strong>
@@ -912,6 +862,7 @@ function EducationDevelopmentTab() {
       </ProfileSection>
 
       <ProfileSection title="Дополнительное образование">
+        {additionalEducationRecords.length === 0 && <ProfileEmptyState>Дополнительное образование пока не добавлено.</ProfileEmptyState>}
         {additionalEducationRecords.map((item) => (
           <ProfileDataCard key={`${item.organization}-${item.course}`}>
             <strong>{item.course}</strong>
@@ -922,6 +873,7 @@ function EducationDevelopmentTab() {
       </ProfileSection>
 
       <ProfileSection title="Сертификаты">
+        {certificateRecords.length === 0 && <ProfileEmptyState>Сертификаты пока не добавлены.</ProfileEmptyState>}
         {certificateRecords.map((item) => (
           <ProfileDataCard key={`${item.title}-${item.issuedAt}`}>
             <strong>{item.title}</strong>
@@ -933,6 +885,7 @@ function EducationDevelopmentTab() {
       </ProfileSection>
 
       <ProfileSection title="Курсы">
+        {courseRecords.length === 0 && <ProfileEmptyState>Курсы пока не добавлены.</ProfileEmptyState>}
         {courseRecords.map((item) => (
           <ProfileDataCard key={`${item.title}-${item.provider}`}>
             <strong>{item.title}</strong>
@@ -945,6 +898,7 @@ function EducationDevelopmentTab() {
 
       <ProfileSection title="Навыки">
         <div className="profileSkillList">
+          {skills.length === 0 && <ProfileEmptyState>Навыки пока не добавлены.</ProfileEmptyState>}
           {skills.map((skill) => (
             <span className="profileSkillChip" key={skill}>{skill}</span>
           ))}
@@ -988,6 +942,7 @@ function AchievementsTab() {
         </select>
       </div>
       <div className="profileTimeline">
+        {filtered.length === 0 && <ProfileEmptyState>Достижения пока не добавлены.</ProfileEmptyState>}
         {filtered.map((item) => (
           <div className="profileTimelineItem" key={`${item.title}-${item.date}`}>
             <div className="profileTimelineIcon">{item.icon}</div>
@@ -1035,6 +990,7 @@ function GratitudeTab() {
       </div>
 
       <div className="profileGratitudeList">
+        {visible.length === 0 && <ProfileEmptyState>Благодарности пока не добавлены.</ProfileEmptyState>}
         {visible.map((item) => {
           const liked = likedIds.includes(item.id);
           return (
@@ -1093,6 +1049,10 @@ function ProfileSection({ title, children }: { title: string; children: ReactNod
 
 function ProfileDataCard({ children }: { children: ReactNode }) {
   return <div className="profileDataCard">{children}</div>;
+}
+
+function ProfileEmptyState({ children }: { children: ReactNode }) {
+  return <div className="profileEmptyState">{children}</div>;
 }
 
 function getInitialsFromName(value: string) {
