@@ -482,8 +482,9 @@ export function UserProfilePage() {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <section className="card">
-        <div className={`cardInner ${canViewDashboard ? "profileCardInner" : ""}`}>
+      {!isEditing && (
+        <section className="card">
+          <div className={`cardInner ${canViewDashboard ? "profileCardInner" : ""}`}>
           <div className="row" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
             <div className="avatar avatarLarge">
               {profile.avatar_url ? (
@@ -619,8 +620,9 @@ export function UserProfilePage() {
             </div>
           )}
 
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {canEditProfile && isEditing ? (
         <section className="card">
