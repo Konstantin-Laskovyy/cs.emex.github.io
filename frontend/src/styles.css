@@ -1035,6 +1035,56 @@ textarea {
   display: block;
 }
 
+.avatarPreviewButton {
+  padding: 0;
+  border: 2px solid #ffffff;
+  cursor: zoom-in;
+}
+
+.avatarPreviewOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0, 25, 54, 0.58);
+}
+
+.avatarPreviewDialog {
+  position: relative;
+  max-width: min(720px, 92vw);
+  max-height: 86vh;
+  padding: 14px;
+  border: 1px solid #bfd8f2;
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: var(--shadow-strong);
+}
+
+.avatarPreviewDialog img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(86vh - 28px);
+  border-radius: 18px;
+  object-fit: contain;
+}
+
+.avatarPreviewClose {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #cfe0f3;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(0, 51, 102, 0.16);
+}
+
 .avatarDropzone {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

@@ -256,6 +256,7 @@ export function UserProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<ProfileTab>("general");
   const [activeEditTab, setActiveEditTab] = useState<ProfileTab>("general");
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -486,13 +487,20 @@ export function UserProfilePage() {
         <section className="card">
           <div className={`cardInner ${canViewDashboard ? "profileCardInner" : ""}`}>
           <div className="row" style={{ alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div className="avatar avatarLarge">
-              {profile.avatar_url ? (
+            {profile.avatar_url ? (
+              <button
+                className="avatar avatarLarge avatarPreviewButton"
+                type="button"
+                onClick={() => setAvatarPreviewUrl(profile.avatar_url ?? null)}
+                aria-label="Открыть фото сотрудника"
+              >
                 <img src={profile.avatar_url} alt={fullName} className="avatarImage" />
-              ) : (
+              </button>
+            ) : (
+              <div className="avatar avatarLarge">
                 <span>{getInitials(profile)}</span>
-              )}
-            </div>
+              </div>
+            )}
 
             <div style={{ minWidth: 0 }}>
               <h1 style={{ margin: 0 }}>{fullName}</h1>
@@ -916,6 +924,17 @@ export function UserProfilePage() {
           </div>
         </section>
       ) : null}
+
+      {avatarPreviewUrl && (
+        <div className="avatarPreviewOverlay" role="dialog" aria-modal="true" onClick={() => setAvatarPreviewUrl(null)}>
+          <div className="avatarPreviewDialog" onClick={(event) => event.stopPropagation()}>
+            <button className="avatarPreviewClose" type="button" onClick={() => setAvatarPreviewUrl(null)} aria-label="Закрыть фото">
+              x
+            </button>
+            <img src={avatarPreviewUrl} alt={fullName} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
