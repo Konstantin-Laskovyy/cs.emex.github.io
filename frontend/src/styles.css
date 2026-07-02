@@ -1525,6 +1525,14 @@ textarea {
   grid-column: 1 / -1;
 }
 
+.profileCardInner > .profileTabs {
+  grid-column: 1 / -1;
+}
+
+.profileCardInner > .profileTabPanel {
+  grid-column: 1;
+}
+
 .profileCardInner > .infoGrid,
 .profileCardInner > .profileWorkGrid,
 .profileCardInner > .profileAboutSection {
@@ -1538,12 +1546,159 @@ textarea {
 
 .profileCardInner > .employeeDashboard {
   grid-column: 2;
-  grid-row: 2 / span 3;
+  grid-row: 3 / span 3;
   align-self: start;
 }
 
 .profileAboutSection {
   margin-top: 18px;
+}
+
+.profileTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding-bottom: 2px;
+}
+
+.profileTab {
+  min-height: 38px;
+  padding: 9px 14px;
+  border: 1px solid #cfe0f3;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.profileTab:hover {
+  border-color: var(--primary);
+  background: #eef6ff;
+}
+
+.profileTabActive {
+  border-color: var(--primary);
+  background: #eef6ff;
+  color: var(--primary-dark);
+  box-shadow: 0 10px 22px rgba(0, 94, 184, 0.12);
+}
+
+.profileTabPanel {
+  min-width: 0;
+}
+
+.profileSectionGrid {
+  display: grid;
+  gap: 12px;
+}
+
+.profileSectionBody {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.profileDataCard {
+  display: grid;
+  gap: 5px;
+  padding: 12px;
+  border: 1px solid #d4e9fb;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.profileDataCard span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.profileSkillList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profileSkillChip {
+  padding: 7px 10px;
+  border: 1px solid #cfe0f3;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--primary-dark);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.profileSkillForm,
+.profileFilterRow,
+.profilePagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.profileSkillForm .input,
+.profileFilterRow .input {
+  max-width: 260px;
+}
+
+.profileTimeline {
+  display: grid;
+  gap: 12px;
+}
+
+.profileTimelineItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.profileTimelineIcon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #cfe0f3;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 10px 22px rgba(0, 51, 102, 0.08);
+}
+
+.profileStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.profileGratitudeList {
+  display: grid;
+  gap: 12px;
+}
+
+.profileGratitudeCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.gratitudeLikeButton {
+  padding: 8px 10px;
+  border: 1px solid #cfe0f3;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.gratitudeLikeButtonActive {
+  border-color: #ffb4c2;
+  background: #fff1f4;
+  color: #b4233b;
 }
 
 .employeeDashboard {
@@ -2474,6 +2629,8 @@ textarea {
   .profileCardInner > .infoGrid,
   .profileCardInner > .profileWorkGrid,
   .profileCardInner > .profileAboutSection,
+  .profileCardInner > .profileTabs,
+  .profileCardInner > .profileTabPanel,
   .profileCardInner > .employeeDashboard {
     grid-column: 1;
   }
@@ -2484,6 +2641,17 @@ textarea {
 
   .profileCardInner > .infoGrid {
     grid-template-columns: 1fr;
+  }
+
+  .profileStatsGrid,
+  .profileGratitudeCard,
+  .profileTimelineItem {
+    grid-template-columns: 1fr;
+  }
+
+  .profileSkillForm .input,
+  .profileFilterRow .input {
+    max-width: none;
   }
 
   .employeeDashboardHeader {

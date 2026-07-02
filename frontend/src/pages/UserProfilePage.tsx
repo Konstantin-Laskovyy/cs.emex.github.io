@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { DragEvent, FormEvent } from "react";
+import type { DragEvent, FormEvent, ReactNode } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
@@ -109,6 +109,117 @@ type OutletContext = {
   me: UserPublic | null;
 };
 
+type ProfileTab = "general" | "education" | "achievements" | "gratitude";
+
+const profileTabs: { id: ProfileTab; label: string }[] = [
+  { id: "general", label: "Общая информация" },
+  { id: "education", label: "Образование и развитие" },
+  { id: "achievements", label: "Достижения" },
+  { id: "gratitude", label: "Благодарности" },
+];
+
+type EducationRecord = {
+  school: string;
+  faculty: string;
+  specialty: string;
+  graduationYear: string;
+};
+
+type AdditionalEducationRecord = {
+  organization: string;
+  course: string;
+  date: string;
+};
+
+type CertificateRecord = {
+  title: string;
+  organization: string;
+  issuedAt: string;
+  validUntil?: string;
+};
+
+type CourseRecord = {
+  title: string;
+  provider: string;
+  duration: string;
+  status: "Пройден" | "В процессе";
+};
+
+type AchievementRecord = {
+  icon: string;
+  title: string;
+  description: string;
+  date: string;
+};
+
+type GratitudeRecord = {
+  id: number;
+  authorName: string;
+  authorTitle: string;
+  authorAvatarUrl?: string | null;
+  text: string;
+  date: string;
+  likes: number;
+};
+
+const educationRecords: EducationRecord[] = [
+  {
+    school: "Казахский национальный университет",
+    faculty: "Информационные технологии",
+    specialty: "Информационные системы",
+    graduationYear: "2014",
+  },
+];
+
+const additionalEducationRecords: AdditionalEducationRecord[] = [
+  { organization: "EMEX Academy", course: "Управление проектами", date: "2024" },
+  { organization: "Microsoft Learn", course: "Power BI для аналитики", date: "2023" },
+];
+
+const certificateRecords: CertificateRecord[] = [
+  { title: "Linux Administration", organization: "Linux Foundation", issuedAt: "2023", validUntil: "2026" },
+  { title: "Docker Fundamentals", organization: "Docker", issuedAt: "2024" },
+];
+
+const courseRecords: CourseRecord[] = [
+  { title: "SQL для отчетности", provider: "EMEX Academy", duration: "12 часов", status: "Пройден" },
+  { title: "Автоматизация процессов", provider: "Internal Lab", duration: "8 часов", status: "В процессе" },
+];
+
+const achievementRecords: AchievementRecord[] = [
+  { icon: "🏆", title: "Лучший сотрудник месяца", description: "Отмечен за стабильную поддержку внутренних сервисов.", date: "2026-05-20" },
+  { icon: "🚀", title: "Запуск нового проекта", description: "Участвовал в запуске корпоративной социальной сети.", date: "2026-04-12" },
+  { icon: "💡", title: "Реализовал автоматизацию", description: "Сократил ручную обработку регулярных задач.", date: "2025-11-03" },
+  { icon: "🎖", title: "5 лет в компании", description: "Юбилей работы в компании EMEX.", date: "2024-02-15" },
+];
+
+const gratitudeRecords: GratitudeRecord[] = [
+  {
+    id: 1,
+    authorName: "Татьяна Воробьева",
+    authorTitle: "Генеральный директор",
+    text: "Спасибо за внимательность к деталям и быстрые решения по внутренним сервисам.",
+    date: "2026-06-18",
+    likes: 12,
+  },
+  {
+    id: 2,
+    authorName: "Dilbar Faretdinova",
+    authorTitle: "Руководитель отдела управления персоналом",
+    text: "Благодарю за помощь с данными 1С ЗУП и карточками сотрудников.",
+    date: "2026-06-10",
+    likes: 7,
+  },
+  {
+    id: 3,
+    authorName: "Sergey Revenko",
+    authorTitle: "Сотрудник IT отдела",
+    text: "Спасибо за поддержку и понятные инструкции при запуске новых функций.",
+    date: "2026-05-29",
+    likes: 5,
+  },
+];
+
 export function UserProfilePage() {
   const { t } = useLanguage();
   const { id } = useParams();
@@ -127,6 +238,7 @@ export function UserProfilePage() {
   const [zupRefreshing, setZupRefreshing] = useState(false);
   const [avatarDragActive, setAvatarDragActive] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState<ProfileTab>("general");
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -140,6 +252,7 @@ export function UserProfilePage() {
     setZupIin("");
     setForm(null);
     setIsEditing(false);
+    setActiveTab("general");
 
     if (!Number.isFinite(userId)) {
       setLoading(false);
@@ -397,29 +510,28 @@ export function UserProfilePage() {
             </Link>
           </div>
 
-          <div className="infoGrid" style={{ marginTop: 18 }}>
-            <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
-              <div className="cardInner">
-                <div className="muted" style={{ fontSize: 13 }}>Email</div>
-                <a style={{ marginTop: 6, display: "block" }} href={`mailto:${profile.email}`}>{profile.email}</a>
-              </div>
-            </div>
-            <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
-              <div className="cardInner">
-                <div className="muted" style={{ fontSize: 13 }}>{t("form.location")}</div>
-                <div style={{ marginTop: 6 }}>{profile.location ?? "—"}</div>
-              </div>
-            </div>
-            <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
-              <div className="cardInner">
-                <div className="muted" style={{ fontSize: 13 }}>{t("form.phone")}</div>
-                {profile.phone ? (
-                  <a style={{ marginTop: 6, display: "block" }} href={`tel:${profile.phone}`}>{profile.phone}</a>
-                ) : (
-                  <div style={{ marginTop: 6 }}>—</div>
-                )}
-              </div>
-            </div>
+          <div className="profileTabs" role="tablist" aria-label="Разделы профиля">
+            {profileTabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`profileTab ${activeTab === tab.id ? "profileTabActive" : ""}`}
+                type="button"
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="profileTabPanel" role="tabpanel">
+            {activeTab === "general" && (
+              <ProfileGeneralTab profile={profile} reports={reports} />
+            )}
+            {activeTab === "education" && <EducationDevelopmentTab />}
+            {activeTab === "achievements" && <AchievementsTab />}
+            {activeTab === "gratitude" && <GratitudeTab />}
           </div>
 
           {canViewDashboard && (
@@ -482,42 +594,6 @@ export function UserProfilePage() {
             </div>
           )}
 
-          <div className="profileWorkGrid">
-            <div className="profileInfoCard">
-              <div className="cardInner">
-                <h3 style={{ margin: 0, fontSize: 16 }}>{t("form.manager")}</h3>
-                {profile.manager ? (
-                  <Link className="profilePersonLink" to={`/users/${profile.manager.id}`}>
-                    {profile.manager.first_name} {profile.manager.last_name}
-                    <span>{profile.manager.title || t("users.noPosition")}</span>
-                  </Link>
-                ) : (
-                  <div className="muted" style={{ marginTop: 10 }}>Не назначен</div>
-                )}
-              </div>
-            </div>
-            <div className="profileInfoCard">
-              <div className="cardInner">
-                <h3 style={{ margin: 0, fontSize: 16 }}>Подчиненные</h3>
-                <div className="profileReports">
-                  {reports.slice(0, 6).map((employee) => (
-                    <Link key={employee.id} to={`/users/${employee.id}`}>
-                      {employee.first_name} {employee.last_name}
-                    </Link>
-                  ))}
-                  {reports.length === 0 && <div className="muted">Нет подчиненных в системе.</div>}
-                  {reports.length > 6 && <div className="muted">Еще {reports.length - 6}</div>}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="profileAboutSection">
-            <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
-              О сотруднике
-            </div>
-            <div>{profile.bio ?? "Описание пока не заполнено."}</div>
-          </div>
         </div>
       </section>
 
@@ -739,4 +815,292 @@ export function UserProfilePage() {
       ) : null}
     </div>
   );
+}
+
+function ProfileGeneralTab({ profile, reports }: { profile: UserPublic; reports: UserPublic[] }) {
+  const { t } = useLanguage();
+
+  return (
+    <>
+      <div className="infoGrid" style={{ marginTop: 0 }}>
+        <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
+          <div className="cardInner">
+            <div className="muted" style={{ fontSize: 13 }}>Email</div>
+            <a style={{ marginTop: 6, display: "block" }} href={`mailto:${profile.email}`}>{profile.email}</a>
+          </div>
+        </div>
+        <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
+          <div className="cardInner">
+            <div className="muted" style={{ fontSize: 13 }}>{t("form.location")}</div>
+            <div style={{ marginTop: 6 }}>{profile.location ?? "—"}</div>
+          </div>
+        </div>
+        <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
+          <div className="cardInner">
+            <div className="muted" style={{ fontSize: 13 }}>{t("form.phone")}</div>
+            {profile.phone ? (
+              <a style={{ marginTop: 6, display: "block" }} href={`tel:${profile.phone}`}>{profile.phone}</a>
+            ) : (
+              <div style={{ marginTop: 6 }}>—</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="profileWorkGrid">
+        <div className="profileInfoCard">
+          <div className="cardInner">
+            <h3 style={{ margin: 0, fontSize: 16 }}>{t("form.manager")}</h3>
+            {profile.manager ? (
+              <Link className="profilePersonLink" to={`/users/${profile.manager.id}`}>
+                {profile.manager.first_name} {profile.manager.last_name}
+                <span>{profile.manager.title || t("users.noPosition")}</span>
+              </Link>
+            ) : (
+              <div className="muted" style={{ marginTop: 10 }}>Не назначен</div>
+            )}
+          </div>
+        </div>
+        <div className="profileInfoCard">
+          <div className="cardInner">
+            <h3 style={{ margin: 0, fontSize: 16 }}>Подчиненные</h3>
+            <div className="profileReports">
+              {reports.slice(0, 6).map((employee) => (
+                <Link key={employee.id} to={`/users/${employee.id}`}>
+                  {employee.first_name} {employee.last_name}
+                </Link>
+              ))}
+              {reports.length === 0 && <div className="muted">Нет подчиненных в системе.</div>}
+              {reports.length > 6 && <div className="muted">Еще {reports.length - 6}</div>}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="profileAboutSection">
+        <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
+          О сотруднике
+        </div>
+        <div>{profile.bio ?? "Описание пока не заполнено."}</div>
+      </div>
+    </>
+  );
+}
+
+function EducationDevelopmentTab() {
+  const [skills, setSkills] = useState(["Docker", "Linux", "Power BI", "Python", "SQL", "Project Management"]);
+  const [newSkill, setNewSkill] = useState("");
+
+  function addSkill() {
+    const value = newSkill.trim();
+    if (!value || skills.some((skill) => skill.toLowerCase() === value.toLowerCase())) return;
+    setSkills((current) => [...current, value]);
+    setNewSkill("");
+  }
+
+  return (
+    <div className="profileSectionGrid">
+      <ProfileSection title="Высшее образование">
+        {educationRecords.map((item) => (
+          <ProfileDataCard key={`${item.school}-${item.graduationYear}`}>
+            <strong>{item.school}</strong>
+            <span>Факультет: {item.faculty}</span>
+            <span>Специальность: {item.specialty}</span>
+            <span>Год окончания: {item.graduationYear}</span>
+          </ProfileDataCard>
+        ))}
+      </ProfileSection>
+
+      <ProfileSection title="Дополнительное образование">
+        {additionalEducationRecords.map((item) => (
+          <ProfileDataCard key={`${item.organization}-${item.course}`}>
+            <strong>{item.course}</strong>
+            <span>Организация: {item.organization}</span>
+            <span>Дата: {item.date}</span>
+          </ProfileDataCard>
+        ))}
+      </ProfileSection>
+
+      <ProfileSection title="Сертификаты">
+        {certificateRecords.map((item) => (
+          <ProfileDataCard key={`${item.title}-${item.issuedAt}`}>
+            <strong>{item.title}</strong>
+            <span>Организация: {item.organization}</span>
+            <span>Дата получения: {item.issuedAt}</span>
+            <span>Срок действия: {item.validUntil ?? "не ограничен"}</span>
+          </ProfileDataCard>
+        ))}
+      </ProfileSection>
+
+      <ProfileSection title="Курсы">
+        {courseRecords.map((item) => (
+          <ProfileDataCard key={`${item.title}-${item.provider}`}>
+            <strong>{item.title}</strong>
+            <span>Провайдер: {item.provider}</span>
+            <span>Продолжительность: {item.duration}</span>
+            <span>Статус: {item.status}</span>
+          </ProfileDataCard>
+        ))}
+      </ProfileSection>
+
+      <ProfileSection title="Навыки">
+        <div className="profileSkillList">
+          {skills.map((skill) => (
+            <span className="profileSkillChip" key={skill}>{skill}</span>
+          ))}
+        </div>
+        <div className="profileSkillForm">
+          <input
+            className="input"
+            value={newSkill}
+            onChange={(event) => setNewSkill(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                addSkill();
+              }
+            }}
+            placeholder="Добавить навык"
+          />
+          <button className="btn" type="button" onClick={addSkill}>Добавить</button>
+        </div>
+      </ProfileSection>
+    </div>
+  );
+}
+
+function AchievementsTab() {
+  const years = Array.from(new Set(achievementRecords.map((item) => new Date(`${item.date}T00:00:00`).getFullYear()))).sort((a, b) => b - a);
+  const [year, setYear] = useState<string>("all");
+  const filtered = year === "all"
+    ? achievementRecords
+    : achievementRecords.filter((item) => String(new Date(`${item.date}T00:00:00`).getFullYear()) === year);
+
+  return (
+    <div className="profileSectionGrid">
+      <div className="profileFilterRow">
+        <span className="muted">Фильтр по году</span>
+        <select className="input" value={year} onChange={(event) => setYear(event.target.value)}>
+          <option value="all">Все годы</option>
+          {years.map((item) => (
+            <option key={item} value={item}>{item}</option>
+          ))}
+        </select>
+      </div>
+      <div className="profileTimeline">
+        {filtered.map((item) => (
+          <div className="profileTimelineItem" key={`${item.title}-${item.date}`}>
+            <div className="profileTimelineIcon">{item.icon}</div>
+            <div className="profileInfoCard">
+              <div className="cardInner">
+                <div className="muted" style={{ fontSize: 13 }}>{formatRuDate(item.date)}</div>
+                <h3 style={{ margin: "6px 0 0", fontSize: 16 }}>{item.title}</h3>
+                <div style={{ marginTop: 8 }}>{item.description}</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function GratitudeTab() {
+  const pageSize = 2;
+  const [page, setPage] = useState(1);
+  const [likedIds, setLikedIds] = useState<number[]>([]);
+  const pageCount = Math.max(1, Math.ceil(gratitudeRecords.length / pageSize));
+  const visible = gratitudeRecords.slice((page - 1) * pageSize, page * pageSize);
+  const totalLikes = gratitudeRecords.reduce((sum, item) => sum + item.likes, 0) + likedIds.length;
+
+  function toggleLike(id: number) {
+    setLikedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  }
+
+  return (
+    <div className="profileSectionGrid">
+      <div className="profileStatsGrid">
+        <div className="profileInfoCard">
+          <div className="cardInner">
+            <div className="muted" style={{ fontSize: 13 }}>Получено благодарностей</div>
+            <strong style={{ marginTop: 6, display: "block", fontSize: 24 }}>{gratitudeRecords.length}</strong>
+          </div>
+        </div>
+        <div className="profileInfoCard">
+          <div className="cardInner">
+            <div className="muted" style={{ fontSize: 13 }}>Получено лайков</div>
+            <strong style={{ marginTop: 6, display: "block", fontSize: 24 }}>{totalLikes}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div className="profileGratitudeList">
+        {visible.map((item) => {
+          const liked = likedIds.includes(item.id);
+          return (
+            <div className="profileInfoCard" key={item.id}>
+              <div className="cardInner profileGratitudeCard">
+                <div className="avatar commentAvatar">
+                  {item.authorAvatarUrl ? (
+                    <img className="avatarImage" src={item.authorAvatarUrl} alt={item.authorName} />
+                  ) : (
+                    getInitialsFromName(item.authorName)
+                  )}
+                </div>
+                <div>
+                  <strong>{item.authorName}</strong>
+                  <div className="muted" style={{ fontSize: 13 }}>{item.authorTitle}</div>
+                  <div style={{ marginTop: 10 }}>{item.text}</div>
+                  <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>{formatRuDate(item.date)}</div>
+                </div>
+                <button
+                  className={`gratitudeLikeButton ${liked ? "gratitudeLikeButtonActive" : ""}`}
+                  type="button"
+                  onClick={() => toggleLike(item.id)}
+                  aria-label="Поставить лайк"
+                >
+                  ❤️ {item.likes + (liked ? 1 : 0)}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="profilePagination">
+        <button className="btn" type="button" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+          Назад
+        </button>
+        <span className="muted">Страница {page} из {pageCount}</span>
+        <button className="btn" type="button" disabled={page === pageCount} onClick={() => setPage((current) => Math.min(pageCount, current + 1))}>
+          Далее
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ProfileSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="profileInfoCard">
+      <div className="cardInner">
+        <h3 style={{ margin: 0, fontSize: 16 }}>{title}</h3>
+        <div className="profileSectionBody">{children}</div>
+      </div>
+    </section>
+  );
+}
+
+function ProfileDataCard({ children }: { children: ReactNode }) {
+  return <div className="profileDataCard">{children}</div>;
+}
+
+function getInitialsFromName(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0] ?? "")
+    .join("")
+    .toUpperCase();
 }
