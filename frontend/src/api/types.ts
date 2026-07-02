@@ -158,6 +158,25 @@ export type ChatConversationPublic = {
   unread_count: number;
 };
 
+export type EmployeeGratitudePublic = {
+  id: number;
+  recipient_id: number;
+  author_id: number;
+  author: ManagerSummary;
+  content: string;
+  created_at: string;
+  likes_count: number;
+  liked_by_me: boolean;
+};
+
+export type EmployeeGratitudeListPublic = {
+  total_count: number;
+  total_likes: number;
+  page: number;
+  page_size: number;
+  items: EmployeeGratitudePublic[];
+};
+
 export type DailyOrderCount = {
   date: string;
   count: number;

@@ -38,6 +38,23 @@ class User(Base):
     )
     news_comments: Mapped[list["NewsComment"]] = relationship("NewsComment", back_populates="author")
     news_reactions: Mapped[list["NewsReaction"]] = relationship("NewsReaction", back_populates="user")
+    received_gratitudes: Mapped[list["EmployeeGratitude"]] = relationship(
+        "EmployeeGratitude",
+        back_populates="recipient",
+        cascade="all, delete-orphan",
+        foreign_keys="EmployeeGratitude.recipient_id",
+    )
+    authored_gratitudes: Mapped[list["EmployeeGratitude"]] = relationship(
+        "EmployeeGratitude",
+        back_populates="author",
+        cascade="all, delete-orphan",
+        foreign_keys="EmployeeGratitude.author_id",
+    )
+    gratitude_likes: Mapped[list["EmployeeGratitudeLike"]] = relationship(
+        "EmployeeGratitudeLike",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification",
         back_populates="recipient",

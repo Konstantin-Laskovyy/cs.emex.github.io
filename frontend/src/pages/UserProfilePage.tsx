@@ -3,7 +3,14 @@ import type { DragEvent, FormEvent, ReactNode } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
-import type { DepartmentPublic, UserPublic, UserUpdate, UserZupSettingsPublic } from "../api/types";
+import type {
+  DepartmentPublic,
+  EmployeeGratitudeListPublic,
+  EmployeeGratitudePublic,
+  UserPublic,
+  UserUpdate,
+  UserZupSettingsPublic,
+} from "../api/types";
 
 type ProfileFormState = {
   first_name: string;
@@ -69,6 +76,16 @@ function formatRuDate(value?: string | null) {
     month: "long",
     year: "numeric",
   }).format(new Date(`${value}T00:00:00`));
+}
+
+function formatNewsDateTime(value: string) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function formatVacationDays(value: number) {
@@ -152,22 +169,11 @@ type AchievementRecord = {
   date: string;
 };
 
-type GratitudeRecord = {
-  id: number;
-  authorName: string;
-  authorTitle: string;
-  authorAvatarUrl?: string | null;
-  text: string;
-  date: string;
-  likes: number;
-};
-
 const educationRecords: EducationRecord[] = [];
 const additionalEducationRecords: AdditionalEducationRecord[] = [];
 const certificateRecords: CertificateRecord[] = [];
 const courseRecords: CourseRecord[] = [];
 const achievementRecords: AchievementRecord[] = [];
-const gratitudeRecords: GratitudeRecord[] = [];
 
 export function UserProfilePage() {
   const { t } = useLanguage();
@@ -480,7 +486,7 @@ export function UserProfilePage() {
             )}
             {activeTab === "education" && <EducationDevelopmentTab />}
             {activeTab === "achievements" && <AchievementsTab />}
-            {activeTab === "gratitude" && <GratitudeTab />}
+            {activeTab === "gratitude" && <GratitudeTab profileId={profile.id} currentUserId={me?.id ?? null} />}
           </div>
 
           {canViewDashboard && (
@@ -960,17 +966,96 @@ function AchievementsTab() {
   );
 }
 
-function GratitudeTab() {
-  const pageSize = 2;
+function GratitudeTab({ profileId, currentUserId }: { profileId: number; currentUserId: number | null }) {
+  const pageSize = 5;
+  const canCreate = currentUserId !== null && currentUserId !== profileId;
   const [page, setPage] = useState(1);
-  const [likedIds, setLikedIds] = useState<number[]>([]);
-  const pageCount = Math.max(1, Math.ceil(gratitudeRecords.length / pageSize));
-  const visible = gratitudeRecords.slice((page - 1) * pageSize, page * pageSize);
-  const totalLikes = gratitudeRecords.reduce((sum, item) => sum + item.likes, 0) + likedIds.length;
+  const [data, setData] = useState<EmployeeGratitudeListPublic | null>(null);
+  const [content, setContent] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function toggleLike(id: number) {
-    setLikedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+  async function loadGratitudes(nextPage = page) {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await apiFetch<EmployeeGratitudeListPublic>(
+        `/users/${profileId}/gratitudes?page=${nextPage}&page_size=${pageSize}`,
+      );
+      setData(response);
+      setPage(response.page);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : "Не удалось загрузить благодарности.");
+    } finally {
+      setLoading(false);
+    }
   }
+
+  useEffect(() => {
+    void loadGratitudes(1);
+  }, [profileId]);
+
+  async function submitGratitude(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!content.trim()) return;
+
+    setSaving(true);
+    setError(null);
+    try {
+      await apiFetch<EmployeeGratitudePublic>(`/users/${profileId}/gratitudes`, {
+        method: "POST",
+        body: JSON.stringify({ content: content.trim() }),
+      });
+      setContent("");
+      await loadGratitudes(1);
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : "Не удалось оставить благодарность.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function toggleLike(item: EmployeeGratitudePublic) {
+    const previous = data;
+    if (previous) {
+      setData({
+        ...previous,
+        total_likes: previous.total_likes + (item.liked_by_me ? -1 : 1),
+        items: previous.items.map((gratitude) =>
+          gratitude.id === item.id
+            ? {
+                ...gratitude,
+                liked_by_me: !gratitude.liked_by_me,
+                likes_count: gratitude.likes_count + (gratitude.liked_by_me ? -1 : 1),
+              }
+            : gratitude,
+        ),
+      });
+    }
+
+    try {
+      const updated = await apiFetch<EmployeeGratitudePublic>(`/users/gratitudes/${item.id}/like`, {
+        method: "POST",
+      });
+      setData((current) =>
+        current
+          ? {
+              ...current,
+              items: current.items.map((gratitude) => (gratitude.id === updated.id ? updated : gratitude)),
+            }
+          : current,
+      );
+    } catch (likeError) {
+      if (previous) setData(previous);
+      setError(likeError instanceof Error ? likeError.message : "Не удалось поставить лайк.");
+    }
+  }
+
+  const items = data?.items ?? [];
+  const totalCount = data?.total_count ?? 0;
+  const totalLikes = data?.total_likes ?? 0;
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
     <div className="profileSectionGrid">
@@ -978,7 +1063,7 @@ function GratitudeTab() {
         <div className="profileInfoCard">
           <div className="cardInner">
             <div className="muted" style={{ fontSize: 13 }}>Получено благодарностей</div>
-            <strong style={{ marginTop: 6, display: "block", fontSize: 24 }}>{gratitudeRecords.length}</strong>
+            <strong style={{ marginTop: 6, display: "block", fontSize: 24 }}>{totalCount}</strong>
           </div>
         </div>
         <div className="profileInfoCard">
@@ -989,33 +1074,51 @@ function GratitudeTab() {
         </div>
       </div>
 
+      {canCreate && (
+        <form className="profileGratitudeForm" onSubmit={submitGratitude}>
+          <textarea
+            className="input"
+            rows={3}
+            value={content}
+            onChange={(event) => setContent(event.target.value)}
+            placeholder="Напишите благодарность сотруднику"
+          />
+          <button className="btn btnPrimary" type="submit" disabled={saving || !content.trim()}>
+            {saving ? "Отправляем..." : "Оставить благодарность"}
+          </button>
+        </form>
+      )}
+
+      {error && <div style={{ color: "#b42318" }}>{error}</div>}
+
       <div className="profileGratitudeList">
-        {visible.length === 0 && <ProfileEmptyState>Благодарности пока не добавлены.</ProfileEmptyState>}
-        {visible.map((item) => {
-          const liked = likedIds.includes(item.id);
+        {loading && <ProfileEmptyState>Загружаем благодарности...</ProfileEmptyState>}
+        {!loading && items.length === 0 && <ProfileEmptyState>Благодарности пока не добавлены.</ProfileEmptyState>}
+        {!loading && items.map((item) => {
+          const authorName = `${item.author.first_name} ${item.author.last_name}`;
           return (
             <div className="profileInfoCard" key={item.id}>
               <div className="cardInner profileGratitudeCard">
                 <div className="avatar commentAvatar">
-                  {item.authorAvatarUrl ? (
-                    <img className="avatarImage" src={item.authorAvatarUrl} alt={item.authorName} />
+                  {item.author.avatar_url ? (
+                    <img className="avatarImage" src={item.author.avatar_url} alt={authorName} />
                   ) : (
-                    getInitialsFromName(item.authorName)
+                    getInitialsFromName(authorName)
                   )}
                 </div>
                 <div>
-                  <strong>{item.authorName}</strong>
-                  <div className="muted" style={{ fontSize: 13 }}>{item.authorTitle}</div>
-                  <div style={{ marginTop: 10 }}>{item.text}</div>
-                  <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>{formatRuDate(item.date)}</div>
+                  <strong>{authorName}</strong>
+                  <div className="muted" style={{ fontSize: 13 }}>{item.author.title || "Сотрудник"}</div>
+                  <div style={{ marginTop: 10 }}>{item.content}</div>
+                  <div className="muted" style={{ marginTop: 10, fontSize: 13 }}>{formatNewsDateTime(item.created_at)}</div>
                 </div>
                 <button
-                  className={`gratitudeLikeButton ${liked ? "gratitudeLikeButtonActive" : ""}`}
+                  className={`gratitudeLikeButton ${item.liked_by_me ? "gratitudeLikeButtonActive" : ""}`}
                   type="button"
-                  onClick={() => toggleLike(item.id)}
+                  onClick={() => toggleLike(item)}
                   aria-label="Поставить лайк"
                 >
-                  ❤️ {item.likes + (liked ? 1 : 0)}
+                  Сердце {item.likes_count}
                 </button>
               </div>
             </div>
@@ -1024,11 +1127,11 @@ function GratitudeTab() {
       </div>
 
       <div className="profilePagination">
-        <button className="btn" type="button" disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+        <button className="btn" type="button" disabled={page === 1 || loading} onClick={() => loadGratitudes(Math.max(1, page - 1))}>
           Назад
         </button>
         <span className="muted">Страница {page} из {pageCount}</span>
-        <button className="btn" type="button" disabled={page === pageCount} onClick={() => setPage((current) => Math.min(pageCount, current + 1))}>
+        <button className="btn" type="button" disabled={page === pageCount || loading} onClick={() => loadGratitudes(Math.min(pageCount, page + 1))}>
           Далее
         </button>
       </div>

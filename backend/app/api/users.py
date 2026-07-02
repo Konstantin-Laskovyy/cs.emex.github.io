@@ -2,6 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_current_user, require_admin
@@ -10,7 +11,10 @@ from app.core.security import hash_password
 from app.core.zup import ZupConfigurationError, ZupServiceError, decimal_to_days, fetch_employee_summary
 from app.db.session import get_db
 from app.models.department import Department
+from app.models.gratitude import EmployeeGratitude, EmployeeGratitudeLike
+from app.models.notification import Notification
 from app.models.user import User
+from app.schemas.gratitudes import EmployeeGratitudeCreate, EmployeeGratitudeListPublic, EmployeeGratitudePublic
 from app.schemas.users import UserCreate, UserPublic, UserUpdate, UserZupSettingsPublic, UserZupSettingsUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -77,6 +81,124 @@ def get_user(
         _try_refresh_user_from_zup(db, user)
 
     return user
+
+
+@router.get("/{user_id}/gratitudes", response_model=EmployeeGratitudeListPublic)
+def list_user_gratitudes(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    page: int = 1,
+    page_size: int = 5,
+) -> EmployeeGratitudeListPublic:
+    _get_active_user(db, user_id)
+    page = max(1, page)
+    page_size = min(20, max(1, page_size))
+
+    total_count = (
+        db.query(func.count(EmployeeGratitude.id))
+        .filter(EmployeeGratitude.recipient_id == user_id)
+        .scalar()
+        or 0
+    )
+    total_likes = (
+        db.query(func.count(EmployeeGratitudeLike.id))
+        .join(EmployeeGratitude, EmployeeGratitudeLike.gratitude_id == EmployeeGratitude.id)
+        .filter(EmployeeGratitude.recipient_id == user_id)
+        .scalar()
+        or 0
+    )
+    gratitudes = (
+        db.query(EmployeeGratitude)
+        .options(joinedload(EmployeeGratitude.author))
+        .filter(EmployeeGratitude.recipient_id == user_id)
+        .order_by(EmployeeGratitude.created_at.desc(), EmployeeGratitude.id.desc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    return EmployeeGratitudeListPublic(
+        total_count=total_count,
+        total_likes=total_likes,
+        page=page,
+        page_size=page_size,
+        items=_build_gratitude_public(db, gratitudes, current_user.id),
+    )
+
+
+@router.post("/{user_id}/gratitudes", response_model=EmployeeGratitudePublic, status_code=status.HTTP_201_CREATED)
+def create_user_gratitude(
+    user_id: int,
+    payload: EmployeeGratitudeCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> EmployeeGratitudePublic:
+    recipient = _get_active_user(db, user_id)
+    if recipient.id == current_user.id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot thank yourself")
+
+    gratitude = EmployeeGratitude(
+        recipient_id=recipient.id,
+        author_id=current_user.id,
+        content=payload.content.strip(),
+    )
+    db.add(gratitude)
+    db.add(
+        Notification(
+            recipient_id=recipient.id,
+            actor_id=current_user.id,
+            title="Новая благодарность",
+            body=f"{current_user.first_name} {current_user.last_name} оставил(а) вам благодарность",
+            link=f"/users/{recipient.id}",
+        )
+    )
+    db.commit()
+    gratitude = (
+        db.query(EmployeeGratitude)
+        .options(joinedload(EmployeeGratitude.author))
+        .filter(EmployeeGratitude.id == gratitude.id)
+        .first()
+    )
+    return _build_gratitude_public(db, [gratitude], current_user.id)[0]
+
+
+@router.post("/gratitudes/{gratitude_id}/like", response_model=EmployeeGratitudePublic)
+def toggle_gratitude_like(
+    gratitude_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> EmployeeGratitudePublic:
+    gratitude = (
+        db.query(EmployeeGratitude)
+        .options(joinedload(EmployeeGratitude.author))
+        .filter(EmployeeGratitude.id == gratitude_id)
+        .first()
+    )
+    if not gratitude:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Gratitude not found")
+
+    existing = (
+        db.query(EmployeeGratitudeLike)
+        .filter(EmployeeGratitudeLike.gratitude_id == gratitude.id, EmployeeGratitudeLike.user_id == current_user.id)
+        .first()
+    )
+    if existing:
+        db.delete(existing)
+    else:
+        db.add(EmployeeGratitudeLike(gratitude_id=gratitude.id, user_id=current_user.id))
+        if gratitude.recipient_id != current_user.id:
+            db.add(
+                Notification(
+                    recipient_id=gratitude.recipient_id,
+                    actor_id=current_user.id,
+                    title="Лайк благодарности",
+                    body=f"{current_user.first_name} {current_user.last_name} оценил(а) благодарность",
+                    link=f"/users/{gratitude.recipient_id}",
+                )
+            )
+    db.commit()
+    return _build_gratitude_public(db, [gratitude], current_user.id)[0]
 
 
 @router.get("/{user_id}/zup-settings", response_model=UserZupSettingsPublic)
@@ -336,6 +458,47 @@ def _get_active_user(db: Session, user_id: int) -> User:
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
+
+
+def _build_gratitude_public(
+    db: Session,
+    gratitudes: list[EmployeeGratitude],
+    current_user_id: int,
+) -> list[EmployeeGratitudePublic]:
+    gratitude_ids = [gratitude.id for gratitude in gratitudes]
+    if not gratitude_ids:
+        return []
+
+    like_rows = (
+        db.query(EmployeeGratitudeLike.gratitude_id, func.count(EmployeeGratitudeLike.id))
+        .filter(EmployeeGratitudeLike.gratitude_id.in_(gratitude_ids))
+        .group_by(EmployeeGratitudeLike.gratitude_id)
+        .all()
+    )
+    liked_rows = (
+        db.query(EmployeeGratitudeLike.gratitude_id)
+        .filter(
+            EmployeeGratitudeLike.gratitude_id.in_(gratitude_ids),
+            EmployeeGratitudeLike.user_id == current_user_id,
+        )
+        .all()
+    )
+    likes_by_id = {gratitude_id: count for gratitude_id, count in like_rows}
+    liked_by_me = {gratitude_id for (gratitude_id,) in liked_rows}
+
+    return [
+        EmployeeGratitudePublic(
+            id=gratitude.id,
+            recipient_id=gratitude.recipient_id,
+            author_id=gratitude.author_id,
+            author=gratitude.author,
+            content=gratitude.content,
+            created_at=gratitude.created_at,
+            likes_count=likes_by_id.get(gratitude.id, 0),
+            liked_by_me=gratitude.id in liked_by_me,
+        )
+        for gratitude in gratitudes
+    ]
 
 
 def _try_refresh_user_from_zup(db: Session, user: User) -> None:
