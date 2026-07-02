@@ -1,6 +1,6 @@
 """add user development profile fields
 
-Revision ID: 0015_add_user_development_profile_fields
+Revision ID: 0015_user_development_fields
 Revises: 0014_add_employee_gratitudes
 Create Date: 2026-07-02
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "0015_add_user_development_profile_fields"
+revision = "0015_user_development_fields"
 down_revision = "0014_add_employee_gratitudes"
 branch_labels = None
 depends_on = None
