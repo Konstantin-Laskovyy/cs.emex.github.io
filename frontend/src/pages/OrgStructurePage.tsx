@@ -209,19 +209,6 @@ export function OrgStructurePage() {
             </div>
 
             <div className="orgPanelSection">
-              <h3>{t("org.positions")}</h3>
-              {selectedNode.positions?.length ? (
-                <div className="orgPositionList">
-                  {selectedNode.positions.map((position) => (
-                    <span key={position}>{position}</span>
-                  ))}
-                </div>
-              ) : (
-                <p className="muted">Для этого узла должности пока не указаны.</p>
-              )}
-            </div>
-
-            <div className="orgPanelSection">
               <h3>{t("org.employees")}</h3>
               {!selectedNode.departmentName && (
                 <p className="muted">Это сводный блок. Выберите конкретный отдел ниже по дереву.</p>
