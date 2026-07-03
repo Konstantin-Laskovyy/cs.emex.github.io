@@ -143,10 +143,12 @@ sudo docker exec -it emex-ollama ollama list
 
 ## 5. Интерфейсы
 
-Через Nginx:
+Через Nginx на сервере `192.168.1.77`.
 
-- Open WebUI: `http://ai.emex.local/ai/webui/`
-- AnythingLLM: `http://ai.emex.local/ai/anythingllm/`
+Важно: на этом сервере порт `80` уже используется корпоративной социальной сетью, поэтому AI-контур опубликован на отдельном порту `8088`.
+
+- Open WebUI: `http://192.168.1.77:8088/ai/webui/`
+- AnythingLLM: `http://192.168.1.77:8088/ai/anythingllm/`
 
 Локально на сервере для диагностики:
 
@@ -154,11 +156,11 @@ sudo docker exec -it emex-ollama ollama list
 - Open WebUI: `http://127.0.0.1:3000`
 - AnythingLLM: `http://127.0.0.1:3001`
 
-Если DNS `ai.emex.local` еще не настроен, временно откройте по IP сервера:
+Если DNS `ai.emex.local` еще не настроен, открывайте по IP сервера:
 
 ```text
-http://<IP_СЕРВЕРА>/ai/webui/
-http://<IP_СЕРВЕРА>/ai/anythingllm/
+http://192.168.1.77:8088/ai/webui/
+http://192.168.1.77:8088/ai/anythingllm/
 ```
 
 ## 6. Подключение Open WebUI к Ollama
@@ -281,7 +283,7 @@ sudo bash scripts/backup.sh
 
 | Сервис | Порт хоста | Порт контейнера | Доступ |
 |---|---:|---:|---|
-| Nginx | 80 | 80 | корпоративная сеть |
+| Nginx | 8088 | 80 | корпоративная сеть |
 | Ollama | 127.0.0.1:11434 | 11434 | только сервер |
 | Open WebUI | 127.0.0.1:3000 | 8080 | только сервер, наружу через Nginx |
 | AnythingLLM | 127.0.0.1:3001 | 3001 | только сервер, наружу через Nginx |
@@ -303,6 +305,7 @@ sudo bash scripts/backup.sh
 
 ```bash
 sudo ufw allow from 192.168.0.0/16 to any port 80 proto tcp
+sudo ufw allow from 192.168.0.0/16 to any port 8088 proto tcp
 sudo ufw deny 11434/tcp
 sudo ufw deny 3000/tcp
 sudo ufw deny 3001/tcp
@@ -451,9 +454,34 @@ sudo docker compose ps
 curl -I http://127.0.0.1:11434
 curl -I http://127.0.0.1:3000
 curl -I http://127.0.0.1:3001
-curl -I http://127.0.0.1/ai/webui/
-curl -I http://127.0.0.1/ai/anythingllm/
+curl -I http://127.0.0.1:8088/ai/webui/
+curl -I http://127.0.0.1:8088/ai/anythingllm/
 sudo docker exec -it emex-ollama ollama list
+```
+
+## 17. Если Docker Compose пишет, что переменные не заданы
+
+Если видите предупреждения вида:
+
+```text
+The "OLLAMA_BASE_URL" variable is not set. Defaulting to a blank string.
+The "OPENWEBUI_SECRET_KEY" variable is not set. Defaulting to a blank string.
+```
+
+значит `docker compose` запущен не из директории `/opt/emex-ai-assistant` или не получил `.env`.
+
+Правильно:
+
+```bash
+cd /opt/emex-ai-assistant
+sudo docker compose --env-file .env up -d
+```
+
+Также можно проверить, что compose видит переменные:
+
+```bash
+cd /opt/emex-ai-assistant
+sudo docker compose --env-file .env config
 ```
 
 ## 16. Важное замечание про reverse proxy

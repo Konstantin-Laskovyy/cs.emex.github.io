@@ -48,6 +48,15 @@ for required_file in docker-compose.yml .env nginx/default.conf scripts/pull-mod
   fi
 done
 
+if [[ -f "${PROJECT_DIR}/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "${PROJECT_DIR}/.env"
+  set +a
+fi
+
+AI_NGINX_PORT="${AI_NGINX_PORT:-8088}"
+
 echo "==> Выставляем права на скрипты"
 chmod +x "${PROJECT_DIR}/scripts/"*.sh
 
@@ -58,8 +67,8 @@ docker compose up -d
 
 echo
 echo "Готово."
-echo "Open WebUI:    http://$(hostname -I | awk '{print $1}')/ai/webui/"
-echo "AnythingLLM:   http://$(hostname -I | awk '{print $1}')/ai/anythingllm/"
+echo "Open WebUI:    http://$(hostname -I | awk '{print $1}'):${AI_NGINX_PORT}/ai/webui/"
+echo "AnythingLLM:   http://$(hostname -I | awk '{print $1}'):${AI_NGINX_PORT}/ai/anythingllm/"
 echo "Ollama local:  http://127.0.0.1:11434"
 echo
 echo "Следующий шаг: загрузить модели"

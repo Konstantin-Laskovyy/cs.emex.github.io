@@ -68,7 +68,9 @@ services:
       - anythingllm
       - open-webui
     ports:
-      - "80:80"
+      # На 192.168.1.77 порт 80 уже занят корпоративной соцсетью.
+      # AI-контур публикуем отдельно: http://192.168.1.77:8088/ai/webui/
+      - "${AI_NGINX_PORT}:80"
     environment:
       TZ: ${TZ}
     volumes:
