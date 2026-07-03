@@ -59,6 +59,12 @@ class DepartmentContentUpdate(BaseModel):
     projects: list[DepartmentProject] | None = None
 
 
+class DepartmentUploadPublic(BaseModel):
+    url: str
+    name: str
+    content_type: str
+
+
 class OrgRootPublic(BaseModel):
     name: str
     manager_id: int | None = None

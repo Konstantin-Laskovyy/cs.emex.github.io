@@ -7,6 +7,7 @@ import type {
   DepartmentDocument,
   DepartmentProject,
   DepartmentPublic,
+  DepartmentUploadPublic,
   UserPublic,
 } from "../api/types";
 
@@ -255,7 +256,12 @@ export function DepartmentDetailsPage() {
           />
         )}
         {activeTab === "documents" && (
-          <DepartmentDocumentsTab draft={draft} isEditing={isEditing} setDraft={setDraft} />
+          <DepartmentDocumentsTab
+            departmentId={department.id}
+            draft={draft}
+            isEditing={isEditing}
+            setDraft={setDraft}
+          />
         )}
         {activeTab === "projects" && (
           <DepartmentProjectsTab draft={draft} isEditing={isEditing} setDraft={setDraft} />
@@ -383,10 +389,12 @@ function DepartmentGeneralTab({
 }
 
 function DepartmentDocumentsTab({
+  departmentId,
   draft,
   isEditing,
   setDraft,
 }: {
+  departmentId: number;
   draft: DepartmentDraft;
   isEditing: boolean;
   setDraft: Dispatch<SetStateAction<DepartmentDraft>>;
@@ -411,7 +419,7 @@ function DepartmentDocumentsTab({
         </div>
 
         {isEditing ? (
-          <DocumentEditor documents={draft.documents} setDraft={setDraft} />
+          <DocumentEditor departmentId={departmentId} documents={draft.documents} setDraft={setDraft} />
         ) : draft.documents.length ? (
           <div className="departmentDocumentGrid">
             {draft.documents.map((document, index) => (
@@ -437,12 +445,45 @@ function DepartmentDocumentsTab({
 }
 
 function DocumentEditor({
+  departmentId,
   documents,
   setDraft,
 }: {
+  departmentId: number;
   documents: DepartmentDocument[];
   setDraft: Dispatch<SetStateAction<DepartmentDraft>>;
 }) {
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+
+  async function uploadDocumentFile(index: number, file: File | undefined) {
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file);
+    setUploadingIndex(index);
+    try {
+      const uploaded = await apiFetch<DepartmentUploadPublic>(`/departments/${departmentId}/documents/upload`, {
+        method: "POST",
+        body: form,
+      });
+      setDraft((current) => ({
+        ...current,
+        documents: current.documents.map((item, itemIndex) =>
+          itemIndex === index
+            ? {
+                ...item,
+                title: item.title || uploaded.name,
+                url: uploaded.url,
+              }
+            : item,
+        ),
+      }));
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Не удалось загрузить файл");
+    } finally {
+      setUploadingIndex(null);
+    }
+  }
+
   if (documents.length === 0) {
     return <div className="departmentEmpty">Нажмите “Добавить документ”, чтобы создать первую запись.</div>;
   }
@@ -477,6 +518,26 @@ function DocumentEditor({
               }))
             }
           />
+          <div className="departmentUploadRow">
+            <input
+              className="departmentFileInput"
+              id={`department-document-upload-${index}`}
+              type="file"
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip,image/*"
+              onChange={(event) => {
+                void uploadDocumentFile(index, event.target.files?.[0]);
+                event.target.value = "";
+              }}
+            />
+            <label className="btn" htmlFor={`department-document-upload-${index}`}>
+              {uploadingIndex === index ? "Загрузка..." : "Прикрепить файл"}
+            </label>
+            {document.url && (
+              <a className="btn" href={document.url} target="_blank" rel="noreferrer">
+                Открыть файл
+              </a>
+            )}
+          </div>
           <textarea
             className="input"
             value={document.description}

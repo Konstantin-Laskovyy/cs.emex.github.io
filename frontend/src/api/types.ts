@@ -151,6 +151,12 @@ export type DepartmentContentPayload = {
   projects?: DepartmentProject[] | null;
 };
 
+export type DepartmentUploadPublic = {
+  url: string;
+  name: string;
+  content_type: string;
+};
+
 export type OrgRootPublic = {
   name: string;
   manager_id?: number | null;

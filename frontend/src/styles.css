@@ -1400,6 +1400,17 @@ textarea {
   gap: 10px;
 }
 
+.departmentUploadRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.departmentFileInput {
+  display: none;
+}
+
 .newsHero {
   position: relative;
   overflow: hidden;

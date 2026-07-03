@@ -1,8 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from pathlib import Path
+from uuid import uuid4
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, require_admin
+from app.core.config import settings
 from app.db.session import get_db
 from app.models.app_setting import AppSetting
 from app.models.department import Department
@@ -12,6 +16,7 @@ from app.schemas.departments import (
     DepartmentCreate,
     DepartmentPublic,
     DepartmentUpdate,
+    DepartmentUploadPublic,
     OrgRootPublic,
     OrgRootUpdate,
 )
@@ -19,6 +24,23 @@ from app.schemas.departments import (
 router = APIRouter(prefix="/departments", tags=["departments"])
 ORG_ROOT_NAME_KEY = "org_root_name"
 ORG_ROOT_MANAGER_ID_KEY = "org_root_manager_id"
+MAX_DEPARTMENT_UPLOAD_SIZE = 15 * 1024 * 1024
+ALLOWED_DEPARTMENT_UPLOAD_TYPES = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif",
+    "application/pdf": ".pdf",
+    "application/msword": ".doc",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
+    "application/vnd.ms-excel": ".xls",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": ".xlsx",
+    "application/vnd.ms-powerpoint": ".ppt",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation": ".pptx",
+    "text/plain": ".txt",
+    "text/csv": ".csv",
+    "application/zip": ".zip",
+}
 
 
 @router.get("/org-root", response_model=OrgRootPublic)
@@ -163,6 +185,42 @@ def update_department_content(
     db.commit()
     db.refresh(department)
     return _department_public(db, department)
+
+
+@router.post("/{department_id}/documents/upload", response_model=DepartmentUploadPublic, status_code=status.HTTP_201_CREATED)
+async def upload_department_document(
+    department_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DepartmentUploadPublic:
+    department = db.get(Department, department_id)
+    if not department:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Отдел не найден")
+
+    _require_department_editor(department, current_user)
+
+    content_type = file.content_type or "application/octet-stream"
+    extension = ALLOWED_DEPARTMENT_UPLOAD_TYPES.get(content_type)
+    if extension is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Неподдерживаемый тип файла")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Файл пустой")
+    if len(content) > MAX_DEPARTMENT_UPLOAD_SIZE:
+        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Файл должен быть не больше 15 МБ")
+
+    upload_dir = Path(settings.upload_dir) / "departments" / str(department.id)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid4().hex}{extension}"
+    (upload_dir / filename).write_bytes(content)
+
+    return DepartmentUploadPublic(
+        url=f"{settings.public_upload_url.rstrip('/')}/departments/{department.id}/{filename}",
+        name=file.filename or filename,
+        content_type=content_type,
+    )
 
 
 @router.delete("/{department_id}", status_code=status.HTTP_204_NO_CONTENT)
