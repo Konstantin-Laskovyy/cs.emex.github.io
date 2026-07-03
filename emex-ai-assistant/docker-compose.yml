@@ -1,0 +1,82 @@
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: emex-ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      TZ: ${TZ}
+    ports:
+      # Порт доступен только с самого сервера. Пользователям Ollama напрямую не открываем.
+      - "127.0.0.1:${OLLAMA_PORT}:11434"
+    volumes:
+      - ./data/ollama:/root/.ollama
+    networks:
+      - emex-ai
+
+  anythingllm:
+    image: mintplexlabs/anythingllm:latest
+    container_name: emex-anythingllm
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    environment:
+      STORAGE_DIR: /app/server/storage
+      SERVER_PORT: 3001
+      UID: ${UID}
+      GID: ${GID}
+      TZ: ${TZ}
+      LLM_PROVIDER: ollama
+      OLLAMA_BASE_PATH: ${OLLAMA_BASE_URL}
+      OLLAMA_MODEL_PREF: ${PRIMARY_CHAT_MODEL}
+      OLLAMA_MODEL_TOKEN_LIMIT: 8192
+      EMBEDDING_ENGINE: ollama
+      EMBEDDING_BASE_PATH: ${OLLAMA_BASE_URL}
+      EMBEDDING_MODEL_PREF: ${EMBEDDING_MODEL}
+    ports:
+      # Для диагностики на сервере: curl http://127.0.0.1:3001
+      - "127.0.0.1:${ANYTHINGLLM_PORT}:3001"
+    volumes:
+      - ./data/anythingllm:/app/server/storage
+      - ./data/documents:/app/server/storage/documents
+    networks:
+      - emex-ai
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: emex-openwebui
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+      WEBUI_SECRET_KEY: ${OPENWEBUI_SECRET_KEY}
+      TZ: ${TZ}
+    ports:
+      # Open WebUI внутри контейнера слушает 8080.
+      - "127.0.0.1:${OPENWEBUI_PORT}:8080"
+    volumes:
+      - ./data/open-webui:/app/backend/data
+    networks:
+      - emex-ai
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: emex-ai-nginx
+    restart: unless-stopped
+    depends_on:
+      - anythingllm
+      - open-webui
+    ports:
+      - "80:80"
+    environment:
+      TZ: ${TZ}
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - emex-ai
+
+networks:
+  emex-ai:
+    name: emex-ai
+    driver: bridge
