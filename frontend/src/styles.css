@@ -1191,6 +1191,143 @@ textarea {
   border-radius: 50%;
 }
 
+.departmentDetailsHeader {
+  align-items: flex-start;
+}
+
+.departmentTabPanel {
+  display: grid;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.departmentOverviewGrid {
+  display: grid;
+  grid-template-columns: 1.4fr repeat(2, minmax(180px, 0.8fr));
+  gap: 12px;
+}
+
+.departmentInfoCard,
+.departmentSection {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #f8fbff;
+  box-shadow: none;
+}
+
+.departmentInfoCard {
+  display: grid;
+  gap: 8px;
+  min-height: 116px;
+  padding: 18px;
+}
+
+.departmentInfoCard > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.departmentInfoCard > strong {
+  font-size: 28px;
+}
+
+.departmentInfoCard small {
+  color: var(--muted);
+}
+
+.departmentManager {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  color: var(--ink);
+}
+
+.departmentManager strong,
+.departmentEmployeeCard strong {
+  display: block;
+}
+
+.departmentManager small,
+.departmentEmployeeCard span,
+.departmentEmployeeCard small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+}
+
+.departmentAvatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+}
+
+.departmentSection {
+  padding: 18px;
+}
+
+.departmentSection h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+.departmentChipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.departmentChip {
+  padding: 9px 12px;
+  border: 1px solid #cfe0f3;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.departmentChip:hover {
+  border-color: var(--primary);
+  background: #eef6ff;
+}
+
+.departmentEmployeeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.departmentEmployeeCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #d4e9fb;
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.departmentEmployeeCard:hover {
+  border-color: var(--primary);
+  background: #eef7ff;
+}
+
+.departmentProjectGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.departmentEmpty {
+  padding: 14px;
+  border: 1px dashed #b9d9f5;
+  border-radius: 16px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.62);
+}
+
 .newsHero {
   position: relative;
   overflow: hidden;
@@ -2758,6 +2895,21 @@ textarea {
 
   .homeSidebar {
     position: static;
+  }
+
+  .departmentOverviewGrid,
+  .departmentEmployeeGrid,
+  .departmentProjectGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .departmentDetailsHeader {
+    display: grid;
+    gap: 12px;
+  }
+
+  .departmentDetailsHeader .spacer {
+    display: none;
   }
 
   .profileWorkGrid {

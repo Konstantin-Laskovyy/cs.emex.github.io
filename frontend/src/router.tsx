@@ -3,6 +3,7 @@ import { AppShell } from "./ui/AppShell";
 import { HomePage } from "./pages/HomePage";
 import { UsersPage } from "./pages/UsersPage";
 import { DepartmentsPage } from "./pages/DepartmentsPage";
+import { DepartmentDetailsPage } from "./pages/DepartmentDetailsPage";
 import { UserProfilePage } from "./pages/UserProfilePage";
 import { LoginPage } from "./pages/LoginPage";
 import { NewsEditorPage } from "./pages/NewsEditorPage";
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: "users", element: <UsersPage /> },
       { path: "users/:id", element: <UserProfilePage /> },
       { path: "departments", element: <DepartmentsPage /> },
+      { path: "departments/:id", element: <DepartmentDetailsPage /> },
       { path: "org", element: <OrgStructurePage /> },
       { path: "chat", element: <ChatPage /> },
       { path: "analytics", element: <AnalyticsPage /> },

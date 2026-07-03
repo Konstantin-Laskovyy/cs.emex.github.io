@@ -74,7 +74,7 @@ export function DepartmentsPage() {
             departments.map((department) => (
               <Link
                 key={department.id}
-                to={`/users?department_id=${department.id}`}
+                to={`/departments/${department.id}`}
                 className="card"
                 style={{
                   boxShadow: "none",
