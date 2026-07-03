@@ -147,8 +147,8 @@ sudo docker exec -it emex-ollama ollama list
 
 Важно: на этом сервере порт `80` уже используется корпоративной социальной сетью, поэтому AI-контур опубликован на отдельном порту `8088`.
 
-- Open WebUI: `http://192.168.1.77:8088/ai/webui/`
-- AnythingLLM: `http://192.168.1.77:8088/ai/anythingllm/`
+- Open WebUI: `http://192.168.1.77:8088/`
+- AnythingLLM: `http://192.168.1.77:8089/`
 
 Локально на сервере для диагностики:
 
@@ -159,8 +159,8 @@ sudo docker exec -it emex-ollama ollama list
 Если DNS `ai.emex.local` еще не настроен, открывайте по IP сервера:
 
 ```text
-http://192.168.1.77:8088/ai/webui/
-http://192.168.1.77:8088/ai/anythingllm/
+http://192.168.1.77:8088/
+http://192.168.1.77:8089/
 ```
 
 ## 6. Подключение Open WebUI к Ollama
@@ -283,7 +283,8 @@ sudo bash scripts/backup.sh
 
 | Сервис | Порт хоста | Порт контейнера | Доступ |
 |---|---:|---:|---|
-| Nginx | 8088 | 80 | корпоративная сеть |
+| Nginx/Open WebUI | 8088 | 80 | корпоративная сеть |
+| Nginx/AnythingLLM | 8089 | 8089 | корпоративная сеть |
 | Ollama | 127.0.0.1:11434 | 11434 | только сервер |
 | Open WebUI | 127.0.0.1:3000 | 8080 | только сервер, наружу через Nginx |
 | AnythingLLM | 127.0.0.1:3001 | 3001 | только сервер, наружу через Nginx |
@@ -306,6 +307,7 @@ sudo bash scripts/backup.sh
 ```bash
 sudo ufw allow from 192.168.0.0/16 to any port 80 proto tcp
 sudo ufw allow from 192.168.0.0/16 to any port 8088 proto tcp
+sudo ufw allow from 192.168.0.0/16 to any port 8089 proto tcp
 sudo ufw deny 11434/tcp
 sudo ufw deny 3000/tcp
 sudo ufw deny 3001/tcp
@@ -454,8 +456,8 @@ sudo docker compose ps
 curl -I http://127.0.0.1:11434
 curl -I http://127.0.0.1:3000
 curl -I http://127.0.0.1:3001
-curl -I http://127.0.0.1:8088/ai/webui/
-curl -I http://127.0.0.1:8088/ai/anythingllm/
+curl -I http://127.0.0.1:8088/
+curl -I http://127.0.0.1:8089/
 sudo docker exec -it emex-ollama ollama list
 ```
 
