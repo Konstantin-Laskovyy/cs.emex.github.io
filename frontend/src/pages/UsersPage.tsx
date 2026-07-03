@@ -53,6 +53,7 @@ export function UsersPage() {
   const [form, setForm] = useState<CreateFormState>(emptyCreateForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -130,6 +131,7 @@ export function UsersPage() {
         )
       );
       setForm(emptyCreateForm);
+      setShowCreateForm(false);
       setSaveMessage(t("users.addSubmit"));
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : "Не удалось создать сотрудника.");
@@ -186,10 +188,23 @@ export function UsersPage() {
                 </option>
               ))}
             </select>
+            {canCreateEmployees && (
+              <button
+                className="btn btnPrimary"
+                type="button"
+                onClick={() => {
+                  setShowCreateForm((current) => !current);
+                  setSaveError(null);
+                  setSaveMessage(null);
+                }}
+              >
+                {showCreateForm ? "Скрыть форму" : t("users.addTitle")}
+              </button>
+            )}
           </div>
         </div>
 
-        {canCreateEmployees && (
+        {canCreateEmployees && showCreateForm && (
         <section className="card" style={{ marginTop: 16, boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
           <div className="cardInner">
             <h2 style={{ margin: 0, fontSize: 20 }}>{t("users.addTitle")}</h2>
@@ -266,6 +281,19 @@ export function UsersPage() {
               <div className="row">
                 <button className="btn btnPrimary" type="submit" disabled={saving}>
                   {saving ? t("users.adding") : t("users.addSubmit")}
+                </button>
+                <button
+                  className="btn"
+                  type="button"
+                  disabled={saving}
+                  onClick={() => {
+                    setShowCreateForm(false);
+                    setForm(emptyCreateForm);
+                    setSaveError(null);
+                    setSaveMessage(null);
+                  }}
+                >
+                  Отмена
                 </button>
               </div>
             </form>
