@@ -1,3 +1,4 @@
+from datetime import date
 from pathlib import Path
 from uuid import uuid4
 
@@ -15,7 +16,7 @@ from app.models.gratitude import EmployeeGratitude, EmployeeGratitudeLike
 from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.gratitudes import EmployeeGratitudeCreate, EmployeeGratitudeListPublic, EmployeeGratitudePublic
-from app.schemas.users import UserCreate, UserPublic, UserUpdate, UserZupSettingsPublic, UserZupSettingsUpdate
+from app.schemas.users import UpcomingBirthdayPublic, UserCreate, UserPublic, UserUpdate, UserZupSettingsPublic, UserZupSettingsUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -56,6 +57,40 @@ def list_users(
     if department_id is not None:
         q = q.filter(User.department_id == department_id)
     return q.order_by(User.last_name.asc(), User.first_name.asc()).limit(200).all()
+
+
+@router.get("/birthdays/upcoming", response_model=list[UpcomingBirthdayPublic])
+def list_upcoming_birthdays(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> list[UpcomingBirthdayPublic]:
+    today = date.today()
+    upcoming: list[UpcomingBirthdayPublic] = []
+    users = (
+        db.query(User)
+        .filter(
+            User.is_active.is_(True),
+            User.access_enabled.is_(True),
+            User.iin.is_not(None),
+        )
+        .all()
+    )
+
+    for user in users:
+        birth_date = _birth_date_from_iin(user.iin)
+        if not birth_date:
+            continue
+        next_date = _next_birthday(birth_date, today)
+        upcoming.append(
+            UpcomingBirthdayPublic(
+                user=user,
+                birth_date=birth_date,
+                next_date=next_date,
+                days_until=(next_date - today).days,
+            )
+        )
+
+    return sorted(upcoming, key=lambda item: (item.days_until, item.user.last_name, item.user.first_name))[:5]
 
 
 @router.get("/{user_id}", response_model=UserPublic)
@@ -470,6 +505,33 @@ def _get_active_user(db: Session, user_id: int) -> User:
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
+
+
+def _birth_date_from_iin(iin: str | None) -> date | None:
+    if not iin or len(iin) < 6 or not iin[:6].isdigit():
+        return None
+    yy = int(iin[:2])
+    month = int(iin[2:4])
+    day = int(iin[4:6])
+    current_year_two_digits = date.today().year % 100
+    year = 2000 + yy if yy <= current_year_two_digits else 1900 + yy
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
+def _next_birthday(birth_date: date, today: date) -> date:
+    try:
+        next_date = birth_date.replace(year=today.year)
+    except ValueError:
+        next_date = date(today.year, 2, 28)
+    if next_date < today:
+        try:
+            next_date = birth_date.replace(year=today.year + 1)
+        except ValueError:
+            next_date = date(today.year + 1, 2, 28)
+    return next_date
 
 
 def _build_gratitude_public(

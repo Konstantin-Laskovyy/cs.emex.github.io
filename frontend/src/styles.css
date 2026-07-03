@@ -1125,6 +1125,72 @@ textarea {
   display: none;
 }
 
+.homeLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  gap: 18px;
+  align-items: start;
+}
+
+.homeFeed {
+  display: grid;
+  gap: 18px;
+}
+
+.homeSidebar {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: 14px;
+}
+
+.birthdayDashboard h2 {
+  margin: 12px 0 0;
+  font-size: 22px;
+}
+
+.birthdayList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.birthdayItem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #d4e9fb;
+  border-radius: 16px;
+  background: #f8fbff;
+  color: var(--ink);
+}
+
+.birthdayItem:hover {
+  border-color: var(--primary);
+  background: #eef7ff;
+}
+
+.birthdayItem strong,
+.birthdayItem span,
+.birthdayItem small {
+  display: block;
+}
+
+.birthdayItem span,
+.birthdayItem small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.birthdayAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+}
+
 .newsHero {
   position: relative;
   overflow: hidden;
@@ -2684,6 +2750,14 @@ textarea {
 
   .newsAuthorAvatar {
     order: 0;
+  }
+
+  .homeLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .homeSidebar {
+    position: static;
   }
 
   .profileWorkGrid {

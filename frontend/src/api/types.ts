@@ -223,6 +223,13 @@ export type EmployeeGratitudeListPublic = {
   items: EmployeeGratitudePublic[];
 };
 
+export type UpcomingBirthdayPublic = {
+  user: ManagerSummary;
+  birth_date: string;
+  next_date: string;
+  days_until: number;
+};
+
 export type DailyOrderCount = {
   date: string;
   count: number;

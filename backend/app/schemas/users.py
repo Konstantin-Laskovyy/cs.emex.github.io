@@ -136,3 +136,10 @@ class UserZupSettingsPublic(BaseModel):
 class UserZupSettingsUpdate(BaseModel):
     iin: str | None = Field(default=None, pattern=r"^\d{12}$")
 
+
+class UpcomingBirthdayPublic(BaseModel):
+    user: ManagerSummary
+    birth_date: date
+    next_date: date
+    days_until: int
+
