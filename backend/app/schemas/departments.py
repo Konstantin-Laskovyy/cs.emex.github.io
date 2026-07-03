@@ -12,6 +12,20 @@ class DepartmentManagerPublic(BaseModel):
         from_attributes = True
 
 
+class DepartmentDocument(BaseModel):
+    title: str = ""
+    description: str = ""
+    url: str = ""
+
+
+class DepartmentProject(BaseModel):
+    title: str = ""
+    description: str = ""
+    owner: str = ""
+    status: str = ""
+    dueDate: str = ""
+
+
 class DepartmentPublic(BaseModel):
     id: int
     name: str
@@ -19,6 +33,9 @@ class DepartmentPublic(BaseModel):
     manager_id: int | None = None
     manager: DepartmentManagerPublic | None = None
     employee_count: int = 0
+    description: str | None = None
+    documents: list[DepartmentDocument] = []
+    projects: list[DepartmentProject] = []
 
     class Config:
         from_attributes = True
@@ -34,6 +51,12 @@ class DepartmentUpdate(BaseModel):
     name: str
     parent_id: int | None = None
     manager_id: int | None = None
+
+
+class DepartmentContentUpdate(BaseModel):
+    description: str | None = None
+    documents: list[DepartmentDocument] | None = None
+    projects: list[DepartmentProject] | None = None
 
 
 class OrgRootPublic(BaseModel):

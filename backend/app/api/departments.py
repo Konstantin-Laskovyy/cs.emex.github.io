@@ -7,7 +7,14 @@ from app.db.session import get_db
 from app.models.app_setting import AppSetting
 from app.models.department import Department
 from app.models.user import User
-from app.schemas.departments import DepartmentCreate, DepartmentPublic, DepartmentUpdate, OrgRootPublic, OrgRootUpdate
+from app.schemas.departments import (
+    DepartmentContentUpdate,
+    DepartmentCreate,
+    DepartmentPublic,
+    DepartmentUpdate,
+    OrgRootPublic,
+    OrgRootUpdate,
+)
 
 router = APIRouter(prefix="/departments", tags=["departments"])
 ORG_ROOT_NAME_KEY = "org_root_name"
@@ -63,6 +70,9 @@ def list_departments(
             manager_id=department.manager_id,
             manager=department.manager,
             employee_count=employee_count,
+            description=department.description,
+            documents=department.documents or [],
+            projects=department.projects or [],
         )
         for department, employee_count in rows
     ]
@@ -129,6 +139,32 @@ def update_department(
     return _department_public(db, department)
 
 
+@router.patch("/{department_id}/content", response_model=DepartmentPublic)
+def update_department_content(
+    department_id: int,
+    payload: DepartmentContentUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DepartmentPublic:
+    department = db.get(Department, department_id)
+    if not department:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Отдел не найден")
+
+    _require_department_editor(department, current_user)
+
+    if payload.description is not None:
+        department.description = payload.description.strip() or None
+    if payload.documents is not None:
+        department.documents = [item.model_dump() for item in payload.documents]
+    if payload.projects is not None:
+        department.projects = [item.model_dump() for item in payload.projects]
+
+    db.add(department)
+    db.commit()
+    db.refresh(department)
+    return _department_public(db, department)
+
+
 @router.delete("/{department_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_department(
     department_id: int,
@@ -169,6 +205,12 @@ def _is_descendant(db: Session, candidate_parent_id: int, department_id: int) ->
     return False
 
 
+def _require_department_editor(department: Department, current_user: User) -> None:
+    if current_user.role == "admin" or department.manager_id == current_user.id:
+        return
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав")
+
+
 def _department_public(db: Session, department: Department) -> DepartmentPublic:
     employee_count = (
         db.query(func.count(User.id))
@@ -183,6 +225,9 @@ def _department_public(db: Session, department: Department) -> DepartmentPublic:
         manager_id=department.manager_id,
         manager=department.manager,
         employee_count=employee_count,
+        description=department.description,
+        documents=department.documents or [],
+        projects=department.projects or [],
     )
 
 

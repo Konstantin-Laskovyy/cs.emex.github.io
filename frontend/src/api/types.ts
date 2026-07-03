@@ -120,12 +120,35 @@ export type DepartmentPublic = {
   manager_id?: number | null;
   manager?: ManagerSummary | null;
   employee_count: number;
+  description?: string | null;
+  documents: DepartmentDocument[];
+  projects: DepartmentProject[];
 };
 
 export type DepartmentPayload = {
   name: string;
   parent_id?: number | null;
   manager_id?: number | null;
+};
+
+export type DepartmentDocument = {
+  title: string;
+  description: string;
+  url: string;
+};
+
+export type DepartmentProject = {
+  title: string;
+  description: string;
+  owner: string;
+  status: string;
+  dueDate: string;
+};
+
+export type DepartmentContentPayload = {
+  description?: string | null;
+  documents?: DepartmentDocument[] | null;
+  projects?: DepartmentProject[] | null;
 };
 
 export type OrgRootPublic = {
