@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
 
@@ -21,6 +21,7 @@ from app.schemas.users import UpcomingBirthdayPublic, UserCreate, UserPublic, Us
 router = APIRouter(prefix="/users", tags=["users"])
 
 MAX_AVATAR_BYTES = 5 * 1024 * 1024
+ZUP_AUTO_REFRESH_INTERVAL = timedelta(hours=24)
 AVATAR_CONTENT_TYPES = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
@@ -108,11 +109,7 @@ def get_user(
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    if (
-        user.iin
-        and user.zup_source_updated_at is None
-        and (current_user.id == user.id or current_user.role == "admin")
-    ):
+    if user.iin and _can_auto_refresh_zup(current_user, user) and _zup_data_is_stale(user.zup_source_updated_at):
         _try_refresh_user_from_zup(db, user)
 
     return user
@@ -580,6 +577,18 @@ def _try_refresh_user_from_zup(db: Session, user: User) -> None:
         _refresh_user_from_zup(db, user)
     except (ZupConfigurationError, ZupServiceError):
         db.rollback()
+
+
+def _can_auto_refresh_zup(current_user: User, user: User) -> bool:
+    return current_user.id == user.id or current_user.role == "admin"
+
+
+def _zup_data_is_stale(source_updated_at: datetime | None) -> bool:
+    if source_updated_at is None:
+        return True
+    if source_updated_at.tzinfo is None:
+        source_updated_at = source_updated_at.replace(tzinfo=timezone.utc)
+    return datetime.now(timezone.utc) - source_updated_at > ZUP_AUTO_REFRESH_INTERVAL
 
 
 def _refresh_user_from_zup(db: Session, user: User) -> None:
