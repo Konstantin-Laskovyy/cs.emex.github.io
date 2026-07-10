@@ -24,6 +24,8 @@ type ProfileFormState = {
   location: string;
   phone: string;
   work_status: WorkStatus;
+  workday_start: string;
+  workday_end: string;
   hire_date: string;
   vacation_days_total: string;
   vacation_days_used: string;
@@ -43,15 +45,36 @@ const workStatusOptions: { value: WorkStatus; label: string }[] = [
   { value: "sick_leave", label: "Больничный" },
 ];
 
-const workStatusClassName: Record<WorkStatus, string> = {
+type DisplayWorkStatus = WorkStatus | "off_hours";
+
+const workStatusClassName: Record<DisplayWorkStatus, string> = {
   working: "employeeStatusWorking",
   vacation: "employeeStatusVacation",
   business_trip: "employeeStatusBusinessTrip",
   sick_leave: "employeeStatusSickLeave",
+  off_hours: "employeeStatusOffHours",
 };
 
-function getWorkStatusLabel(status: WorkStatus | string | undefined) {
+function getWorkStatusLabel(status: DisplayWorkStatus | string | undefined) {
+  if (status === "off_hours") return "Рабочий день завершен";
   return workStatusOptions.find((item) => item.value === status)?.label ?? "На работе";
+}
+
+function parseWorkTime(value: string | null | undefined) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value ?? "");
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+function getEffectiveWorkStatus(user: UserPublic, now: Date): DisplayWorkStatus {
+  if ((user.work_status ?? "working") !== "working") return user.work_status;
+  const end = parseWorkTime(user.workday_end);
+  if (end === null) return "working";
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return nowMinutes >= end ? "off_hours" : "working";
 }
 
 function getInitials(user: Pick<UserPublic, "first_name" | "last_name">) {
@@ -70,6 +93,8 @@ function toFormState(profile: UserPublic): ProfileFormState {
     location: profile.location ?? "",
     phone: profile.phone ?? "",
     work_status: profile.work_status ?? "working",
+    workday_start: profile.workday_start ?? "09:00",
+    workday_end: profile.workday_end ?? "18:00",
     hire_date: profile.hire_date ?? "",
     vacation_days_total: String(profile.vacation_days_total ?? 24),
     vacation_days_used: String(profile.vacation_days_used ?? 0),
@@ -278,9 +303,15 @@ export function UserProfilePage() {
   const [activeTab, setActiveTab] = useState<ProfileTab>("general");
   const [activeEditTab, setActiveEditTab] = useState<ProfileTab>("general");
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [now, setNow] = useState(() => new Date());
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -397,6 +428,8 @@ export function UserProfilePage() {
       location: form.location.trim() || null,
       phone: form.phone.trim() || null,
       work_status: form.work_status,
+      workday_start: form.workday_start,
+      workday_end: form.workday_end,
       education_records: parseEducationRecords(form.education_records_text),
       additional_education_records: parseAdditionalEducationRecords(form.additional_education_records_text),
       certificate_records: parseCertificateRecords(form.certificate_records_text),
@@ -502,6 +535,7 @@ export function UserProfilePage() {
   const reports = employees.filter((employee) => employee.manager_id === profile.id);
   const vacationRemaining = Math.max(0, (profile.vacation_days_total ?? 0) - (profile.vacation_days_used ?? 0));
   const zupLastVacation = parseZupLastVacation(profile.zup_last_vacation_info);
+  const effectiveWorkStatus = getEffectiveWorkStatus(profile, now);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -530,10 +564,10 @@ export function UserProfilePage() {
                 {profile.title ?? t("users.noPosition")}
               </div>
               <div
-                className={`employeeStatusBadge ${workStatusClassName[profile.work_status ?? "working"]}`}
+                className={`employeeStatusBadge ${workStatusClassName[effectiveWorkStatus]}`}
                 style={{ marginTop: 8 }}
               >
-                {getWorkStatusLabel(profile.work_status)}
+                {getWorkStatusLabel(effectiveWorkStatus)}
               </div>
               <div className="muted" style={{ fontSize: 14, marginTop: 8 }}>
                 Отдел: {profile.department?.name ?? "не назначен"}
@@ -789,6 +823,24 @@ export function UserProfilePage() {
                       </option>
                     ))}
                   </select>
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Начало рабочего дня</div>
+                  <input
+                    className="input"
+                    type="time"
+                    value={form.workday_start}
+                    onChange={(event) => setForm({ ...form, workday_start: event.target.value })}
+                  />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Конец рабочего дня</div>
+                  <input
+                    className="input"
+                    type="time"
+                    value={form.workday_end}
+                    onChange={(event) => setForm({ ...form, workday_end: event.target.value })}
+                  />
                 </label>
               </div>
 

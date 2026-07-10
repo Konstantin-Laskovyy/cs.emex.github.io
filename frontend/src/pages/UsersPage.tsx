@@ -17,6 +17,8 @@ type CreateFormState = {
   location: string;
   phone: string;
   work_status: WorkStatus;
+  workday_start: string;
+  workday_end: string;
   bio: string;
 };
 
@@ -32,6 +34,8 @@ const emptyCreateForm: CreateFormState = {
   location: "",
   phone: "",
   work_status: "working",
+  workday_start: "09:00",
+  workday_end: "18:00",
   bio: "",
 };
 
@@ -42,15 +46,36 @@ const workStatusOptions: { value: WorkStatus; label: string }[] = [
   { value: "sick_leave", label: "Больничный" },
 ];
 
-const workStatusClassName: Record<WorkStatus, string> = {
+type DisplayWorkStatus = WorkStatus | "off_hours";
+
+const workStatusClassName: Record<DisplayWorkStatus, string> = {
   working: "employeeStatusWorking",
   vacation: "employeeStatusVacation",
   business_trip: "employeeStatusBusinessTrip",
   sick_leave: "employeeStatusSickLeave",
+  off_hours: "employeeStatusOffHours",
 };
 
-function getWorkStatusLabel(status: WorkStatus | string | undefined) {
+function getWorkStatusLabel(status: DisplayWorkStatus | string | undefined) {
+  if (status === "off_hours") return "Рабочий день завершен";
   return workStatusOptions.find((item) => item.value === status)?.label ?? "На работе";
+}
+
+function parseWorkTime(value: string | null | undefined) {
+  const match = /^(\d{2}):(\d{2})$/.exec(value ?? "");
+  if (!match) return null;
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
+function getEffectiveWorkStatus(user: UserPublic, now: Date): DisplayWorkStatus {
+  if ((user.work_status ?? "working") !== "working") return user.work_status;
+  const end = parseWorkTime(user.workday_end);
+  if (end === null) return "working";
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return nowMinutes >= end ? "off_hours" : "working";
 }
 
 function getInitials(user: UserPublic) {
@@ -74,6 +99,7 @@ export function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [now, setNow] = useState(() => new Date());
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -97,6 +123,11 @@ export function UsersPage() {
     setUsers(usersData);
     setDepartments(departmentsData);
   }
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,6 +169,8 @@ export function UsersPage() {
       location: form.location.trim() || null,
       phone: form.phone.trim() || null,
       work_status: form.work_status,
+      workday_start: form.workday_start,
+      workday_end: form.workday_end,
       bio: form.bio.trim() || null,
     };
 
@@ -299,6 +332,14 @@ export function UsersPage() {
                     ))}
                   </select>
                 </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Начало рабочего дня</div>
+                  <input className="input" type="time" value={form.workday_start} onChange={(e) => setForm({ ...form, workday_start: e.target.value })} />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Конец рабочего дня</div>
+                  <input className="input" type="time" value={form.workday_end} onChange={(e) => setForm({ ...form, workday_end: e.target.value })} />
+                </label>
               </div>
 
               <label>
@@ -359,6 +400,7 @@ export function UsersPage() {
             !loadError &&
             users.map((user) => {
               const fullName = `${user.first_name} ${user.last_name}`;
+              const effectiveWorkStatus = getEffectiveWorkStatus(user, now);
               return (
                 <Link
                   key={user.id}
@@ -385,10 +427,10 @@ export function UsersPage() {
                           {user.title ?? t("users.noPosition")}
                         </div>
                         <div
-                          className={`employeeStatusBadge ${workStatusClassName[user.work_status ?? "working"]}`}
+                          className={`employeeStatusBadge ${workStatusClassName[effectiveWorkStatus]}`}
                           style={{ marginTop: 8 }}
                         >
-                          {getWorkStatusLabel(user.work_status)}
+                          {getWorkStatusLabel(effectiveWorkStatus)}
                         </div>
                         <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
                           {user.department?.name ?? t("users.noDepartment")} · {user.email}

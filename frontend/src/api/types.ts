@@ -28,6 +28,8 @@ export type UserPublic = {
   location?: string | null;
   phone?: string | null;
   work_status: WorkStatus;
+  workday_start: string;
+  workday_end: string;
   hire_date?: string | null;
   vacation_days_total: number;
   vacation_days_used: number;
@@ -96,6 +98,8 @@ export type UserUpdate = {
   location?: string | null;
   phone?: string | null;
   work_status?: WorkStatus;
+  workday_start?: string;
+  workday_end?: string;
   hire_date?: string | null;
   vacation_days_total?: number | null;
   vacation_days_used?: number | null;

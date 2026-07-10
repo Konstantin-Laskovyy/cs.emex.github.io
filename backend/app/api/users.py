@@ -333,6 +333,8 @@ def update_user(
     user.location = _clean_optional(payload.location)
     user.phone = _clean_optional(payload.phone)
     user.work_status = payload.work_status
+    user.workday_start = payload.workday_start
+    user.workday_end = payload.workday_end
     if current_user.role == "admin":
         user.hire_date = payload.hire_date
         if payload.vacation_days_total is not None:
@@ -444,6 +446,8 @@ def create_user(
         location=_clean_optional(payload.location),
         phone=_clean_optional(payload.phone),
         work_status=payload.work_status,
+        workday_start=payload.workday_start,
+        workday_end=payload.workday_end,
         hire_date=payload.hire_date,
         vacation_days_total=payload.vacation_days_total if payload.vacation_days_total is not None else 24,
         vacation_days_used=payload.vacation_days_used if payload.vacation_days_used is not None else 0,

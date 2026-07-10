@@ -63,6 +63,7 @@ class AchievementRecord(BaseModel):
 
 
 WORK_STATUS_PATTERN = "^(working|vacation|business_trip|sick_leave)$"
+WORK_TIME_PATTERN = "^([01]\\d|2[0-3]):[0-5]\\d$"
 
 
 class UserPublic(BaseModel):
@@ -80,6 +81,8 @@ class UserPublic(BaseModel):
     location: str | None = None
     phone: str | None = None
     work_status: str = "working"
+    workday_start: str = "09:00"
+    workday_end: str = "18:00"
     hire_date: date | None = None
     vacation_days_total: int = 24
     vacation_days_used: int = 0
@@ -111,6 +114,8 @@ class UserUpdate(BaseModel):
     location: str | None = None
     phone: str | None = None
     work_status: str = Field(default="working", pattern=WORK_STATUS_PATTERN)
+    workday_start: str = Field(default="09:00", pattern=WORK_TIME_PATTERN)
+    workday_end: str = Field(default="18:00", pattern=WORK_TIME_PATTERN)
     hire_date: date | None = None
     vacation_days_total: int | None = Field(default=None, ge=0, le=365)
     vacation_days_used: int | None = Field(default=None, ge=0, le=365)

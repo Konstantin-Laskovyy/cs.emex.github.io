@@ -1963,6 +1963,12 @@ textarea {
   color: #991b1b;
 }
 
+.employeeStatusOffHours {
+  border-color: rgba(100, 116, 139, 0.35);
+  background: rgba(100, 116, 139, 0.12);
+  color: #334155;
+}
+
 .profileSectionGrid {
   display: grid;
   gap: 12px;

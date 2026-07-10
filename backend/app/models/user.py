@@ -67,6 +67,8 @@ class User(Base):
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
     work_status: Mapped[str] = mapped_column(String(40), default="working", server_default="working")
+    workday_start: Mapped[str] = mapped_column(String(5), default="09:00", server_default="09:00")
+    workday_end: Mapped[str] = mapped_column(String(5), default="18:00", server_default="18:00")
     iin: Mapped[str | None] = mapped_column(String(12), nullable=True, index=True)
     hire_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     vacation_days_total: Mapped[int] = mapped_column(Integer, default=24, server_default="24")
