@@ -78,6 +78,10 @@ function getEffectiveWorkStatus(user: UserPublic, now: Date): DisplayWorkStatus 
   return nowMinutes >= end ? "off_hours" : "working";
 }
 
+function formatWorkSchedule(user: Pick<UserPublic, "workday_start" | "workday_end">) {
+  return `${user.workday_start || "09:00"} - ${user.workday_end || "18:00"}`;
+}
+
 function getInitials(user: UserPublic) {
   return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
 }
@@ -434,6 +438,9 @@ export function UsersPage() {
                         </div>
                         <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
                           {user.department?.name ?? t("users.noDepartment")} · {user.email}
+                        </div>
+                        <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
+                          График работы: {formatWorkSchedule(user)}
                         </div>
                         <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>
                           {t("users.manager")}{" "}

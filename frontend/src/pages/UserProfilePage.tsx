@@ -77,6 +77,10 @@ function getEffectiveWorkStatus(user: UserPublic, now: Date): DisplayWorkStatus 
   return nowMinutes >= end ? "off_hours" : "working";
 }
 
+function formatWorkSchedule(user: Pick<UserPublic, "workday_start" | "workday_end">) {
+  return `${user.workday_start || "09:00"} - ${user.workday_end || "18:00"}`;
+}
+
 function getInitials(user: Pick<UserPublic, "first_name" | "last_name">) {
   return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
 }
@@ -569,6 +573,9 @@ export function UserProfilePage() {
               >
                 {getWorkStatusLabel(effectiveWorkStatus)}
               </div>
+              <div className="muted" style={{ fontSize: 14, marginTop: 6 }}>
+                График работы: {formatWorkSchedule(profile)}
+              </div>
               <div className="muted" style={{ fontSize: 14, marginTop: 8 }}>
                 Отдел: {profile.department?.name ?? "не назначен"}
               </div>
@@ -1059,6 +1066,12 @@ function ProfileGeneralTab({ profile, reports }: { profile: UserPublic; reports:
             ) : (
               <div style={{ marginTop: 6 }}>—</div>
             )}
+          </div>
+        </div>
+        <div className="card" style={{ boxShadow: "none", background: "rgba(255,255,255,0.03)" }}>
+          <div className="cardInner">
+            <div className="muted" style={{ fontSize: 13 }}>График работы</div>
+            <div style={{ marginTop: 6 }}>{formatWorkSchedule(profile)}</div>
           </div>
         </div>
       </div>
