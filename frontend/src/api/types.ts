@@ -11,6 +11,8 @@ export type ManagerSummary = {
   avatar_url?: string | null;
 };
 
+export type WorkStatus = "working" | "vacation" | "business_trip" | "sick_leave";
+
 export type UserPublic = {
   id: number;
   email: string;
@@ -25,6 +27,7 @@ export type UserPublic = {
   bio?: string | null;
   location?: string | null;
   phone?: string | null;
+  work_status: WorkStatus;
   hire_date?: string | null;
   vacation_days_total: number;
   vacation_days_used: number;
@@ -92,6 +95,7 @@ export type UserUpdate = {
   bio?: string | null;
   location?: string | null;
   phone?: string | null;
+  work_status?: WorkStatus;
   hire_date?: string | null;
   vacation_days_total?: number | null;
   vacation_days_used?: number | null;

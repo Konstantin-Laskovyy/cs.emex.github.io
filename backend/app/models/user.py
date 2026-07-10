@@ -66,6 +66,7 @@ class User(Base):
     bio: Mapped[str | None] = mapped_column(String(2000), nullable=True)
     location: Mapped[str | None] = mapped_column(String(200), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    work_status: Mapped[str] = mapped_column(String(40), default="working", server_default="working")
     iin: Mapped[str | None] = mapped_column(String(12), nullable=True, index=True)
     hire_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     vacation_days_total: Mapped[int] = mapped_column(Integer, default=24, server_default="24")

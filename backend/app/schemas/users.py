@@ -62,6 +62,9 @@ class AchievementRecord(BaseModel):
     date: str = ""
 
 
+WORK_STATUS_PATTERN = "^(working|vacation|business_trip|sick_leave)$"
+
+
 class UserPublic(BaseModel):
     id: int
     email: str
@@ -76,6 +79,7 @@ class UserPublic(BaseModel):
     bio: str | None = None
     location: str | None = None
     phone: str | None = None
+    work_status: str = "working"
     hire_date: date | None = None
     vacation_days_total: int = 24
     vacation_days_used: int = 0
@@ -106,6 +110,7 @@ class UserUpdate(BaseModel):
     bio: str | None = None
     location: str | None = None
     phone: str | None = None
+    work_status: str = Field(default="working", pattern=WORK_STATUS_PATTERN)
     hire_date: date | None = None
     vacation_days_total: int | None = Field(default=None, ge=0, le=365)
     vacation_days_used: int | None = Field(default=None, ge=0, le=365)

@@ -3,7 +3,7 @@ import type { FormEvent } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
-import type { DepartmentPublic, UserCreate, UserPublic } from "../api/types";
+import type { DepartmentPublic, UserCreate, UserPublic, WorkStatus } from "../api/types";
 
 type CreateFormState = {
   email: string;
@@ -16,6 +16,7 @@ type CreateFormState = {
   avatar_url: string;
   location: string;
   phone: string;
+  work_status: WorkStatus;
   bio: string;
 };
 
@@ -30,8 +31,27 @@ const emptyCreateForm: CreateFormState = {
   avatar_url: "",
   location: "",
   phone: "",
+  work_status: "working",
   bio: "",
 };
+
+const workStatusOptions: { value: WorkStatus; label: string }[] = [
+  { value: "working", label: "На работе" },
+  { value: "vacation", label: "В отпуске" },
+  { value: "business_trip", label: "Командировка" },
+  { value: "sick_leave", label: "Больничный" },
+];
+
+const workStatusClassName: Record<WorkStatus, string> = {
+  working: "employeeStatusWorking",
+  vacation: "employeeStatusVacation",
+  business_trip: "employeeStatusBusinessTrip",
+  sick_leave: "employeeStatusSickLeave",
+};
+
+function getWorkStatusLabel(status: WorkStatus | string | undefined) {
+  return workStatusOptions.find((item) => item.value === status)?.label ?? "На работе";
+}
 
 function getInitials(user: UserPublic) {
   return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
@@ -117,6 +137,7 @@ export function UsersPage() {
       avatar_url: form.avatar_url.trim() || null,
       location: form.location.trim() || null,
       phone: form.phone.trim() || null,
+      work_status: form.work_status,
       bio: form.bio.trim() || null,
     };
 
@@ -268,6 +289,16 @@ export function UsersPage() {
                   <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.phone")}</div>
                   <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
                 </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Статус</div>
+                  <select className="input" value={form.work_status} onChange={(e) => setForm({ ...form, work_status: e.target.value as WorkStatus })}>
+                    {workStatusOptions.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
               </div>
 
               <label>
@@ -352,6 +383,12 @@ export function UsersPage() {
                         <div style={{ fontWeight: 700 }}>{fullName}</div>
                         <div className="muted" style={{ fontSize: 14, marginTop: 4 }}>
                           {user.title ?? t("users.noPosition")}
+                        </div>
+                        <div
+                          className={`employeeStatusBadge ${workStatusClassName[user.work_status ?? "working"]}`}
+                          style={{ marginTop: 8 }}
+                        >
+                          {getWorkStatusLabel(user.work_status)}
                         </div>
                         <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
                           {user.department?.name ?? t("users.noDepartment")} · {user.email}

@@ -10,6 +10,7 @@ import type {
   UserPublic,
   UserUpdate,
   UserZupSettingsPublic,
+  WorkStatus,
 } from "../api/types";
 
 type ProfileFormState = {
@@ -22,6 +23,7 @@ type ProfileFormState = {
   bio: string;
   location: string;
   phone: string;
+  work_status: WorkStatus;
   hire_date: string;
   vacation_days_total: string;
   vacation_days_used: string;
@@ -33,6 +35,24 @@ type ProfileFormState = {
   skills_text: string;
   achievement_records_text: string;
 };
+
+const workStatusOptions: { value: WorkStatus; label: string }[] = [
+  { value: "working", label: "На работе" },
+  { value: "vacation", label: "В отпуске" },
+  { value: "business_trip", label: "Командировка" },
+  { value: "sick_leave", label: "Больничный" },
+];
+
+const workStatusClassName: Record<WorkStatus, string> = {
+  working: "employeeStatusWorking",
+  vacation: "employeeStatusVacation",
+  business_trip: "employeeStatusBusinessTrip",
+  sick_leave: "employeeStatusSickLeave",
+};
+
+function getWorkStatusLabel(status: WorkStatus | string | undefined) {
+  return workStatusOptions.find((item) => item.value === status)?.label ?? "На работе";
+}
 
 function getInitials(user: Pick<UserPublic, "first_name" | "last_name">) {
   return `${user.first_name[0] ?? ""}${user.last_name[0] ?? ""}`.toUpperCase();
@@ -49,6 +69,7 @@ function toFormState(profile: UserPublic): ProfileFormState {
     bio: profile.bio ?? "",
     location: profile.location ?? "",
     phone: profile.phone ?? "",
+    work_status: profile.work_status ?? "working",
     hire_date: profile.hire_date ?? "",
     vacation_days_total: String(profile.vacation_days_total ?? 24),
     vacation_days_used: String(profile.vacation_days_used ?? 0),
@@ -375,6 +396,7 @@ export function UserProfilePage() {
       bio: form.bio.trim() || null,
       location: form.location.trim() || null,
       phone: form.phone.trim() || null,
+      work_status: form.work_status,
       education_records: parseEducationRecords(form.education_records_text),
       additional_education_records: parseAdditionalEducationRecords(form.additional_education_records_text),
       certificate_records: parseCertificateRecords(form.certificate_records_text),
@@ -506,6 +528,12 @@ export function UserProfilePage() {
               <h1 style={{ margin: 0 }}>{fullName}</h1>
               <div className="muted" style={{ marginTop: 6 }}>
                 {profile.title ?? t("users.noPosition")}
+              </div>
+              <div
+                className={`employeeStatusBadge ${workStatusClassName[profile.work_status ?? "working"]}`}
+                style={{ marginTop: 8 }}
+              >
+                {getWorkStatusLabel(profile.work_status)}
               </div>
               <div className="muted" style={{ fontSize: 14, marginTop: 8 }}>
                 Отдел: {profile.department?.name ?? "не назначен"}
@@ -747,6 +775,20 @@ export function UserProfilePage() {
                 <label>
                   <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.phone")}</div>
                   <input className="input" value={form.phone} onChange={(event) => setForm({ ...form, phone: event.target.value })} />
+                </label>
+                <label>
+                  <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>Статус</div>
+                  <select
+                    className="input"
+                    value={form.work_status}
+                    onChange={(event) => setForm({ ...form, work_status: event.target.value as WorkStatus })}
+                  >
+                    {workStatusOptions.map((status) => (
+                      <option key={status.value} value={status.value}>
+                        {status.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
 
