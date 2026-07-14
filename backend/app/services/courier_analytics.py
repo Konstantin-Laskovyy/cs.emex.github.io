@@ -30,6 +30,7 @@ SUM(CASE WHEN COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0') <> '0'
 
 METRIC_DELIVERY_WAYBILLS = "delivery_waybills"
 METRIC_ACCEPTED_PICKUPS = "accepted_pickups"
+METRIC_DELIVERY_BRANCHES = "delivery_branches"
 
 ADDRESS_DATE_COLUMN_CANDIDATES = (
     "date_beg",
@@ -145,6 +146,14 @@ def _city_select(cursor: object, address_column: str, alias: str) -> tuple[str, 
     return f"{city_code} AS city_code, {city_name} AS city_name", join_clause
 
 
+def _branch_select(address_column: str, alias: str) -> tuple[str, str]:
+    address_branch_code = f"COALESCE(NULLIF(TRIM(CAST(a.{address_column} AS CHAR)), ''), 'unknown')"
+    branch_code = f"COALESCE(NULLIF(TRIM(CAST({alias}.Code AS CHAR)), ''), {address_branch_code})"
+    branch_name = f"COALESCE(NULLIF(TRIM(CAST({alias}.Name AS CHAR)), ''), CONCAT('Филиал ', {address_branch_code}))"
+    join_clause = f"LEFT JOIN store {alias} ON {alias}.Code = a.{address_column}"
+    return f"{branch_code} AS city_code, {branch_name} AS city_name", join_clause
+
+
 def fetch_current_month_address_stats(today: date | None = None) -> list[dict]:
     today = today or date.today()
     month_start = today.replace(day=1)
@@ -186,6 +195,7 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
             date_expression, from_expression, visible_filter = _get_address_source(cursor)
             delivery_city_select, delivery_town_join = _city_select(cursor, "TownTo", "tt")
             accepted_city_select, accepted_town_join = _city_select(cursor, "TownFrom", "tf")
+            delivery_branch_select, delivery_branch_join = _branch_select("FL", "sf")
             barcode_expression = "COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0')"
             cursor.execute(
                 f"""
@@ -209,6 +219,17 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
                   AND {barcode_expression} = '0'
                 GROUP BY DATE({date_expression}), city_code, city_name
 
+                UNION ALL
+
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_branch_select}, COUNT(*) AS count
+                FROM {from_expression}
+                {delivery_branch_join}
+                WHERE {date_expression} >= %s
+                  AND {date_expression} < %s
+                  {visible_filter}
+                  AND {barcode_expression} <> '0'
+                GROUP BY DATE({date_expression}), city_code, city_name
+
                 ORDER BY stat_date, metric_type, count DESC
                 """,
                 (
@@ -216,6 +237,9 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
                     month_start_at,
                     tomorrow_start,
                     METRIC_ACCEPTED_PICKUPS,
+                    month_start_at,
+                    tomorrow_start,
+                    METRIC_DELIVERY_BRANCHES,
                     month_start_at,
                     tomorrow_start,
                 ),

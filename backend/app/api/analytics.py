@@ -20,6 +20,7 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 METRIC_DELIVERY_WAYBILLS = "delivery_waybills"
 METRIC_ACCEPTED_PICKUPS = "accepted_pickups"
+METRIC_DELIVERY_BRANCHES = "delivery_branches"
 
 
 def _empty_daily(stat_date: date) -> DailyOrderCount:
@@ -144,6 +145,7 @@ def get_orders_summary(
         or [_empty_daily(today)],
         delivery_by_city=[_city_daily(item) for item in city_stats if item.metric_type == METRIC_DELIVERY_WAYBILLS],
         accepted_by_city=[_city_daily(item) for item in city_stats if item.metric_type == METRIC_ACCEPTED_PICKUPS],
+        delivery_by_branch=[_city_daily(item) for item in city_stats if item.metric_type == METRIC_DELIVERY_BRANCHES],
         givn=GivnSummary(
             today_count=today_givn_stat.total_count if today_givn_stat else 0,
             today_quantity=today_givn_stat.total_quantity if today_givn_stat else 0,

@@ -51,4 +51,5 @@ class OrdersSummary(BaseModel):
     daily: list[DailyOrderCount]
     delivery_by_city: list[CityDailyCount]
     accepted_by_city: list[CityDailyCount]
+    delivery_by_branch: list[CityDailyCount]
     givn: GivnSummary

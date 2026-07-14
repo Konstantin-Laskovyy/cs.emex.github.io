@@ -324,6 +324,23 @@ export function AnalyticsPage() {
                 />
               </div>
             </div>
+
+            <div className="card analyticsTrendCard">
+              <div className="cardInner">
+                <div className="analyticsSectionTitle">
+                  <h2>Выдано на доставку по филиалам</h2>
+                  <span>{t("analytics.waybills")}</span>
+                </div>
+                <CityStatsTable
+                  cityLabel="Филиал"
+                  countLabel={t("analytics.count")}
+                  dateLabel={t("analytics.date")}
+                  emptyText={t("analytics.empty")}
+                  items={summary.delivery_by_branch}
+                  locale={locale}
+                />
+              </div>
+            </div>
           </div>
         </>
       )}

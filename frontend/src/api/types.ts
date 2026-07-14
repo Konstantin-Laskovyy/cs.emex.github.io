@@ -315,5 +315,6 @@ export type OrdersSummary = {
   daily: DailyOrderCount[];
   delivery_by_city: CityDailyCount[];
   accepted_by_city: CityDailyCount[];
+  delivery_by_branch: CityDailyCount[];
   givn: GivnSummary;
 };
