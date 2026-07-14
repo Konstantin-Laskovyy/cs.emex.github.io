@@ -2872,6 +2872,14 @@ textarea {
   grid-template-columns: 82px minmax(110px, 1fr) minmax(130px, 1.15fr) 72px;
 }
 
+.analyticsCityDayHeader,
+.analyticsCityDayRow {
+  display: grid;
+  grid-template-columns: 30px 82px minmax(130px, 1fr) 72px;
+  gap: 10px;
+  align-items: center;
+}
+
 .analyticsCityHeader {
   padding: 10px 14px;
   color: #5f7897;
@@ -2889,7 +2897,51 @@ textarea {
   font-size: 13px;
 }
 
+.analyticsCityDayRow {
+  width: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-top: 1px solid #dbeeff;
+  background: #f8fcff;
+  color: #31557a;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.analyticsCityDayRow:hover {
+  background: #eef8ff;
+}
+
+.analyticsCityToggle {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 999px;
+  background: #e2f1ff;
+  color: #005eb8;
+  font-weight: 900;
+}
+
+.analyticsCityDetailRow {
+  display: grid;
+  grid-template-columns: 30px 82px minmax(110px, 1fr) minmax(130px, 1.15fr) 72px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 14px;
+  border-top: 1px solid #e7f3ff;
+  background: #ffffff;
+  color: #31557a;
+  font-size: 12px;
+}
+
 .analyticsCityRow strong {
+  color: var(--ink);
+}
+
+.analyticsCityDayRow strong,
+.analyticsCityDetailRow strong {
   color: var(--ink);
 }
 
@@ -2897,7 +2949,13 @@ textarea {
   overflow-wrap: anywhere;
 }
 
-.analyticsCityRow b {
+.analyticsCityDetailRow > span:nth-child(4) {
+  overflow-wrap: anywhere;
+}
+
+.analyticsCityRow b,
+.analyticsCityDayRow b,
+.analyticsCityDetailRow b {
   justify-self: end;
   padding: 5px 9px;
   border-radius: 999px;
@@ -3209,6 +3267,9 @@ textarea {
 
   .analyticsCityHeader,
   .analyticsCityRow,
+  .analyticsCityDayHeader,
+  .analyticsCityDayRow,
+  .analyticsCityDetailRow,
   .analyticsCourierHeader,
   .analyticsCourierRow {
     grid-template-columns: 1fr;
@@ -3219,7 +3280,9 @@ textarea {
   }
 
   .analyticsCourierRow b,
-  .analyticsCourierRow span {
+  .analyticsCourierRow span,
+  .analyticsCityDayRow b,
+  .analyticsCityDetailRow b {
     justify-self: start;
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { ApiError, apiFetch } from "../api/client";
 import type { CityDailyCount, CourierGivnCount, OrdersSummary } from "../api/types";
 import { useLanguage } from "../i18n";
@@ -35,8 +35,68 @@ function CityStatsTable({
   cityLabel: string;
   showBranch?: boolean;
 }) {
+  const groupedItems = useMemo(() => {
+    const groups = new Map<string, { date: string; total: number; items: CityDailyCount[] }>();
+    items.forEach((item) => {
+      const group = groups.get(item.date) ?? { date: item.date, total: 0, items: [] };
+      group.total += item.count;
+      group.items.push(item);
+      groups.set(item.date, group);
+    });
+    return Array.from(groups.values());
+  }, [items]);
+  const [expandedDates, setExpandedDates] = useState<Set<string>>(() => new Set());
+
   if (items.length === 0) {
     return <p className="muted">{emptyText}</p>;
+  }
+
+  if (showBranch) {
+    return (
+      <div className="analyticsCityTable analyticsCityTableGrouped">
+        <div className="analyticsCityHeader analyticsCityDayHeader">
+          <span />
+          <span>{dateLabel}</span>
+          <span>{branchLabel}</span>
+          <span>{countLabel}</span>
+        </div>
+        {groupedItems.map((group) => {
+          const isExpanded = expandedDates.has(group.date);
+          return (
+            <Fragment key={group.date}>
+              <button
+                className="analyticsCityDayRow"
+                type="button"
+                aria-expanded={isExpanded}
+                onClick={() => {
+                  setExpandedDates((current) => {
+                    const next = new Set(current);
+                    if (next.has(group.date)) next.delete(group.date);
+                    else next.add(group.date);
+                    return next;
+                  });
+                }}
+              >
+                <span className="analyticsCityToggle">{isExpanded ? "-" : "+"}</span>
+                <span>{formatDate(group.date, locale)}</span>
+                <strong>{group.items.length.toLocaleString(locale)} филиалов</strong>
+                <b>{group.total.toLocaleString(locale)}</b>
+              </button>
+              {isExpanded &&
+                group.items.map((item) => (
+                  <div className="analyticsCityDetailRow" key={`${item.date}-${item.city_code}-${item.branch_code}`}>
+                    <span />
+                    <span />
+                    <strong>{item.city_name}</strong>
+                    <span>{item.branch_name ?? "Без филиала"}</span>
+                    <b>{item.count.toLocaleString(locale)}</b>
+                  </div>
+                ))}
+            </Fragment>
+          );
+        })}
+      </div>
+    );
   }
 
   return (
@@ -89,7 +149,6 @@ function CourierStatsTable({
     </div>
   );
 }
-
 export function AnalyticsPage() {
   const { language, t } = useLanguage();
   const locale = getLocale(language);
