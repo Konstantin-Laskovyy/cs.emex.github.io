@@ -70,7 +70,36 @@ function parseWorkTime(value: string | null | undefined) {
   return hours * 60 + minutes;
 }
 
+function toDateKey(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function parseZupLastVacation(value?: string | null) {
+  if (!value) return null;
+  const match = value.trim().match(/^(\d{4}-\d{2}-\d{2})\s+(\d+(?:[.,]\d+)?)$/);
+  if (!match) return null;
+  return {
+    date: match[1],
+    days: Number(match[2].replace(",", ".")),
+  };
+}
+
+function isZupVacationActive(value: string | null | undefined, now: Date) {
+  const vacation = parseZupLastVacation(value);
+  if (!vacation) return false;
+  const days = Math.max(1, Math.ceil(vacation.days));
+  const start = new Date(`${vacation.date}T00:00:00`);
+  const end = new Date(start);
+  end.setDate(start.getDate() + days - 1);
+  const todayKey = toDateKey(now);
+  return todayKey >= toDateKey(start) && todayKey <= toDateKey(end);
+}
+
 function getEffectiveWorkStatus(user: UserPublic, now: Date): DisplayWorkStatus {
+  if (isZupVacationActive(user.zup_last_vacation_info, now)) return "vacation";
   if ((user.work_status ?? "working") !== "working") return user.work_status;
   const end = parseWorkTime(user.workday_end);
   if (end === null) return "working";

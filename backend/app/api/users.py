@@ -1,3 +1,5 @@
+import math
+import re
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from uuid import uuid4
@@ -612,8 +614,28 @@ def _refresh_user_from_zup(db: Session, user: User) -> None:
         user.vacation_days_used = vacation_used
     user.zup_last_vacation_info = zup_summary.last_vacation_info
     user.zup_source_updated_at = zup_summary.source_updated_at
+    if _zup_vacation_is_active(user.zup_last_vacation_info):
+        user.work_status = "vacation"
+    elif user.work_status == "vacation" and user.zup_last_vacation_info:
+        user.work_status = "working"
 
     db.add(user)
     db.commit()
     db.refresh(user)
+
+
+def _zup_vacation_is_active(value: str | None, today: date | None = None) -> bool:
+    if not value:
+        return False
+    match = re.match(r"^(\d{4}-\d{2}-\d{2})\s+(\d+(?:[.,]\d+)?)$", value.strip())
+    if not match:
+        return False
+    try:
+        start = date.fromisoformat(match.group(1))
+        days = max(1, math.ceil(float(match.group(2).replace(",", "."))))
+    except ValueError:
+        return False
+    current = today or date.today()
+    end = start + timedelta(days=days - 1)
+    return start <= current <= end
 
