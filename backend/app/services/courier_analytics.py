@@ -287,7 +287,7 @@ def fetch_current_month_givn_courier_stats(today: date | None = None) -> list[di
     tomorrow = today + timedelta(days=1)
     date_expression = "g.date_beg"
     courier_code = "COALESCE(NULLIF(TRIM(CAST(g.kurier AS CHAR)), ''), 'unknown')"
-    courier_name = f"COALESCE(NULLIF(TRIM(CAST(k.name AS CHAR)), ''), CONCAT('Courier ', {courier_code}))"
+    courier_name = f"COALESCE(NULLIF(TRIM(CAST(MAX(k.name) AS CHAR)), ''), CONCAT('Courier ', {courier_code}))"
 
     with _courier_connection() as connection:
         cursor = connection.cursor(dictionary=True)
@@ -304,7 +304,7 @@ def fetch_current_month_givn_courier_stats(today: date | None = None) -> list[di
                 LEFT JOIN kurier k ON k.code = g.kurier
                 WHERE g.date_beg >= %s
                   AND g.date_beg < %s
-                GROUP BY {date_expression}, courier_code, courier_name
+                GROUP BY {date_expression}, courier_code
                 ORDER BY {date_expression}, count DESC
                 """,
                 (month_start, tomorrow),
