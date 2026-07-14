@@ -32,6 +32,8 @@ class CourierCityDailyStat(Base):
     stat_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
     city_code: Mapped[str] = mapped_column(String(64), nullable=False)
     city_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    branch_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    branch_name: Mapped[str | None] = mapped_column(String(160), nullable=True)
     total_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
     refreshed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

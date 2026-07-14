@@ -154,6 +154,24 @@ def _branch_select(address_column: str, alias: str) -> tuple[str, str]:
     return f"{branch_code} AS city_code, {branch_name} AS city_name", join_clause
 
 
+def _responsible_branch_select(address_column: str, alias: str) -> tuple[str, str]:
+    address_city_code = f"COALESCE(NULLIF(TRIM(CAST(a.{address_column} AS CHAR)), ''), 'unknown')"
+    branch_code = f"COALESCE(NULLIF(TRIM(CAST({alias}.Code AS CHAR)), ''), {address_city_code})"
+    branch_name = f"COALESCE(NULLIF(TRIM(CAST({alias}.Name AS CHAR)), ''), CONCAT('Филиал ', {address_city_code}))"
+    join_clause = f"""
+                LEFT JOIN (
+                  SELECT candidate.Town, MIN(candidate.Code) AS Code
+                  FROM store candidate
+                  WHERE candidate.Active = 'T'
+                    AND candidate.Our = 'T'
+                    AND candidate.parent = 0
+                    AND candidate.Name LIKE 'EMEX%'
+                  GROUP BY candidate.Town
+                ) {alias}_pick ON {alias}_pick.Town = a.{address_column}
+                LEFT JOIN store {alias} ON {alias}.Code = {alias}_pick.Code"""
+    return f"{branch_code} AS branch_code, {branch_name} AS branch_name", join_clause
+
+
 def fetch_current_month_address_stats(today: date | None = None) -> list[dict]:
     today = today or date.today()
     month_start = today.replace(day=1)
@@ -196,21 +214,23 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
             delivery_city_select, delivery_town_join = _city_select(cursor, "TownTo", "tt")
             accepted_city_select, accepted_town_join = _city_select(cursor, "TownFrom", "tf")
             delivery_branch_select, delivery_branch_join = _branch_select("FL", "sf")
+            responsible_branch_select, responsible_branch_join = _responsible_branch_select("TownTo", "rs")
             barcode_expression = "COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0')"
             cursor.execute(
                 f"""
-                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_city_select}, COUNT(*) AS count
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_city_select}, {responsible_branch_select}, COUNT(*) AS count
                 FROM {from_expression}
                 {delivery_town_join}
+                {responsible_branch_join}
                 WHERE {date_expression} >= %s
                   AND {date_expression} < %s
                   {visible_filter}
                   AND {barcode_expression} <> '0'
-                GROUP BY DATE({date_expression}), city_code, city_name
+                GROUP BY DATE({date_expression}), city_code, city_name, branch_code, branch_name
 
                 UNION ALL
 
-                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {accepted_city_select}, COUNT(*) AS count
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {accepted_city_select}, NULL AS branch_code, NULL AS branch_name, COUNT(*) AS count
                 FROM {from_expression}
                 {accepted_town_join}
                 WHERE {date_expression} >= %s
@@ -221,7 +241,7 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
 
                 UNION ALL
 
-                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_branch_select}, COUNT(*) AS count
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_branch_select}, NULL AS branch_code, NULL AS branch_name, COUNT(*) AS count
                 FROM {from_expression}
                 {delivery_branch_join}
                 WHERE {date_expression} >= %s
@@ -356,6 +376,8 @@ def refresh_courier_daily_address_stats(db: Session, today: date | None = None) 
                 stat_date=stat_date,
                 city_code=str(city_code),
                 city_name=str(row.get("city_name") or city_code),
+                branch_code=str(row["branch_code"]) if row.get("branch_code") else None,
+                branch_name=str(row["branch_name"]) if row.get("branch_name") else None,
                 total_count=int(row.get("count") or 0),
             )
         )

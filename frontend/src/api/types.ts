@@ -278,6 +278,8 @@ export type CityDailyCount = {
   date: string;
   city_code: string;
   city_name: string;
+  branch_code?: string | null;
+  branch_name?: string | null;
   count: number;
 };
 

@@ -17,35 +17,41 @@ function formatDate(value: string, locale: string) {
 }
 
 function CityStatsTable({
+  branchLabel,
   countLabel,
   dateLabel,
   emptyText,
   items,
   locale,
   cityLabel,
+  showBranch = false,
 }: {
+  branchLabel?: string;
   countLabel: string;
   dateLabel: string;
   emptyText: string;
   items: CityDailyCount[];
   locale: string;
   cityLabel: string;
+  showBranch?: boolean;
 }) {
   if (items.length === 0) {
     return <p className="muted">{emptyText}</p>;
   }
 
   return (
-    <div className="analyticsCityTable">
+    <div className={showBranch ? "analyticsCityTable analyticsCityTableWithBranch" : "analyticsCityTable"}>
       <div className="analyticsCityHeader">
         <span>{dateLabel}</span>
         <span>{cityLabel}</span>
+        {showBranch && <span>{branchLabel}</span>}
         <span>{countLabel}</span>
       </div>
       {items.map((item) => (
         <div className="analyticsCityRow" key={`${item.date}-${item.city_code}`}>
           <span>{formatDate(item.date, locale)}</span>
           <strong>{item.city_name}</strong>
+          {showBranch && <span>{item.branch_name ?? "Без филиала"}</span>}
           <b>{item.count.toLocaleString(locale)}</b>
         </div>
       ))}
@@ -298,12 +304,14 @@ export function AnalyticsPage() {
                   <span>{t("analytics.waybills")}</span>
                 </div>
                 <CityStatsTable
+                  branchLabel="Филиал"
                   cityLabel={t("analytics.city")}
                   countLabel={t("analytics.count")}
                   dateLabel={t("analytics.date")}
                   emptyText={t("analytics.empty")}
                   items={summary.delivery_by_city}
                   locale={locale}
+                  showBranch
                 />
               </div>
             </div>
@@ -325,6 +333,7 @@ export function AnalyticsPage() {
               </div>
             </div>
 
+            {false && (
             <div className="card analyticsTrendCard">
               <div className="cardInner">
                 <div className="analyticsSectionTitle">
@@ -336,11 +345,12 @@ export function AnalyticsPage() {
                   countLabel={t("analytics.count")}
                   dateLabel={t("analytics.date")}
                   emptyText={t("analytics.empty")}
-                  items={summary.delivery_by_branch}
+                  items={[]}
                   locale={locale}
                 />
               </div>
             </div>
+            )}
           </div>
         </>
       )}

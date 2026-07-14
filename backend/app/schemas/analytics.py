@@ -14,6 +14,8 @@ class CityDailyCount(BaseModel):
     date: date
     city_code: str
     city_name: str
+    branch_code: str | None = None
+    branch_name: str | None = None
     count: int
 
 

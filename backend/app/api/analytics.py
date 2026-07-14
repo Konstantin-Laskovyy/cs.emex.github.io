@@ -32,6 +32,8 @@ def _city_daily(item: CourierCityDailyStat) -> CityDailyCount:
         date=item.stat_date,
         city_code=item.city_code,
         city_name=item.city_name,
+        branch_code=item.branch_code,
+        branch_name=item.branch_name,
         count=item.total_count,
     )
 
