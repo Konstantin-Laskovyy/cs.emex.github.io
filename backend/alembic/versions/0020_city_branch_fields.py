@@ -1,6 +1,6 @@
 """add courier city branch fields
 
-Revision ID: 0020_add_courier_city_branch_fields
+Revision ID: 0020_city_branch_fields
 Revises: 0019_courier_givn_analytics
 Create Date: 2026-07-14
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "0020_add_courier_city_branch_fields"
+revision = "0020_city_branch_fields"
 down_revision = "0019_courier_givn_analytics"
 branch_labels = None
 depends_on = None
