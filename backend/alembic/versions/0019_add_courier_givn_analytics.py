@@ -1,7 +1,7 @@
 """add courier givn analytics
 
 Revision ID: 0019_courier_givn_analytics
-Revises: 0018_user_work_schedule
+Revises: 0018_add_user_work_schedule
 Create Date: 2026-07-14
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = "0019_courier_givn_analytics"
-down_revision = "0018_user_work_schedule"
+down_revision = "0018_add_user_work_schedule"
 branch_labels = None
 depends_on = None
 
