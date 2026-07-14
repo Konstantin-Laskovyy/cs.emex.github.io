@@ -6,9 +6,14 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_admin
 from app.db.session import get_db
-from app.models.courier_analytics import CourierCityDailyStat, CourierDailyAddressStat
+from app.models.courier_analytics import (
+    CourierCityDailyStat,
+    CourierDailyAddressStat,
+    CourierGivnCourierDailyStat,
+    CourierGivnDailyStat,
+)
 from app.models.user import User
-from app.schemas.analytics import CityDailyCount, DailyOrderCount, OrdersSummary
+from app.schemas.analytics import CityDailyCount, CourierGivnCount, DailyGivnCount, DailyOrderCount, GivnSummary, OrdersSummary
 
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -28,6 +33,10 @@ def _city_daily(item: CourierCityDailyStat) -> CityDailyCount:
         city_name=item.city_name,
         count=item.total_count,
     )
+
+
+def _empty_givn_daily(stat_date: date) -> DailyGivnCount:
+    return DailyGivnCount(date=stat_date, count=0, quantity=0)
 
 
 @router.get("/orders/summary", response_model=OrdersSummary)
@@ -75,6 +84,44 @@ def get_orders_summary(
         )
         .all()
     )
+    givn_stats = (
+        db.query(CourierGivnDailyStat)
+        .filter(
+            CourierGivnDailyStat.stat_date >= month_start,
+            CourierGivnDailyStat.stat_date <= today,
+        )
+        .order_by(CourierGivnDailyStat.stat_date.asc())
+        .all()
+    )
+    givn_stats_by_date = {item.stat_date: item for item in givn_stats}
+    today_givn_stat = givn_stats_by_date.get(today)
+    givn_month_count, givn_month_quantity = (
+        db.query(
+            func.coalesce(func.sum(CourierGivnDailyStat.total_count), 0),
+            func.coalesce(func.sum(CourierGivnDailyStat.total_quantity), 0),
+        )
+        .filter(
+            CourierGivnDailyStat.stat_date >= month_start,
+            CourierGivnDailyStat.stat_date <= today,
+        )
+        .one()
+    )
+    top_givn_couriers = (
+        db.query(
+            CourierGivnCourierDailyStat.courier_code,
+            CourierGivnCourierDailyStat.courier_name,
+            func.coalesce(func.sum(CourierGivnCourierDailyStat.total_count), 0).label("total_count"),
+            func.coalesce(func.sum(CourierGivnCourierDailyStat.total_quantity), 0).label("total_quantity"),
+        )
+        .filter(
+            CourierGivnCourierDailyStat.stat_date >= month_start,
+            CourierGivnCourierDailyStat.stat_date <= today,
+        )
+        .group_by(CourierGivnCourierDailyStat.courier_code, CourierGivnCourierDailyStat.courier_name)
+        .order_by(func.sum(CourierGivnCourierDailyStat.total_count).desc(), CourierGivnCourierDailyStat.courier_name.asc())
+        .limit(12)
+        .all()
+    )
 
     return OrdersSummary(
         today=today,
@@ -97,4 +144,28 @@ def get_orders_summary(
         or [_empty_daily(today)],
         delivery_by_city=[_city_daily(item) for item in city_stats if item.metric_type == METRIC_DELIVERY_WAYBILLS],
         accepted_by_city=[_city_daily(item) for item in city_stats if item.metric_type == METRIC_ACCEPTED_PICKUPS],
+        givn=GivnSummary(
+            today_count=today_givn_stat.total_count if today_givn_stat else 0,
+            today_quantity=today_givn_stat.total_quantity if today_givn_stat else 0,
+            month_count=int(givn_month_count or 0),
+            month_quantity=int(givn_month_quantity or 0),
+            daily=[
+                DailyGivnCount(
+                    date=item.stat_date,
+                    count=item.total_count,
+                    quantity=item.total_quantity,
+                )
+                for item in givn_stats
+            ]
+            or [_empty_givn_daily(today)],
+            top_couriers=[
+                CourierGivnCount(
+                    courier_code=str(item.courier_code),
+                    courier_name=str(item.courier_name),
+                    count=int(item.total_count or 0),
+                    quantity=int(item.total_quantity or 0),
+                )
+                for item in top_givn_couriers
+            ],
+        ),
     )

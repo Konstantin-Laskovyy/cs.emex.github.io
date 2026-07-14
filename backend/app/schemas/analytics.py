@@ -17,6 +17,28 @@ class CityDailyCount(BaseModel):
     count: int
 
 
+class DailyGivnCount(BaseModel):
+    date: date
+    count: int
+    quantity: int
+
+
+class CourierGivnCount(BaseModel):
+    courier_code: str
+    courier_name: str
+    count: int
+    quantity: int
+
+
+class GivnSummary(BaseModel):
+    today_count: int
+    today_quantity: int
+    month_count: int
+    month_quantity: int
+    daily: list[DailyGivnCount]
+    top_couriers: list[CourierGivnCount]
+
+
 class OrdersSummary(BaseModel):
     today: date
     month_start: date
@@ -29,3 +51,4 @@ class OrdersSummary(BaseModel):
     daily: list[DailyOrderCount]
     delivery_by_city: list[CityDailyCount]
     accepted_by_city: list[CityDailyCount]
+    givn: GivnSummary

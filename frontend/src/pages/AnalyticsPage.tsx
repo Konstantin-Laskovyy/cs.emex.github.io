@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ApiError, apiFetch } from "../api/client";
-import type { CityDailyCount, OrdersSummary } from "../api/types";
+import type { CityDailyCount, CourierGivnCount, OrdersSummary } from "../api/types";
 import { useLanguage } from "../i18n";
 
 function getLocale(language: string) {
@@ -53,6 +53,37 @@ function CityStatsTable({
   );
 }
 
+function CourierStatsTable({
+  emptyText,
+  items,
+  locale,
+}: {
+  emptyText: string;
+  items: CourierGivnCount[];
+  locale: string;
+}) {
+  if (items.length === 0) {
+    return <p className="muted">{emptyText}</p>;
+  }
+
+  return (
+    <div className="analyticsCourierTable">
+      <div className="analyticsCourierHeader">
+        <span>Курьер</span>
+        <span>Выдачи</span>
+        <span>Места</span>
+      </div>
+      {items.map((item) => (
+        <div className="analyticsCourierRow" key={item.courier_code}>
+          <strong>{item.courier_name}</strong>
+          <b>{item.count.toLocaleString(locale)}</b>
+          <span>{item.quantity.toLocaleString(locale)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AnalyticsPage() {
   const { language, t } = useLanguage();
   const locale = getLocale(language);
@@ -84,6 +115,9 @@ export function AnalyticsPage() {
 
   const maxDailyCount = useMemo(() => {
     return Math.max(1, ...(summary?.daily.map((item) => item.count) ?? [0]));
+  }, [summary]);
+  const maxGivnDailyCount = useMemo(() => {
+    return Math.max(1, ...(summary?.givn.daily.map((item) => item.count) ?? [0]));
   }, [summary]);
 
   return (
@@ -141,6 +175,86 @@ export function AnalyticsPage() {
                 </span>
               </div>
             </div>
+          </div>
+
+          <div className="analyticsSectionTitle analyticsBlockTitle">
+            <h2>Выдача курьерам</h2>
+            <span>courier.givn</span>
+          </div>
+
+          <div className="analyticsMetricGrid">
+            <div className="analyticsMetric analyticsMetricWarm">
+              <span>Выдано сегодня</span>
+              <strong>{summary.givn.today_count.toLocaleString(locale)}</strong>
+              <small>
+                {formatDate(summary.today, locale)} В· актов выдачи
+              </small>
+              <div className="analyticsSplit">
+                <span>
+                  Мест: <b>{summary.givn.today_quantity.toLocaleString(locale)}</b>
+                </span>
+              </div>
+            </div>
+            <div className="analyticsMetric analyticsMetricWarm">
+              <span>Выдано за месяц</span>
+              <strong>{summary.givn.month_count.toLocaleString(locale)}</strong>
+              <small>
+                {t("analytics.since")} В· {formatDate(summary.month_start, locale)}
+              </small>
+              <div className="analyticsSplit">
+                <span>
+                  Мест: <b>{summary.givn.month_quantity.toLocaleString(locale)}</b>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="analyticsCityGrid">
+            <div className="card analyticsTrendCard">
+              <div className="cardInner">
+                <div className="analyticsSectionTitle">
+                  <h2>Динамика выдачи</h2>
+                  <span>акты / места</span>
+                </div>
+
+                {summary.givn.daily.length === 0 ? (
+                  <p className="muted">{t("analytics.empty")}</p>
+                ) : (
+                  <div className="analyticsBars">
+                    {summary.givn.daily.map((item) => (
+                      <div className="analyticsBarRow" key={item.date}>
+                        <span>{formatDate(item.date, locale)}</span>
+                        <div className="analyticsBarTrack analyticsBarTrackWarm">
+                          <div
+                            className="analyticsBarFill analyticsBarFillWarm"
+                            style={{ width: `${Math.max(4, (item.count / maxGivnDailyCount) * 100)}%` }}
+                          />
+                        </div>
+                        <strong>
+                          {item.count.toLocaleString(locale)}
+                          <small>{item.quantity.toLocaleString(locale)} мест</small>
+                        </strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="card analyticsTrendCard">
+              <div className="cardInner">
+                <div className="analyticsSectionTitle">
+                  <h2>Топ курьеров</h2>
+                  <span>за месяц</span>
+                </div>
+                <CourierStatsTable emptyText={t("analytics.empty")} items={summary.givn.top_couriers} locale={locale} />
+              </div>
+            </div>
+          </div>
+
+          <div className="analyticsSectionTitle analyticsBlockTitle">
+            <h2>{t("analytics.title")}</h2>
+            <span>courier.address</span>
           </div>
 
           <div className="card analyticsTrendCard">

@@ -281,6 +281,28 @@ export type CityDailyCount = {
   count: number;
 };
 
+export type DailyGivnCount = {
+  date: string;
+  count: number;
+  quantity: number;
+};
+
+export type CourierGivnCount = {
+  courier_code: string;
+  courier_name: string;
+  count: number;
+  quantity: number;
+};
+
+export type GivnSummary = {
+  today_count: number;
+  today_quantity: number;
+  month_count: number;
+  month_quantity: number;
+  daily: DailyGivnCount[];
+  top_couriers: CourierGivnCount[];
+};
+
 export type OrdersSummary = {
   today: string;
   month_start: string;
@@ -293,4 +315,5 @@ export type OrdersSummary = {
   daily: DailyOrderCount[];
   delivery_by_city: CityDailyCount[];
   accepted_by_city: CityDailyCount[];
+  givn: GivnSummary;
 };

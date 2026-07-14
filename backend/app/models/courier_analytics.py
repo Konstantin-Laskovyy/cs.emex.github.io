@@ -39,3 +39,37 @@ class CourierCityDailyStat(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+
+class CourierGivnDailyStat(Base):
+    __tablename__ = "courier_givn_daily_stats"
+
+    stat_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    total_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    total_quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    refreshed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class CourierGivnCourierDailyStat(Base):
+    __tablename__ = "courier_givn_courier_daily_stats"
+    __table_args__ = (
+        UniqueConstraint("stat_date", "courier_code", name="uq_courier_givn_courier_daily_stats_date_courier"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    stat_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    courier_code: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    courier_name: Mapped[str] = mapped_column(String(160), nullable=False)
+    total_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    total_quantity: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    refreshed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

@@ -7,7 +7,12 @@ from typing import Iterator
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.models.courier_analytics import CourierCityDailyStat, CourierDailyAddressStat
+from app.models.courier_analytics import (
+    CourierCityDailyStat,
+    CourierDailyAddressStat,
+    CourierGivnCourierDailyStat,
+    CourierGivnDailyStat,
+)
 
 try:
     import mysql.connector
@@ -222,6 +227,71 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
             cursor.close()
 
 
+def fetch_current_month_givn_daily_stats(today: date | None = None) -> list[dict]:
+    today = today or date.today()
+    month_start = today.replace(day=1)
+    tomorrow = today + timedelta(days=1)
+    date_expression = "g.date_beg"
+
+    with _courier_connection() as connection:
+        cursor = connection.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                f"""
+                SELECT
+                  {date_expression} AS stat_date,
+                  COUNT(*) AS count,
+                  SUM(COALESCE(g.Kol_vo, 0)) AS quantity
+                FROM givn g
+                WHERE g.date_beg >= %s
+                  AND g.date_beg < %s
+                GROUP BY {date_expression}
+                ORDER BY {date_expression}
+                """,
+                (month_start, tomorrow),
+            )
+            return list(cursor.fetchall())
+        except MySQLError as exc:
+            raise RuntimeError("Courier givn daily analytics query failed") from exc
+        finally:
+            cursor.close()
+
+
+def fetch_current_month_givn_courier_stats(today: date | None = None) -> list[dict]:
+    today = today or date.today()
+    month_start = today.replace(day=1)
+    tomorrow = today + timedelta(days=1)
+    date_expression = "g.date_beg"
+    courier_code = "COALESCE(NULLIF(TRIM(CAST(g.kurier AS CHAR)), ''), 'unknown')"
+    courier_name = f"COALESCE(NULLIF(TRIM(CAST(k.name AS CHAR)), ''), CONCAT('Courier ', {courier_code}))"
+
+    with _courier_connection() as connection:
+        cursor = connection.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                f"""
+                SELECT
+                  {date_expression} AS stat_date,
+                  {courier_code} AS courier_code,
+                  {courier_name} AS courier_name,
+                  COUNT(*) AS count,
+                  SUM(COALESCE(g.Kol_vo, 0)) AS quantity
+                FROM givn g
+                LEFT JOIN kurier k ON k.code = g.kurier
+                WHERE g.date_beg >= %s
+                  AND g.date_beg < %s
+                GROUP BY {date_expression}, courier_code, courier_name
+                ORDER BY {date_expression}, count DESC
+                """,
+                (month_start, tomorrow),
+            )
+            return list(cursor.fetchall())
+        except MySQLError as exc:
+            raise RuntimeError("Courier givn courier analytics query failed") from exc
+        finally:
+            cursor.close()
+
+
 def refresh_courier_daily_address_stats(db: Session, today: date | None = None) -> int:
     rows = fetch_current_month_address_stats(today=today)
     city_rows = fetch_current_month_city_stats(today=today)
@@ -269,3 +339,54 @@ def refresh_courier_daily_address_stats(db: Session, today: date | None = None) 
 
     db.commit()
     return refreshed
+
+
+def refresh_courier_givn_stats(db: Session, today: date | None = None) -> int:
+    rows = fetch_current_month_givn_daily_stats(today=today)
+    courier_rows = fetch_current_month_givn_courier_stats(today=today)
+    refreshed = 0
+    today = today or date.today()
+    month_start = today.replace(day=1)
+
+    for row in rows:
+        stat_date = row.get("stat_date")
+        if not stat_date:
+            continue
+
+        stat = db.get(CourierGivnDailyStat, stat_date)
+        if stat is None:
+            stat = CourierGivnDailyStat(stat_date=stat_date)
+
+        stat.total_count = int(row.get("count") or 0)
+        stat.total_quantity = int(row.get("quantity") or 0)
+        db.add(stat)
+        refreshed += 1
+
+    db.query(CourierGivnCourierDailyStat).filter(
+        CourierGivnCourierDailyStat.stat_date >= month_start,
+        CourierGivnCourierDailyStat.stat_date <= today,
+    ).delete(synchronize_session=False)
+
+    for row in courier_rows:
+        stat_date = row.get("stat_date")
+        courier_code = row.get("courier_code")
+        if not stat_date or not courier_code:
+            continue
+
+        db.add(
+            CourierGivnCourierDailyStat(
+                stat_date=stat_date,
+                courier_code=str(courier_code),
+                courier_name=str(row.get("courier_name") or courier_code),
+                total_count=int(row.get("count") or 0),
+                total_quantity=int(row.get("quantity") or 0),
+            )
+        )
+        refreshed += 1
+
+    db.commit()
+    return refreshed
+
+
+def refresh_courier_analytics(db: Session, today: date | None = None) -> int:
+    return refresh_courier_daily_address_stats(db, today=today) + refresh_courier_givn_stats(db, today=today)
