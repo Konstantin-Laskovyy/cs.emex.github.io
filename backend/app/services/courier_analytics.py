@@ -154,10 +154,19 @@ def _branch_select(address_column: str, alias: str) -> tuple[str, str]:
     return f"{branch_code} AS city_code, {branch_name} AS city_name", join_clause
 
 
-def _responsible_branch_select(address_column: str, alias: str) -> tuple[str, str]:
+def _delivery_city_with_responsible_branch_select(address_column: str, town_alias: str, branch_alias: str) -> str:
     address_city_code = f"COALESCE(NULLIF(TRIM(CAST(a.{address_column} AS CHAR)), ''), 'unknown')"
-    branch_code = f"COALESCE(NULLIF(TRIM(CAST({alias}.Code AS CHAR)), ''), {address_city_code})"
-    branch_name = f"COALESCE(NULLIF(TRIM(CAST({alias}.Name AS CHAR)), ''), CONCAT('Филиал ', {address_city_code}))"
+    city_code = f"CASE WHEN {branch_alias}.Code IS NULL THEN 'other' ELSE COALESCE(NULLIF(TRIM(CAST({town_alias}.Code AS CHAR)), ''), {address_city_code}) END"
+    city_name = f"CASE WHEN {branch_alias}.Code IS NULL THEN 'Другие города' ELSE COALESCE(NULLIF(TRIM(CAST({town_alias}.Name AS CHAR)), ''), CONCAT('Город ', {address_city_code})) END"
+    branch_code = f"CASE WHEN {branch_alias}.Code IS NULL THEN 'other' ELSE NULLIF(TRIM(CAST({branch_alias}.Code AS CHAR)), '') END"
+    branch_name = f"CASE WHEN {branch_alias}.Code IS NULL THEN 'Другие города' ELSE NULLIF(TRIM(CAST({branch_alias}.Name AS CHAR)), '') END"
+    return (
+        f"{city_code} AS city_code, {city_name} AS city_name, "
+        f"{branch_code} AS branch_code, {branch_name} AS branch_name"
+    )
+
+
+def _responsible_branch_join(address_column: str, alias: str) -> str:
     join_clause = f"""
                 LEFT JOIN (
                   SELECT candidate.Town, MIN(candidate.Code) AS Code
@@ -169,7 +178,7 @@ def _responsible_branch_select(address_column: str, alias: str) -> tuple[str, st
                   GROUP BY candidate.Town
                 ) {alias}_pick ON {alias}_pick.Town = a.{address_column}
                 LEFT JOIN store {alias} ON {alias}.Code = {alias}_pick.Code"""
-    return f"{branch_code} AS branch_code, {branch_name} AS branch_name", join_clause
+    return join_clause
 
 
 def fetch_current_month_address_stats(today: date | None = None) -> list[dict]:
@@ -214,11 +223,12 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
             delivery_city_select, delivery_town_join = _city_select(cursor, "TownTo", "tt")
             accepted_city_select, accepted_town_join = _city_select(cursor, "TownFrom", "tf")
             delivery_branch_select, delivery_branch_join = _branch_select("FL", "sf")
-            responsible_branch_select, responsible_branch_join = _responsible_branch_select("TownTo", "rs")
+            delivery_with_branch_select = _delivery_city_with_responsible_branch_select("TownTo", "tt", "rs")
+            responsible_branch_join = _responsible_branch_join("TownTo", "rs")
             barcode_expression = "COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0')"
             cursor.execute(
                 f"""
-                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_city_select}, {responsible_branch_select}, COUNT(*) AS count
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_with_branch_select}, COUNT(*) AS count
                 FROM {from_expression}
                 {delivery_town_join}
                 {responsible_branch_join}
