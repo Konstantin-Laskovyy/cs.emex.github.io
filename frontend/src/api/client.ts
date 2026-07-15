@@ -78,6 +78,34 @@ export async function apiFetch<T>(
   }
 }
 
+export async function apiDownload(path: string): Promise<Blob> {
+  const base = getApiBaseUrl().replace(/\/+$/, "");
+  const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 120000);
+  const headers = new Headers();
+
+  const token = getToken();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+
+  try {
+    const res = await fetch(url, { headers, signal: controller.signal });
+    if (!res.ok) {
+      if (res.status === 401) expireSession();
+      const text = await res.text();
+      throw new ApiError(text || `Request failed: ${res.status}`, res.status, text);
+    }
+    return await res.blob();
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("Export request timed out.", 504);
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 function safeJsonParse(text: string) {
   try {
     return JSON.parse(text);

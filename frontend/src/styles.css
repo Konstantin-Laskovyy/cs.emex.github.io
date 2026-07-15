@@ -2685,6 +2685,20 @@ textarea {
   gap: 16px;
 }
 
+.analyticsHeroInner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.analyticsExportButton {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  margin-top: 6px;
+}
+
 .analyticsMetricGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3263,6 +3277,15 @@ textarea {
 
   .chatComposer {
     grid-template-columns: 1fr;
+  }
+
+  .analyticsHeroInner {
+    display: grid;
+  }
+
+  .analyticsExportButton {
+    justify-self: start;
+    margin-top: 0;
   }
 
   .analyticsCityHeader,

@@ -1,6 +1,6 @@
 from datetime import date
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,7 @@ from app.models.courier_analytics import (
 from app.models.user import User
 from app.schemas.analytics import CityDailyCount, CourierGivnCount, DailyGivnCount, DailyOrderCount, GivnSummary, OrdersSummary
 from app.services.courier_analytics import refresh_courier_analytics
+from app.services.xlsx_export import build_xlsx
 
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -22,6 +23,7 @@ router = APIRouter(prefix="/analytics", tags=["analytics"])
 METRIC_DELIVERY_WAYBILLS = "delivery_waybills"
 METRIC_ACCEPTED_PICKUPS = "accepted_pickups"
 METRIC_DELIVERY_BRANCHES = "delivery_branches"
+XLSX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 def _empty_daily(stat_date: date) -> DailyOrderCount:
@@ -41,6 +43,56 @@ def _city_daily(item: CourierCityDailyStat) -> CityDailyCount:
 
 def _empty_givn_daily(stat_date: date) -> DailyGivnCount:
     return DailyGivnCount(date=stat_date, count=0, quantity=0)
+
+
+def _delivery_stats_query(db: Session, month_start: date, today: date) -> list[CourierCityDailyStat]:
+    return (
+        db.query(CourierCityDailyStat)
+        .filter(
+            CourierCityDailyStat.metric_type == METRIC_DELIVERY_WAYBILLS,
+            CourierCityDailyStat.stat_date >= month_start,
+            CourierCityDailyStat.stat_date <= today,
+        )
+        .order_by(
+            CourierCityDailyStat.stat_date.asc(),
+            CourierCityDailyStat.total_count.desc(),
+            CourierCityDailyStat.city_name.asc(),
+            CourierCityDailyStat.branch_name.asc(),
+        )
+        .all()
+    )
+
+
+def _delivery_export_workbook(stats: list[CourierCityDailyStat]) -> bytes:
+    totals_by_date: dict[date, dict[str, int]] = {}
+    for item in stats:
+        bucket = totals_by_date.setdefault(item.stat_date, {"total": 0, "branches": 0})
+        bucket["total"] += item.total_count
+        bucket["branches"] += 1
+
+    daily_rows: list[list[str | int]] = [["Дата", "Филиалов", "Всего"]]
+    daily_rows.extend(
+        [stat_date.isoformat(), values["branches"], values["total"]]
+        for stat_date, values in sorted(totals_by_date.items())
+    )
+
+    detail_rows: list[list[str | int]] = [["Дата", "Город", "Филиал", "Кол-во"]]
+    detail_rows.extend(
+        [
+            item.stat_date.isoformat(),
+            item.city_name,
+            item.branch_name or "",
+            item.total_count,
+        ]
+        for item in stats
+    )
+
+    return build_xlsx(
+        [
+            ("По дням", daily_rows),
+            ("По филиалам", detail_rows),
+        ]
+    )
 
 
 @router.get("/orders/summary", response_model=OrdersSummary)
@@ -175,4 +227,23 @@ def get_orders_summary(
                 for item in top_givn_couriers
             ],
         ),
+    )
+
+
+@router.get("/orders/export")
+def export_orders_dashboard(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> Response:
+    refresh_courier_analytics(db)
+
+    today = date.today()
+    month_start = today.replace(day=1)
+    stats = _delivery_stats_query(db, month_start, today)
+    content = _delivery_export_workbook(stats)
+    filename = f"courier_delivery_dashboard_{month_start.isoformat()}_{today.isoformat()}.xlsx"
+    return Response(
+        content=content,
+        media_type=XLSX_MEDIA_TYPE,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { ApiError, apiFetch } from "../api/client";
+import { ApiError, apiDownload, apiFetch } from "../api/client";
 import type { CityDailyCount, CourierGivnCount, OrdersSummary } from "../api/types";
 import { useLanguage } from "../i18n";
 
@@ -155,6 +155,7 @@ export function AnalyticsPage() {
   const [summary, setSummary] = useState<OrdersSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -185,13 +186,37 @@ export function AnalyticsPage() {
     return Math.max(1, ...(summary?.givn.daily.map((item) => item.count) ?? [0]));
   }, [summary]);
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const blob = await apiDownload("/analytics/orders/export");
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `courier_delivery_dashboard_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      setLoadError(error instanceof ApiError ? error.message : t("analytics.loadError"));
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <section className="analyticsPage">
       <div className="card pageHero">
-        <div className="cardInner">
-          <span className="newsBadge">{t("analytics.badge")}</span>
-          <h1>{t("analytics.title")}</h1>
-          <p className="muted">{t("analytics.subtitle")}</p>
+        <div className="cardInner analyticsHeroInner">
+          <div>
+            <span className="newsBadge">{t("analytics.badge")}</span>
+            <h1>{t("analytics.title")}</h1>
+            <p className="muted">{t("analytics.subtitle")}</p>
+          </div>
+          <button className="btn btnPrimary analyticsExportButton" type="button" onClick={handleExport} disabled={exporting}>
+            {exporting ? "Экспорт..." : "Экспорт данных"}
+          </button>
         </div>
       </div>
 
