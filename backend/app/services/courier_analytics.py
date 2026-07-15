@@ -217,11 +217,15 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
     month_start = today.replace(day=1)
     month_start_at = datetime.combine(month_start, time.min)
     tomorrow_start = datetime.combine(today, time.min) + timedelta(days=1)
+    courier_day_offset = timedelta(hours=3)
+    delivery_month_start_at = month_start_at - courier_day_offset
+    delivery_tomorrow_start = tomorrow_start - courier_day_offset
 
     with _courier_connection() as connection:
         cursor = connection.cursor(dictionary=True)
         try:
             date_expression, from_expression, visible_filter = _get_address_source(cursor)
+            delivery_date_expression = "DATE(a.ldtime + INTERVAL 3 HOUR)"
             delivery_city_select, delivery_town_join = _city_select(cursor, "TownTo", "tt")
             accepted_city_select, accepted_town_join = _city_select(cursor, "TownFrom", "tf")
             delivery_branch_select, delivery_branch_join = _branch_select("FL", "sf")
@@ -230,15 +234,16 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
             barcode_expression = "COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0')"
             cursor.execute(
                 f"""
-                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {delivery_with_branch_select}, COUNT(*) AS count
-                FROM {from_expression}
+                SELECT %s AS metric_type, {delivery_date_expression} AS stat_date, {delivery_with_branch_select}, COUNT(*) AS count
+                FROM address a FORCE INDEX(ldtime)
                 {delivery_town_join}
                 {responsible_branch_join}
-                WHERE {date_expression} >= %s
-                  AND {date_expression} < %s
-                  {visible_filter}
-                  AND {barcode_expression} <> '0'
-                GROUP BY DATE({date_expression}), city_code, city_name, branch_code, branch_name
+                WHERE a.ldtime >= %s
+                  AND a.ldtime < %s
+                  AND a.mode = 1
+                  AND a.type = 3
+                  AND a.State1 = 4
+                GROUP BY {delivery_date_expression}, city_code, city_name, branch_code, branch_name
 
                 UNION ALL
 
@@ -266,8 +271,8 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
                 """,
                 (
                     METRIC_DELIVERY_WAYBILLS,
-                    month_start_at,
-                    tomorrow_start,
+                    delivery_month_start_at,
+                    delivery_tomorrow_start,
                     METRIC_ACCEPTED_PICKUPS,
                     month_start_at,
                     tomorrow_start,
