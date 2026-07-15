@@ -14,6 +14,7 @@ from app.models.courier_analytics import (
 )
 from app.models.user import User
 from app.schemas.analytics import CityDailyCount, CourierGivnCount, DailyGivnCount, DailyOrderCount, GivnSummary, OrdersSummary
+from app.services.courier_analytics import refresh_courier_analytics
 
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -47,6 +48,8 @@ def get_orders_summary(
     db: Session = Depends(get_db),
     _: User = Depends(require_admin),
 ) -> OrdersSummary:
+    refresh_courier_analytics(db)
+
     today = date.today()
     month_start = today.replace(day=1)
 

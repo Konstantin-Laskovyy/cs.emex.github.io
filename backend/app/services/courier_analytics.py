@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from datetime import date, datetime, time, timedelta
 from typing import Iterator
 
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -31,6 +32,7 @@ SUM(CASE WHEN COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0') <> '0'
 METRIC_DELIVERY_WAYBILLS = "delivery_waybills"
 METRIC_ACCEPTED_PICKUPS = "accepted_pickups"
 METRIC_DELIVERY_BRANCHES = "delivery_branches"
+COURIER_ANALYTICS_REFRESH_LOCK_ID = 2026071501
 
 ADDRESS_DATE_COLUMN_CANDIDATES = (
     "date_beg",
@@ -445,4 +447,22 @@ def refresh_courier_givn_stats(db: Session, today: date | None = None) -> int:
 
 
 def refresh_courier_analytics(db: Session, today: date | None = None) -> int:
-    return refresh_courier_daily_address_stats(db, today=today) + refresh_courier_givn_stats(db, today=today)
+    lock_acquired = bool(
+        db.execute(
+            text("SELECT pg_try_advisory_lock(:lock_id)"),
+            {"lock_id": COURIER_ANALYTICS_REFRESH_LOCK_ID},
+        ).scalar()
+    )
+    if not lock_acquired:
+        return 0
+
+    try:
+        return refresh_courier_daily_address_stats(db, today=today) + refresh_courier_givn_stats(db, today=today)
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.execute(
+            text("SELECT pg_advisory_unlock(:lock_id)"),
+            {"lock_id": COURIER_ANALYTICS_REFRESH_LOCK_ID},
+        )
