@@ -242,7 +242,6 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
                   AND a.ldtime < %s
                   AND a.mode = 1
                   AND a.type = 3
-                  AND a.State1 = 4
                 GROUP BY {delivery_date_expression}, city_code, city_name, branch_code, branch_name
 
                 UNION ALL
