@@ -183,6 +183,17 @@ def _responsible_branch_join(address_column: str, alias: str) -> str:
     return join_clause
 
 
+def _courier_store_delivery_select() -> str:
+    city_code = "COALESCE(NULLIF(TRIM(CAST(st.Code AS CHAR)), ''), NULLIF(TRIM(CAST(s.Town AS CHAR)), ''), 'other')"
+    city_name = "COALESCE(NULLIF(TRIM(CAST(st.Name AS CHAR)), ''), 'Другие города')"
+    branch_code = "COALESCE(NULLIF(TRIM(CAST(s.Code AS CHAR)), ''), NULLIF(TRIM(CAST(k.store AS CHAR)), ''), 'other')"
+    branch_name = "COALESCE(NULLIF(TRIM(CAST(s.Name AS CHAR)), ''), CONCAT('Филиал ', COALESCE(NULLIF(TRIM(CAST(k.store AS CHAR)), ''), '0')))"
+    return (
+        f"{city_code} AS city_code, {city_name} AS city_name, "
+        f"{branch_code} AS branch_code, {branch_name} AS branch_name"
+    )
+
+
 def fetch_current_month_address_stats(today: date | None = None) -> list[dict]:
     today = today or date.today()
     month_start = today.replace(day=1)
@@ -217,32 +228,26 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
     month_start = today.replace(day=1)
     month_start_at = datetime.combine(month_start, time.min)
     tomorrow_start = datetime.combine(today, time.min) + timedelta(days=1)
-    courier_day_offset = timedelta(hours=3)
-    delivery_month_start_at = month_start_at - courier_day_offset
-    delivery_tomorrow_start = tomorrow_start - courier_day_offset
+    tomorrow = today + timedelta(days=1)
 
     with _courier_connection() as connection:
         cursor = connection.cursor(dictionary=True)
         try:
             date_expression, from_expression, visible_filter = _get_address_source(cursor)
-            delivery_date_expression = "DATE(a.ldtime + INTERVAL 3 HOUR)"
-            delivery_city_select, delivery_town_join = _city_select(cursor, "TownTo", "tt")
+            delivery_city_select = _courier_store_delivery_select()
             accepted_city_select, accepted_town_join = _city_select(cursor, "TownFrom", "tf")
             delivery_branch_select, delivery_branch_join = _branch_select("FL", "sf")
-            delivery_with_branch_select = _delivery_city_with_responsible_branch_select("TownTo", "tt", "rs")
-            responsible_branch_join = _responsible_branch_join("TownTo", "rs")
             barcode_expression = "COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0')"
             cursor.execute(
                 f"""
-                SELECT %s AS metric_type, {delivery_date_expression} AS stat_date, {delivery_with_branch_select}, COUNT(*) AS count
-                FROM address a FORCE INDEX(ldtime)
-                {delivery_town_join}
-                {responsible_branch_join}
-                WHERE a.ldtime >= %s
-                  AND a.ldtime < %s
-                  AND a.mode = 1
-                  AND a.type = 3
-                GROUP BY {delivery_date_expression}, city_code, city_name, branch_code, branch_name
+                SELECT %s AS metric_type, g.date_beg AS stat_date, {delivery_city_select}, COUNT(*) AS count
+                FROM givn g
+                LEFT JOIN kurier k ON k.code = g.kurier
+                LEFT JOIN store s ON s.Code = k.store
+                LEFT JOIN town st ON st.Code = s.Town
+                WHERE g.date_beg >= %s
+                  AND g.date_beg < %s
+                GROUP BY g.date_beg, city_code, city_name, branch_code, branch_name
 
                 UNION ALL
 
@@ -270,8 +275,8 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
                 """,
                 (
                     METRIC_DELIVERY_WAYBILLS,
-                    delivery_month_start_at,
-                    delivery_tomorrow_start,
+                    month_start,
+                    tomorrow,
                     METRIC_ACCEPTED_PICKUPS,
                     month_start_at,
                     tomorrow_start,
