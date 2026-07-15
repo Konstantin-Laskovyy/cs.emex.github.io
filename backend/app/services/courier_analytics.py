@@ -184,9 +184,9 @@ def _responsible_branch_join(address_column: str, alias: str) -> str:
 
 
 def _courier_store_delivery_select() -> str:
-    city_code = "COALESCE(NULLIF(TRIM(CAST(st.Code AS CHAR)), ''), NULLIF(TRIM(CAST(s.Town AS CHAR)), ''), 'other')"
-    city_name = "COALESCE(NULLIF(TRIM(CAST(st.Name AS CHAR)), ''), 'Другие города')"
     branch_code = "COALESCE(NULLIF(TRIM(CAST(s.Code AS CHAR)), ''), NULLIF(TRIM(CAST(k.store AS CHAR)), ''), 'other')"
+    city_code = branch_code
+    city_name = "COALESCE(NULLIF(TRIM(CAST(st.Name AS CHAR)), ''), 'Другие города')"
     branch_name = "COALESCE(NULLIF(TRIM(CAST(s.Name AS CHAR)), ''), CONCAT('Филиал ', COALESCE(NULLIF(TRIM(CAST(k.store AS CHAR)), ''), '0')))"
     return (
         f"{city_code} AS city_code, {city_name} AS city_name, "
