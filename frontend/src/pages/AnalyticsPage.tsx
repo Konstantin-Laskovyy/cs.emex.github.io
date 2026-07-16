@@ -407,12 +407,14 @@ export function AnalyticsPage() {
                   <span>{t("analytics.pickups")}</span>
                 </div>
                 <CityStatsTable
+                  branchLabel="Р¤РёР»РёР°Р»"
                   cityLabel={t("analytics.city")}
                   countLabel={t("analytics.count")}
                   dateLabel={t("analytics.date")}
                   emptyText={t("analytics.empty")}
                   items={summary.accepted_by_city}
                   locale={locale}
+                  showBranch
                 />
               </div>
             </div>

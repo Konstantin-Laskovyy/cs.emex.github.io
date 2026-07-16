@@ -194,6 +194,22 @@ def _courier_store_delivery_select() -> str:
     )
 
 
+def _accepted_pickup_branch_select() -> tuple[str, str]:
+    branch_code = "COALESCE(NULLIF(TRIM(CAST(sf.Code AS CHAR)), ''), NULLIF(TRIM(CAST(a.FL AS CHAR)), ''), 'other')"
+    city_code = branch_code
+    city_name = "COALESCE(NULLIF(TRIM(CAST(st.Name AS CHAR)), ''), NULLIF(TRIM(CAST(tf.Name AS CHAR)), ''), 'Other cities')"
+    branch_name = "COALESCE(NULLIF(TRIM(CAST(sf.Name AS CHAR)), ''), CONCAT('Branch ', COALESCE(NULLIF(TRIM(CAST(a.FL AS CHAR)), ''), '0')))"
+    join_clause = """
+                LEFT JOIN store sf ON sf.Code = a.FL
+                LEFT JOIN town st ON st.Code = sf.Town
+                LEFT JOIN town tf ON tf.Code = a.TownFrom"""
+    return (
+        f"{city_code} AS city_code, {city_name} AS city_name, "
+        f"{branch_code} AS branch_code, {branch_name} AS branch_name",
+        join_clause,
+    )
+
+
 def fetch_current_month_address_stats(today: date | None = None) -> list[dict]:
     today = today or date.today()
     month_start = today.replace(day=1)
@@ -235,7 +251,7 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
         try:
             date_expression, from_expression, visible_filter = _get_address_source(cursor)
             delivery_city_select = _courier_store_delivery_select()
-            accepted_city_select, accepted_town_join = _city_select(cursor, "TownFrom", "tf")
+            accepted_city_select, accepted_town_join = _accepted_pickup_branch_select()
             delivery_branch_select, delivery_branch_join = _branch_select("FL", "sf")
             barcode_expression = "COALESCE(NULLIF(TRIM(CAST(a.strbarcode AS CHAR)), ''), '0')"
             cursor.execute(
@@ -251,14 +267,14 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
 
                 UNION ALL
 
-                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {accepted_city_select}, NULL AS branch_code, NULL AS branch_name, COUNT(*) AS count
+                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {accepted_city_select}, COUNT(*) AS count
                 FROM {from_expression}
                 {accepted_town_join}
                 WHERE {date_expression} >= %s
                   AND {date_expression} < %s
                   {visible_filter}
                   AND {barcode_expression} = '0'
-                GROUP BY DATE({date_expression}), city_code, city_name
+                GROUP BY DATE({date_expression}), city_code, city_name, branch_code, branch_name
 
                 UNION ALL
 
