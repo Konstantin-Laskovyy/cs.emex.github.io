@@ -98,6 +98,7 @@ class UserPublic(BaseModel):
     role: str = "employee"
     is_active: bool = True
     access_enabled: bool = True
+    is_manager: bool = False
 
     class Config:
         from_attributes = True

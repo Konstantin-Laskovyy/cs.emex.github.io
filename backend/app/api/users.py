@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.api.deps import get_current_user, require_admin
+from app.api.deps import get_current_user, is_manager_user, require_admin
 from app.core.config import settings
 from app.core.security import hash_password
 from app.core.zup import ZupConfigurationError, ZupServiceError, decimal_to_days, fetch_employee_summary
@@ -33,8 +33,11 @@ AVATAR_CONTENT_TYPES = {
 
 
 @router.get("/me", response_model=UserPublic)
-def me(current_user: User = Depends(get_current_user)) -> UserPublic:
-    return current_user
+def me(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> UserPublic:
+    return UserPublic.model_validate(current_user).model_copy(update={"is_manager": is_manager_user(db, current_user)})
 
 
 @router.get("", response_model=list[UserPublic])

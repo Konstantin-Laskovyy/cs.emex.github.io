@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.api.deps import require_admin
+from app.api.deps import require_manager_or_admin
 from app.db.session import get_db
 from app.models.courier_analytics import (
     CourierCityDailyStat,
@@ -98,7 +98,7 @@ def _delivery_export_workbook(stats: list[CourierCityDailyStat]) -> bytes:
 @router.get("/orders/summary", response_model=OrdersSummary)
 def get_orders_summary(
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_manager_or_admin),
 ) -> OrdersSummary:
     refresh_courier_analytics(db)
 
@@ -233,7 +233,7 @@ def get_orders_summary(
 @router.get("/orders/export")
 def export_orders_dashboard(
     db: Session = Depends(get_db),
-    _: User = Depends(require_admin),
+    _: User = Depends(require_manager_or_admin),
 ) -> Response:
     refresh_courier_analytics(db)
 

@@ -45,6 +45,7 @@ export type UserPublic = {
   role: "employee" | "admin";
   is_active: boolean;
   access_enabled: boolean;
+  is_manager?: boolean;
 };
 
 export type VacationPeriod = {

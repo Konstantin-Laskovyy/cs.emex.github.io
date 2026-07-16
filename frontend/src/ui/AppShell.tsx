@@ -10,6 +10,7 @@ type NavItem = {
   labelKey: string;
   icon: string;
   adminOnly?: boolean;
+  managerOnly?: boolean;
 };
 
 const navItems: NavItem[] = [
@@ -18,7 +19,7 @@ const navItems: NavItem[] = [
   { to: "/departments", labelKey: "nav.departments", icon: "О" },
   { to: "/org", labelKey: "nav.org", icon: "◇" },
   { to: "/chat", labelKey: "nav.chat", icon: "C" },
-  { to: "/analytics", labelKey: "nav.analytics", icon: "A", adminOnly: true },
+  { to: "/analytics", labelKey: "nav.analytics", icon: "A", managerOnly: true },
   { to: "/admin", labelKey: "nav.admin", icon: "А", adminOnly: true },
 ];
 
@@ -272,7 +273,11 @@ export function AppShell() {
 
         <nav className="sidebarNav">
           {navItems
-            .filter((item) => !item.adminOnly || me?.role === "admin")
+            .filter((item) => {
+              if (item.adminOnly) return me?.role === "admin";
+              if (item.managerOnly) return me?.role === "admin" || Boolean(me?.is_manager);
+              return true;
+            })
             .map((item) => (
               <NavLink
                 key={item.to}
