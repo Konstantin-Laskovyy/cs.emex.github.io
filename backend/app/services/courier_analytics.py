@@ -195,12 +195,13 @@ def _courier_store_delivery_select() -> str:
 
 
 def _accepted_pickup_branch_select() -> tuple[str, str]:
-    branch_code = "COALESCE(NULLIF(TRIM(CAST(sf.Code AS CHAR)), ''), NULLIF(TRIM(CAST(a.FL AS CHAR)), ''), 'other')"
+    branch_code = "COALESCE(NULLIF(TRIM(CAST(sf.Code AS CHAR)), ''), NULLIF(TRIM(CAST(t.Store AS CHAR)), ''), 'other')"
     city_code = branch_code
     city_name = "COALESCE(NULLIF(TRIM(CAST(st.Name AS CHAR)), ''), NULLIF(TRIM(CAST(tf.Name AS CHAR)), ''), 'Other cities')"
-    branch_name = "COALESCE(NULLIF(TRIM(CAST(sf.Name AS CHAR)), ''), CONCAT('Branch ', COALESCE(NULLIF(TRIM(CAST(a.FL AS CHAR)), ''), '0')))"
+    branch_name = "COALESCE(NULLIF(TRIM(CAST(sf.Name AS CHAR)), ''), CONCAT('Branch ', COALESCE(NULLIF(TRIM(CAST(t.Store AS CHAR)), ''), '0')))"
     join_clause = """
-                LEFT JOIN store sf ON sf.Code = a.FL
+                JOIN address a ON a.code = t.Address
+                LEFT JOIN store sf ON sf.Code = t.Store
                 LEFT JOIN town st ON st.Code = sf.Town
                 LEFT JOIN town tf ON tf.Code = a.TownFrom"""
     return (
@@ -267,14 +268,13 @@ def fetch_current_month_city_stats(today: date | None = None) -> list[dict]:
 
                 UNION ALL
 
-                SELECT %s AS metric_type, DATE({date_expression}) AS stat_date, {accepted_city_select}, COUNT(*) AS count
-                FROM {from_expression}
+                SELECT %s AS metric_type, DATE(t.Statetime) AS stat_date, {accepted_city_select}, COUNT(*) AS count
+                FROM trace t
                 {accepted_town_join}
-                WHERE {date_expression} >= %s
-                  AND {date_expression} < %s
-                  {visible_filter}
-                  AND {barcode_expression} = '0'
-                GROUP BY DATE({date_expression}), city_code, city_name, branch_code, branch_name
+                WHERE t.ldtime >= %s
+                  AND t.ldtime < %s
+                  AND t.State = 3
+                GROUP BY DATE(t.Statetime), city_code, city_name, branch_code, branch_name
 
                 UNION ALL
 

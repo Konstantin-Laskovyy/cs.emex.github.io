@@ -404,7 +404,7 @@ export function AnalyticsPage() {
               <div className="cardInner">
                 <div className="analyticsSectionTitle">
                   <h2>{t("analytics.acceptedByCity")}</h2>
-                  <span>{t("analytics.pickups")}</span>
+                  <span>Принято складом</span>
                 </div>
                 <CityStatsTable
                   branchLabel="Р¤РёР»РёР°Р»"
