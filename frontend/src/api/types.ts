@@ -218,6 +218,16 @@ export type NewsUploadPublic = {
   is_image: boolean;
 };
 
+export type SystemUpdatePublic = {
+  id: number;
+  title: string;
+  body: string;
+  author_id: number;
+  author: NewsAuthor;
+  created_at: string;
+  updated_at: string;
+};
+
 export type NotificationPublic = {
   id: number;
   title: string;

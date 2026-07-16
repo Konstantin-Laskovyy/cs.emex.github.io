@@ -3030,6 +3030,46 @@ textarea {
   color: #9a570c;
 }
 
+.systemUpdatesPage {
+  display: grid;
+  gap: 18px;
+}
+
+.systemUpdateComposer {
+  border-color: #bfd8f2;
+}
+
+.systemUpdateForm {
+  display: grid;
+  gap: 12px;
+}
+
+.systemUpdateList {
+  display: grid;
+  gap: 14px;
+}
+
+.systemUpdateItem h2 {
+  margin: 8px 0 10px;
+  font-size: 22px;
+}
+
+.systemUpdateItem p {
+  margin: 0 0 14px;
+  color: #28425f;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.systemUpdateMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 @media (max-width: 900px) {
   .topHeader {
     position: sticky;

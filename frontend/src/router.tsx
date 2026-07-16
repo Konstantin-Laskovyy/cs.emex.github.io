@@ -12,6 +12,7 @@ import { AdminPage } from "./pages/AdminPage";
 import { OrgStructurePage } from "./pages/OrgStructurePage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { ChatPage } from "./pages/ChatPage";
+import { SystemUpdatesPage } from "./pages/SystemUpdatesPage";
 import { getToken } from "./api/client";
 
 function ProtectedLayout() {
@@ -38,6 +39,7 @@ export const router = createBrowserRouter([
       { path: "org", element: <OrgStructurePage /> },
       { path: "chat", element: <ChatPage /> },
       { path: "analytics", element: <AnalyticsPage /> },
+      { path: "system-updates", element: <SystemUpdatesPage /> },
       { path: "news/new", element: <NewsEditorPage /> },
       { path: "news/:id", element: <NewsDetailsPage /> },
       { path: "admin", element: <AdminPage /> },

@@ -373,6 +373,9 @@ export function AppShell() {
                   <Link to="/users" onClick={() => setUserPanelOpen(false)}>
                     {t("nav.users")}
                   </Link>
+                  <Link to="/system-updates" onClick={() => setUserPanelOpen(false)}>
+                    Изменения в соцсети
+                  </Link>
                   {me?.role === "admin" && (
                     <Link to="/admin" onClick={() => setUserPanelOpen(false)}>
                       {t("nav.admin")}
