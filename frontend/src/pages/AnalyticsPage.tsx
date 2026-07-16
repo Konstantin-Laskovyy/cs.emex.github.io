@@ -407,7 +407,7 @@ export function AnalyticsPage() {
                   <span>Принято складом</span>
                 </div>
                 <CityStatsTable
-                  branchLabel="Р¤РёР»РёР°Р»"
+                  branchLabel="Филиал"
                   cityLabel={t("analytics.city")}
                   countLabel={t("analytics.count")}
                   dateLabel={t("analytics.date")}
