@@ -207,21 +207,25 @@ function parseAchievementRecords(value: string): AchievementRecord[] {
 
 function formatRuDate(value?: string | null) {
   if (!value) return "Не указано";
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
   return new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "long",
     year: "numeric",
-  }).format(new Date(`${value}T00:00:00`));
+  }).format(date);
 }
 
 function formatNewsDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value || "Дата не указана";
   return new Intl.DateTimeFormat("ru-RU", {
     day: "2-digit",
     month: "long",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 function formatVacationDays(value: number) {
@@ -245,6 +249,7 @@ function parseZupLastVacation(value?: string | null) {
 function getWorkDuration(hireDate?: string | null) {
   if (!hireDate) return "Дата приема не указана";
   const start = new Date(`${hireDate}T00:00:00`);
+  if (Number.isNaN(start.getTime())) return "Дата приема не указана";
   const now = new Date();
   let years = now.getFullYear() - start.getFullYear();
   let months = now.getMonth() - start.getMonth();
@@ -1480,13 +1485,13 @@ function EducationDevelopmentTab({ profile }: { profile: UserPublic }) {
 }
 
 function AchievementsTab({ achievements }: { achievements: AchievementRecord[] }) {
-  const years = Array.from(new Set(achievements.map((item) => new Date(`${item.date}T00:00:00`).getFullYear())))
-    .filter((item) => Number.isFinite(item))
-    .sort((a, b) => b - a);
+  const getAchievementYear = (value: string) => value.match(/\b(?:19|20)\d{2}\b/)?.[0] ?? null;
+  const years = Array.from(new Set(achievements.map((item) => getAchievementYear(item.date)).filter((item): item is string => Boolean(item))))
+    .sort((a, b) => Number(b) - Number(a));
   const [year, setYear] = useState<string>("all");
   const filtered = year === "all"
     ? achievements
-    : achievements.filter((item) => String(new Date(`${item.date}T00:00:00`).getFullYear()) === year);
+    : achievements.filter((item) => getAchievementYear(item.date) === year);
 
   return (
     <div className="profileSectionGrid">
