@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, FormEvent, ReactNode } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
@@ -872,7 +872,7 @@ export function UserProfilePage() {
 
               <label>
                 <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.description")}</div>
-                <textarea className="input" value={form.bio} onChange={(event) => setForm({ ...form, bio: event.target.value })} rows={5} />
+                <RichTextEditor value={form.bio} onChange={(bio) => setForm({ ...form, bio })} />
               </label>
 
               {canManageZup && (
@@ -1059,17 +1059,171 @@ export function UserProfilePage() {
   );
 }
 
+const profileEmojiOptions = [
+  "😀", "😊", "👍", "👏", "🎉", "⭐", "❤️", "💡",
+  "✅", "📌", "📣", "🚀", "🤝", "💼", "📚", "🏆",
+];
+
+function RichTextEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [showEmoji, setShowEmoji] = useState(false);
+
+  const updateValue = (nextValue: string, selectionStart: number, selectionEnd = selectionStart) => {
+    onChange(nextValue.slice(0, 2000));
+    window.requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(selectionStart, selectionEnd);
+    });
+  };
+
+  const wrapSelection = (before: string, after: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = value.slice(start, end) || "текст";
+    const nextValue = `${value.slice(0, start)}${before}${selectedText}${after}${value.slice(end)}`;
+    const contentStart = start + before.length;
+    updateValue(nextValue, contentStart, contentStart + selectedText.length);
+  };
+
+  const formatLines = (kind: "paragraph" | "heading" | "subheading" | "quote" | "bullet" | "numbered") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = value.lastIndexOf("\n", Math.max(0, textarea.selectionStart - 1)) + 1;
+    const nextLineBreak = value.indexOf("\n", textarea.selectionEnd);
+    const end = nextLineBreak === -1 ? value.length : nextLineBreak;
+    const selectedLines = value.slice(start, end).split("\n");
+    const cleanLine = (line: string) => line.replace(/^(?:#{1,3}\s+|>\s+|[•\-]\s+|\d+[.)]\s+)/, "");
+    const formattedLines = selectedLines.map((line, index) => {
+      const cleaned = cleanLine(line);
+      if (kind === "heading") return `## ${cleaned}`;
+      if (kind === "subheading") return `### ${cleaned}`;
+      if (kind === "quote") return `> ${cleaned}`;
+      if (kind === "bullet") return `• ${cleaned}`;
+      if (kind === "numbered") return `${index + 1}. ${cleaned}`;
+      return cleaned;
+    });
+    const replacement = formattedLines.join("\n");
+    updateValue(`${value.slice(0, start)}${replacement}${value.slice(end)}`, start, start + replacement.length);
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    updateValue(`${value.slice(0, start)}${emoji}${value.slice(end)}`, start + emoji.length);
+    setShowEmoji(false);
+  };
+
+  return (
+    <div className="richTextEditor">
+      <div className="richTextToolbar" role="toolbar" aria-label="Форматирование описания">
+        <select
+          className="richTextTypeSelect"
+          aria-label="Тип текста"
+          defaultValue=""
+          onChange={(event) => {
+            if (event.target.value) {
+              formatLines(event.target.value as "paragraph" | "heading" | "subheading" | "quote");
+              event.target.value = "";
+            }
+          }}
+        >
+          <option value="" disabled>Тип текста</option>
+          <option value="paragraph">Обычный текст</option>
+          <option value="heading">Заголовок</option>
+          <option value="subheading">Подзаголовок</option>
+          <option value="quote">Цитата</option>
+        </select>
+        <span className="richTextToolbarDivider" />
+        <button type="button" className="richTextToolButton" title="Жирный" aria-label="Жирный" onClick={() => wrapSelection("**", "**")}>
+          <strong>B</strong>
+        </button>
+        <button type="button" className="richTextToolButton" title="Курсив" aria-label="Курсив" onClick={() => wrapSelection("*", "*")}>
+          <em>I</em>
+        </button>
+        <button type="button" className="richTextToolButton" title="Подчеркнутый" aria-label="Подчеркнутый" onClick={() => wrapSelection("++", "++")}>
+          <u>U</u>
+        </button>
+        <span className="richTextToolbarDivider" />
+        <button type="button" className="richTextToolButton" title="Маркированный список" aria-label="Маркированный список" onClick={() => formatLines("bullet")}>
+          •
+        </button>
+        <button type="button" className="richTextToolButton richTextNumberButton" title="Нумерованный список" aria-label="Нумерованный список" onClick={() => formatLines("numbered")}>
+          1.
+        </button>
+        <div className="richTextEmojiWrap">
+          <button
+            type="button"
+            className="richTextToolButton"
+            title="Добавить смайлик"
+            aria-label="Добавить смайлик"
+            aria-expanded={showEmoji}
+            onClick={() => setShowEmoji((current) => !current)}
+          >
+            😊
+          </button>
+          {showEmoji && (
+            <div className="richTextEmojiPicker">
+              {profileEmojiOptions.map((emoji) => (
+                <button key={emoji} type="button" onClick={() => insertEmoji(emoji)} aria-label={`Добавить ${emoji}`}>
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <textarea
+        ref={textareaRef}
+        className="richTextArea"
+        value={value}
+        onChange={(event) => onChange(event.target.value.slice(0, 2000))}
+        rows={8}
+        maxLength={2000}
+        placeholder="Расскажите о сотруднике, его задачах и опыте..."
+      />
+      <div className="richTextFooter">
+        <span>Выделите текст и выберите формат</span>
+        <span>{value.length} / 2000</span>
+      </div>
+    </div>
+  );
+}
+
 type ProfileBioBlock =
   | { type: "paragraph"; text: string }
-  | { type: "list"; items: Array<{ text: string; children: string[] }> };
+  | { type: "heading"; level: 2 | 3; text: string }
+  | { type: "quote"; text: string }
+  | { type: "list"; ordered: boolean; items: Array<{ text: string; children: string[] }> };
+
+function renderProfileInlineText(text: string, keyPrefix: string): ReactNode[] {
+  const parts = text.split(/(\*\*.+?\*\*|\+\+.+?\+\+|\*.+?\*)/g).filter(Boolean);
+  return parts.map((part, index) => {
+    const key = `${keyPrefix}-${index}`;
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={key}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("++") && part.endsWith("++")) {
+      return <u key={key}>{part.slice(2, -2)}</u>;
+    }
+    if (part.startsWith("*") && part.endsWith("*")) {
+      return <em key={key}>{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+}
 
 function parseProfileBio(value: string): ProfileBioBlock[] {
   const blocks: ProfileBioBlock[] = [];
   let listItems: Array<{ text: string; children: string[] }> = [];
+  let listIsOrdered = false;
 
   const flushList = () => {
     if (listItems.length > 0) {
-      blocks.push({ type: "list", items: listItems });
+      blocks.push({ type: "list", ordered: listIsOrdered, items: listItems });
       listItems = [];
     }
   };
@@ -1087,9 +1241,28 @@ function parseProfileBio(value: string): ProfileBioBlock[] {
       return;
     }
 
-    const listItem = line.match(/^(?:[•●▪◦\-–—]|\d+[.)])\s*(.+)$/);
+    const heading = line.match(/^(#{2,3})\s+(.+)$/);
+    if (heading) {
+      flushList();
+      blocks.push({ type: "heading", level: heading[1].length as 2 | 3, text: heading[2] });
+      return;
+    }
+
+    const quote = line.match(/^>\s+(.+)$/);
+    if (quote) {
+      flushList();
+      blocks.push({ type: "quote", text: quote[1] });
+      return;
+    }
+
+    const listItem = line.match(/^(\d+[.)]|[•●▪◦\-–—])\s*(.+)$/);
     if (listItem) {
-      listItems.push({ text: listItem[1], children: [] });
+      const itemIsOrdered = /^\d/.test(listItem[1]);
+      if (listItems.length > 0 && itemIsOrdered !== listIsOrdered) {
+        flushList();
+      }
+      listIsOrdered = itemIsOrdered;
+      listItems.push({ text: listItem[2], children: [] });
       return;
     }
 
@@ -1111,24 +1284,35 @@ function ProfileBio({ value }: { value: string | null | undefined }) {
     <div className="profileAboutContent">
       {parseProfileBio(normalizedValue).map((block, blockIndex) => {
         if (block.type === "paragraph") {
-          return <p key={`paragraph-${blockIndex}`}>{block.text}</p>;
+          return <p key={`paragraph-${blockIndex}`}>{renderProfileInlineText(block.text, `paragraph-${blockIndex}`)}</p>;
+        }
+        if (block.type === "heading") {
+          return block.level === 2
+            ? <h2 key={`heading-${blockIndex}`}>{renderProfileInlineText(block.text, `heading-${blockIndex}`)}</h2>
+            : <h3 key={`heading-${blockIndex}`}>{renderProfileInlineText(block.text, `heading-${blockIndex}`)}</h3>;
+        }
+        if (block.type === "quote") {
+          return <blockquote key={`quote-${blockIndex}`}>{renderProfileInlineText(block.text, `quote-${blockIndex}`)}</blockquote>;
         }
 
+        const ListTag = block.ordered ? "ol" : "ul";
         return (
-          <ul key={`list-${blockIndex}`}>
+          <ListTag key={`list-${blockIndex}`}>
             {block.items.map((item, itemIndex) => (
               <li key={`${item.text}-${itemIndex}`}>
-                <span>{item.text}</span>
+                <span>{renderProfileInlineText(item.text, `list-${blockIndex}-${itemIndex}`)}</span>
                 {item.children.length > 0 && (
                   <ul>
                     {item.children.map((child, childIndex) => (
-                      <li key={`${child}-${childIndex}`}>{child}</li>
+                      <li key={`${child}-${childIndex}`}>
+                        {renderProfileInlineText(child, `child-${blockIndex}-${itemIndex}-${childIndex}`)}
+                      </li>
                     ))}
                   </ul>
                 )}
               </li>
             ))}
-          </ul>
+          </ListTag>
         );
       })}
     </div>
