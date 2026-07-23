@@ -10,6 +10,7 @@ import type {
   DepartmentUploadPublic,
   UserPublic,
 } from "../api/types";
+import { RichTextContent, RichTextEditor } from "./UserProfilePage";
 
 type DepartmentTab = "general" | "documents" | "projects";
 
@@ -328,16 +329,17 @@ function DepartmentGeneralTab({
       <div className="departmentSection">
         <h2>Об отделе</h2>
         {isEditing ? (
-          <textarea
-            className="input departmentTextarea"
+          <RichTextEditor
             value={draft.description}
             placeholder="Опишите задачи отдела, зоны ответственности, ключевые контакты или внутренние правила."
-            onChange={(event) => setDraft((current) => ({ ...current, description: event.target.value }))}
+            maxLength={3000}
+            onChange={(description) => setDraft((current) => ({ ...current, description }))}
           />
         ) : (
-          <p className={department.description ? "departmentText" : "departmentEmpty"}>
-            {department.description || "Описание отдела пока не заполнено."}
-          </p>
+          <RichTextContent
+            value={department.description}
+            emptyText="Описание отдела пока не заполнено."
+          />
         )}
       </div>
 

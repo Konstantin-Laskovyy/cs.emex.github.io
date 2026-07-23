@@ -1064,12 +1064,22 @@ const profileEmojiOptions = [
   "✅", "📌", "📣", "🚀", "🤝", "💼", "📚", "🏆",
 ];
 
-function RichTextEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function RichTextEditor({
+  value,
+  onChange,
+  placeholder = "Расскажите о сотруднике, его задачах и опыте...",
+  maxLength = 2000,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  maxLength?: number;
+}) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showEmoji, setShowEmoji] = useState(false);
 
   const updateValue = (nextValue: string, selectionStart: number, selectionEnd = selectionStart) => {
-    onChange(nextValue.slice(0, 2000));
+    onChange(nextValue.slice(0, maxLength));
     window.requestAnimationFrame(() => {
       textareaRef.current?.focus();
       textareaRef.current?.setSelectionRange(selectionStart, selectionEnd);
@@ -1180,14 +1190,14 @@ function RichTextEditor({ value, onChange }: { value: string; onChange: (value: 
         ref={textareaRef}
         className="richTextArea"
         value={value}
-        onChange={(event) => onChange(event.target.value.slice(0, 2000))}
+        onChange={(event) => onChange(event.target.value.slice(0, maxLength))}
         rows={8}
-        maxLength={2000}
-        placeholder="Расскажите о сотруднике, его задачах и опыте..."
+        maxLength={maxLength}
+        placeholder={placeholder}
       />
       <div className="richTextFooter">
         <span>Выделите текст и выберите формат</span>
-        <span>{value.length} / 2000</span>
+        <span>{value.length} / {maxLength}</span>
       </div>
     </div>
   );
@@ -1274,10 +1284,16 @@ function parseProfileBio(value: string): ProfileBioBlock[] {
   return blocks;
 }
 
-function ProfileBio({ value }: { value: string | null | undefined }) {
+export function RichTextContent({
+  value,
+  emptyText = "Описание пока не заполнено.",
+}: {
+  value: string | null | undefined;
+  emptyText?: string;
+}) {
   const normalizedValue = value?.trim();
   if (!normalizedValue) {
-    return <div className="profileAboutEmpty">Описание пока не заполнено.</div>;
+    return <div className="profileAboutEmpty">{emptyText}</div>;
   }
 
   return (
@@ -1389,7 +1405,7 @@ function ProfileGeneralTab({ profile, reports }: { profile: UserPublic; reports:
         <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
           О сотруднике
         </div>
-        <ProfileBio value={profile.bio} />
+        <RichTextContent value={profile.bio} />
       </div>
     </>
   );
