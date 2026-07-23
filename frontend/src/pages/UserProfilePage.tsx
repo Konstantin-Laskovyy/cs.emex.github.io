@@ -1059,6 +1059,82 @@ export function UserProfilePage() {
   );
 }
 
+type ProfileBioBlock =
+  | { type: "paragraph"; text: string }
+  | { type: "list"; items: Array<{ text: string; children: string[] }> };
+
+function parseProfileBio(value: string): ProfileBioBlock[] {
+  const blocks: ProfileBioBlock[] = [];
+  let listItems: Array<{ text: string; children: string[] }> = [];
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      blocks.push({ type: "list", items: listItems });
+      listItems = [];
+    }
+  };
+
+  value.split(/\r?\n/).forEach((rawLine) => {
+    const line = rawLine.trim();
+    if (!line) {
+      flushList();
+      return;
+    }
+
+    const nestedItem = line.match(/^[oо]\s+(.+)$/i);
+    if (nestedItem && listItems.length > 0) {
+      listItems[listItems.length - 1].children.push(nestedItem[1]);
+      return;
+    }
+
+    const listItem = line.match(/^(?:[•●▪◦\-–—]|\d+[.)])\s*(.+)$/);
+    if (listItem) {
+      listItems.push({ text: listItem[1], children: [] });
+      return;
+    }
+
+    flushList();
+    blocks.push({ type: "paragraph", text: line });
+  });
+
+  flushList();
+  return blocks;
+}
+
+function ProfileBio({ value }: { value: string | null | undefined }) {
+  const normalizedValue = value?.trim();
+  if (!normalizedValue) {
+    return <div className="profileAboutEmpty">Описание пока не заполнено.</div>;
+  }
+
+  return (
+    <div className="profileAboutContent">
+      {parseProfileBio(normalizedValue).map((block, blockIndex) => {
+        if (block.type === "paragraph") {
+          return <p key={`paragraph-${blockIndex}`}>{block.text}</p>;
+        }
+
+        return (
+          <ul key={`list-${blockIndex}`}>
+            {block.items.map((item, itemIndex) => (
+              <li key={`${item.text}-${itemIndex}`}>
+                <span>{item.text}</span>
+                {item.children.length > 0 && (
+                  <ul>
+                    {item.children.map((child, childIndex) => (
+                      <li key={`${child}-${childIndex}`}>{child}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        );
+      })}
+    </div>
+  );
+}
+
 function ProfileGeneralTab({ profile, reports }: { profile: UserPublic; reports: UserPublic[] }) {
   const { t } = useLanguage();
 
@@ -1129,7 +1205,7 @@ function ProfileGeneralTab({ profile, reports }: { profile: UserPublic; reports:
         <div className="muted" style={{ fontSize: 13, marginBottom: 8 }}>
           О сотруднике
         </div>
-        <div>{profile.bio ?? "Описание пока не заполнено."}</div>
+        <ProfileBio value={profile.bio} />
       </div>
     </>
   );
