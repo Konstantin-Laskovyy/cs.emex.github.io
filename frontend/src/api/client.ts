@@ -30,12 +30,12 @@ export function expireSession() {
 
 export async function apiFetch<T>(
   path: string,
-  init?: RequestInit & { auth?: boolean },
+  init?: RequestInit & { auth?: boolean; timeoutMs?: number },
 ): Promise<T> {
   const base = getApiBaseUrl().replace(/\/+$/, "");
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 8000);
+  const timeout = window.setTimeout(() => controller.abort(), init?.timeoutMs ?? 8000);
 
   const headers = new Headers(init?.headers);
   headers.set("Accept", "application/json");

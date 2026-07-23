@@ -162,7 +162,7 @@ export function AnalyticsPage() {
     setLoading(true);
     setLoadError(null);
 
-    apiFetch<OrdersSummary>("/analytics/orders/summary")
+    apiFetch<OrdersSummary>("/analytics/orders/summary", { timeoutMs: 120000 })
       .then((data) => {
         if (!cancelled) setSummary(data);
       })
