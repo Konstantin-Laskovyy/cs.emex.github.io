@@ -2236,6 +2236,111 @@ textarea {
   gap: 12px;
 }
 
+.achievementEditor {
+  display: grid;
+  gap: 14px;
+}
+
+.achievementEditorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.achievementEditorHeader h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.achievementEditorHeader p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.achievementEditorList {
+  display: grid;
+  gap: 12px;
+}
+
+.achievementEditorItem {
+  overflow: hidden;
+  border: 1px solid #cfe0f3;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.achievementEditorItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 7px 10px 7px 14px;
+  border-bottom: 1px solid #e1ebf5;
+  background: #f5f9fe;
+}
+
+.achievementRemoveButton {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #9b2c2c;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.achievementRemoveButton:hover,
+.achievementRemoveButton:focus-visible {
+  border-color: #fecaca;
+  background: #fff1f2;
+  outline: none;
+}
+
+.achievementEditorGrid {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.7fr) minmax(240px, 1fr);
+  gap: 12px;
+  padding: 14px;
+}
+
+.achievementEditorGrid label {
+  min-width: 0;
+}
+
+.achievementEditorGrid label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.achievementEditorGrid textarea {
+  min-height: 104px;
+  resize: vertical;
+}
+
+.achievementEditorWideField {
+  grid-column: 1 / -1;
+}
+
+.achievementAddBottom {
+  justify-self: start;
+}
+
+.achievementDescription {
+  margin-top: 8px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
 .profileTimelineItem {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -2252,6 +2357,7 @@ textarea {
   border-radius: 50%;
   background: #ffffff;
   box-shadow: 0 10px 22px rgba(0, 51, 102, 0.08);
+  overflow: hidden;
 }
 
 .profileStatsGrid {
@@ -3480,6 +3586,23 @@ textarea {
 
   .employeeDashboardGrid {
     grid-template-columns: 1fr;
+  }
+
+  .achievementEditorHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .achievementEditorHeader .btn {
+    align-self: flex-start;
+  }
+
+  .achievementEditorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .achievementEditorWideField {
+    grid-column: auto;
   }
 
   .sidebarMenu {

@@ -35,7 +35,7 @@ type ProfileFormState = {
   certificate_records_text: string;
   course_records_text: string;
   skills_text: string;
-  achievement_records_text: string;
+  achievement_records: AchievementRecord[];
 };
 
 const workStatusOptions: { value: WorkStatus; label: string }[] = [
@@ -137,9 +137,12 @@ function toFormState(profile: UserPublic): ProfileFormState {
       .map((item) => [item.title, item.provider, item.duration, item.status].join(" | "))
       .join("\n"),
     skills_text: (profile.skills ?? []).join("\n"),
-    achievement_records_text: (profile.achievement_records ?? [])
-      .map((item) => [item.icon, item.title, item.description, item.date].join(" | "))
-      .join("\n"),
+    achievement_records: (profile.achievement_records ?? []).map((item) => ({
+      icon: item.icon ?? "",
+      title: item.title ?? "",
+      description: item.description ?? "",
+      date: item.date ?? "",
+    })),
   };
 }
 
@@ -197,12 +200,6 @@ function parseSkills(value: string) {
     .split(/\n|,/)
     .map((skill) => skill.trim())
     .filter(Boolean);
-}
-
-function parseAchievementRecords(value: string): AchievementRecord[] {
-  return splitProfileLines(value)
-    .map(([icon, title, description, date]) => ({ icon, title, description, date }))
-    .filter((item) => item.icon || item.title || item.description || item.date);
 }
 
 function formatRuDate(value?: string | null) {
@@ -463,7 +460,14 @@ export function UserProfilePage() {
       certificate_records: parseCertificateRecords(form.certificate_records_text),
       course_records: parseCourseRecords(form.course_records_text),
       skills: parseSkills(form.skills_text),
-      achievement_records: parseAchievementRecords(form.achievement_records_text),
+      achievement_records: form.achievement_records
+        .map((item) => ({
+          icon: item.icon.trim(),
+          title: item.title.trim(),
+          description: item.description.trim(),
+          date: item.date.trim(),
+        }))
+        .filter((item) => item.icon || item.title || item.description || item.date),
     };
     if (me?.role === "admin") {
       payload.hire_date = form.hire_date || null;
@@ -1001,12 +1005,9 @@ export function UserProfilePage() {
               )}
 
               {activeEditTab === "achievements" && (
-                <ProfileEditTextarea
-                  label="Достижения"
-                  hint="Формат: иконка или символ | заголовок | описание | дата YYYY-MM-DD"
-                  rows={8}
-                  value={form.achievement_records_text}
-                  onChange={(value) => setForm({ ...form, achievement_records_text: value })}
+                <AchievementRecordsEditor
+                  items={form.achievement_records}
+                  onChange={(achievement_records) => setForm({ ...form, achievement_records })}
                 />
               )}
 
@@ -1484,6 +1485,111 @@ function EducationDevelopmentTab({ profile }: { profile: UserPublic }) {
   );
 }
 
+function AchievementRecordsEditor({
+  items,
+  onChange,
+}: {
+  items: AchievementRecord[];
+  onChange: (items: AchievementRecord[]) => void;
+}) {
+  const addAchievement = () => {
+    onChange([...items, { icon: "🏆", title: "", description: "", date: "" }]);
+  };
+
+  const updateAchievement = (index: number, patch: Partial<AchievementRecord>) => {
+    onChange(items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item)));
+  };
+
+  const removeAchievement = (index: number) => {
+    onChange(items.filter((_, itemIndex) => itemIndex !== index));
+  };
+
+  return (
+    <div className="achievementEditor">
+      <div className="achievementEditorHeader">
+        <div>
+          <h3>Достижения</h3>
+          <p>Каждое достижение заполняется и сохраняется отдельно.</p>
+        </div>
+        <button className="btn btnPrimary" type="button" onClick={addAchievement}>
+          + Добавить достижение
+        </button>
+      </div>
+
+      {items.length === 0 && (
+        <div className="profileEmptyState">
+          Достижений пока нет. Добавьте первую запись.
+        </div>
+      )}
+
+      <div className="achievementEditorList">
+        {items.map((item, index) => (
+          <div className="achievementEditorItem" key={index}>
+            <div className="achievementEditorItemHeader">
+              <strong>Достижение {index + 1}</strong>
+              <button
+                className="achievementRemoveButton"
+                type="button"
+                title="Удалить достижение"
+                aria-label={`Удалить достижение ${index + 1}`}
+                onClick={() => removeAchievement(index)}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="achievementEditorGrid">
+              <label>
+                <span>Иконка или смайлик</span>
+                <input
+                  className="input"
+                  value={item.icon}
+                  placeholder="🏆"
+                  onChange={(event) => updateAchievement(index, { icon: event.target.value })}
+                />
+              </label>
+              <label>
+                <span>Дата или период</span>
+                <input
+                  className="input"
+                  value={item.date}
+                  placeholder="2026-07-23 или 2025-2026"
+                  onChange={(event) => updateAchievement(index, { date: event.target.value })}
+                />
+              </label>
+              <label className="achievementEditorWideField">
+                <span>Заголовок</span>
+                <input
+                  className="input"
+                  value={item.title}
+                  placeholder="Название достижения"
+                  onChange={(event) => updateAchievement(index, { title: event.target.value })}
+                />
+              </label>
+              <label className="achievementEditorWideField">
+                <span>Описание</span>
+                <textarea
+                  className="input"
+                  rows={4}
+                  value={item.description}
+                  placeholder="Что было сделано и какой результат получен"
+                  onChange={(event) => updateAchievement(index, { description: event.target.value })}
+                />
+              </label>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {items.length > 0 && (
+        <button className="btn achievementAddBottom" type="button" onClick={addAchievement}>
+          + Добавить ещё
+        </button>
+      )}
+    </div>
+  );
+}
+
 function AchievementsTab({ achievements }: { achievements: AchievementRecord[] }) {
   const getAchievementYear = (value: string) => value.match(/\b(?:19|20)\d{2}\b/)?.[0] ?? null;
   const years = Array.from(new Set(achievements.map((item) => getAchievementYear(item.date)).filter((item): item is string => Boolean(item))))
@@ -1506,18 +1612,23 @@ function AchievementsTab({ achievements }: { achievements: AchievementRecord[] }
       </div>
       <div className="profileTimeline">
         {filtered.length === 0 && <ProfileEmptyState>Достижения пока не добавлены.</ProfileEmptyState>}
-        {filtered.map((item, index) => (
+        {filtered.map((item, index) => {
+          const iconIsCompact = Array.from(item.icon || "").length <= 4;
+          const displayIcon = iconIsCompact ? (item.icon || "🏆") : "🏆";
+          const displayTitle = item.title || (!iconIsCompact ? item.icon : "") || "Достижение";
+          return (
           <div className="profileTimelineItem" key={[item.title, item.date, index].join("-")}>
-            <div className="profileTimelineIcon">{item.icon || "*"}</div>
+            <div className="profileTimelineIcon">{displayIcon}</div>
             <div className="profileInfoCard">
               <div className="cardInner">
                 <div className="muted" style={{ fontSize: 13 }}>{item.date ? formatRuDate(item.date) : "Дата не указана"}</div>
-                <h3 style={{ margin: "6px 0 0", fontSize: 16 }}>{item.title}</h3>
-                <div style={{ marginTop: 8 }}>{item.description}</div>
+                <h3 style={{ margin: "6px 0 0", fontSize: 16 }}>{displayTitle}</h3>
+                {item.description && <div className="achievementDescription">{item.description}</div>}
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
