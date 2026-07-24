@@ -33,6 +33,7 @@ export function HomePage() {
   useOutletContext<ShellContext>();
   const { t } = useLanguage();
   const [news, setNews] = useState<NewsPublic[]>([]);
+  const [expandedNews, setExpandedNews] = useState<Set<number>>(() => new Set());
   const [birthdays, setBirthdays] = useState<UpcomingBirthdayPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -138,6 +139,29 @@ export function HomePage() {
                   <div className="newsSummary">
                     <p>{item.summary}</p>
                   </div>
+
+                  {item.content && (
+                    <>
+                      <div
+                        className={`newsContent newsContentPreview ${expandedNews.has(item.id) ? "newsContentPreviewExpanded" : ""}`}
+                        dangerouslySetInnerHTML={{ __html: item.content }}
+                      />
+                      <button
+                        className="newsExpandButton"
+                        type="button"
+                        onClick={() =>
+                          setExpandedNews((current) => {
+                            const next = new Set(current);
+                            if (next.has(item.id)) next.delete(item.id);
+                            else next.add(item.id);
+                            return next;
+                          })
+                        }
+                      >
+                        {expandedNews.has(item.id) ? "Свернуть" : "Показать полностью"}
+                      </button>
+                    </>
+                  )}
 
                   <div className="row newsCardActions">
                     <Link className="btn btnNewsRead" to={`/news/${item.id}`}>

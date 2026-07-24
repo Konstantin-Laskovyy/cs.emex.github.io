@@ -1,6 +1,7 @@
 from html import escape
 from html.parser import HTMLParser
 from pathlib import Path
+import re
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
@@ -26,7 +27,6 @@ from app.schemas.news import (
 
 router = APIRouter(prefix="/news", tags=["news"])
 
-MAX_NEWS_UPLOAD_SIZE = 20 * 1024 * 1024
 ALLOWED_UPLOAD_TYPES = {
     "image/jpeg": ".jpg",
     "image/png": ".png",
@@ -54,8 +54,10 @@ ALLOWED_TAGS = {
     "em",
     "figcaption",
     "figure",
+    "h1",
     "h2",
     "h3",
+    "hr",
     "i",
     "img",
     "li",
@@ -64,14 +66,27 @@ ALLOWED_TAGS = {
     "pre",
     "s",
     "strong",
+    "span",
     "u",
     "ul",
 }
-VOID_TAGS = {"br", "img"}
+VOID_TAGS = {"br", "hr", "img"}
 ALLOWED_ATTRIBUTES = {
     "a": {"href", "target", "rel"},
-    "img": {"src", "alt"},
+    "img": {"src", "alt", "title", "width", "height", "data-align"},
+    "span": {"style"},
+    "p": {"style", "data-indent"},
+    "h1": {"style", "data-indent"},
+    "h2": {"style", "data-indent"},
+    "h3": {"style", "data-indent"},
 }
+SAFE_FONT_FAMILIES = {"Arial", "Georgia", "Verdana", "Times New Roman", "Courier New"}
+SAFE_FONT_SIZES = {"12px", "14px", "16px", "18px", "24px", "32px"}
+SAFE_LINE_HEIGHTS = {"1", "1.25", "1.5", "1.75", "2"}
+SAFE_TEXT_ALIGNS = {"left", "center", "right", "justify"}
+SAFE_IMAGE_ALIGNS = {"left", "center", "right"}
+HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{5})?$")
+INTEGER_RE = re.compile(r"^\d{1,4}$")
 
 
 @router.get("", response_model=list[NewsPublic])
@@ -102,7 +117,7 @@ async def upload_news_file(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported file type")
 
     content = await file.read()
-    if len(content) > MAX_NEWS_UPLOAD_SIZE:
+    if len(content) > settings.news_upload_max_bytes:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="File is too large")
 
     upload_dir = Path(settings.upload_dir) / "news"
@@ -337,6 +352,19 @@ class NewsHtmlSanitizer(HTMLParser):
                 continue
             if tag == "a" and name == "target" and value != "_blank":
                 continue
+            if name == "style":
+                value = _sanitize_style(tag, value)
+                if not value:
+                    continue
+            if name == "data-indent":
+                if value not in {"1", "2", "3", "4"}:
+                    continue
+            if name == "data-align":
+                if value not in SAFE_IMAGE_ALIGNS:
+                    continue
+            if name in {"width", "height"}:
+                if not INTEGER_RE.fullmatch(value) or not 40 <= int(value) <= 2000:
+                    continue
             safe.append((name, value))
 
         if tag == "a":
@@ -367,8 +395,37 @@ def _is_safe_url(value: str) -> bool:
         lowered.startswith("http://")
         or lowered.startswith("https://")
         or lowered.startswith("mailto:")
+        or lowered.startswith("tel:")
+        or (lowered.startswith("/") and not lowered.startswith("//"))
         or lowered.startswith(settings.public_upload_url.rstrip("/") + "/")
     )
+
+
+def _sanitize_style(tag: str, value: str) -> str:
+    safe_styles: list[str] = []
+    for declaration in value.split(";"):
+        if ":" not in declaration:
+            continue
+        name, raw_value = declaration.split(":", 1)
+        name = name.strip().lower()
+        style_value = raw_value.strip()
+
+        if tag == "span":
+            if name in {"color", "background-color"} and HEX_COLOR_RE.fullmatch(style_value):
+                safe_styles.append(f"{name}: {style_value.lower()}")
+            elif name == "font-family":
+                font_family = style_value.strip("\"'")
+                if font_family in SAFE_FONT_FAMILIES:
+                    safe_styles.append(f"font-family: {font_family}")
+            elif name == "font-size" and style_value in SAFE_FONT_SIZES:
+                safe_styles.append(f"font-size: {style_value}")
+            elif name == "line-height" and style_value in SAFE_LINE_HEIGHTS:
+                safe_styles.append(f"line-height: {style_value}")
+        elif tag in {"p", "h1", "h2", "h3"}:
+            if name == "text-align" and style_value in SAFE_TEXT_ALIGNS:
+                safe_styles.append(f"text-align: {style_value}")
+
+    return "; ".join(safe_styles)
 
 
 @router.delete("/{news_id}", status_code=status.HTTP_204_NO_CONTENT)

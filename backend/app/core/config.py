@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     ad_default_email_domain: str = "emex.kz"
     upload_dir: str = "uploads"
     public_upload_url: str = "/uploads"
+    news_upload_max_bytes: int = 20 * 1024 * 1024
     zup_wsdl_url: str = ""
     zup_service_url: str = ""
     zup_username: str = ""

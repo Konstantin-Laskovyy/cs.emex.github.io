@@ -1600,10 +1600,15 @@ textarea {
   margin: 0 0 14px;
 }
 
+.newsContent h1,
 .newsContent h2,
 .newsContent h3 {
   margin: 18px 0 10px;
   line-height: 1.25;
+}
+
+.newsContent h1 {
+  font-size: 30px;
 }
 
 .newsContent h2 {
@@ -1639,6 +1644,41 @@ textarea {
   background: #ffffff;
 }
 
+.newsContent img[data-align="left"] {
+  margin-right: auto;
+}
+
+.newsContent img[data-align="center"] {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.newsContent img[data-align="right"] {
+  margin-left: auto;
+}
+
+.newsContent [data-indent="1"] {
+  margin-left: 24px;
+}
+
+.newsContent [data-indent="2"] {
+  margin-left: 48px;
+}
+
+.newsContent [data-indent="3"] {
+  margin-left: 72px;
+}
+
+.newsContent [data-indent="4"] {
+  margin-left: 96px;
+}
+
+.newsContent hr {
+  margin: 22px 0;
+  border: 0;
+  border-top: 1px solid #bfd3e8;
+}
+
 .newsContent figcaption {
   margin-top: 6px;
   color: var(--muted);
@@ -1661,63 +1701,200 @@ textarea {
   padding: 2px 5px;
 }
 
-.richEditor {
-  border: 1px solid #bfd5f0;
-  border-radius: 14px;
-  background: #ffffff;
+.newsContentPreview {
+  position: relative;
+  max-height: 260px;
+  margin-top: 16px;
   overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 82%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 82%, transparent 100%);
 }
 
-.richEditorToolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px;
-  border-bottom: 1px solid #d9e7f6;
-  background: #f4f9ff;
+.newsContentPreviewExpanded {
+  max-height: none;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
-.richEditorButton {
-  min-height: 34px;
-  padding: 7px 10px;
-  border: 1px solid #c9ddf3;
-  border-radius: 10px;
-  background: #ffffff;
-  color: var(--ink);
+.newsContentPreview img {
+  max-height: 220px;
+}
+
+.newsContentPreviewExpanded img {
+  max-height: 520px;
+}
+
+.newsExpandButton {
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary-dark);
   font-weight: 800;
   cursor: pointer;
 }
 
-.richEditorButton:hover:not(:disabled) {
+.newsExpandButton:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.tiptapEditor,
+.tiptapEditorLoading {
+  position: relative;
+  overflow: visible;
+  border: 1px solid #bfd5ea;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.tiptapEditor:focus-within {
   border-color: var(--primary);
-  background: #eef7ff;
+  box-shadow: 0 0 0 3px rgba(7, 95, 171, 0.1);
 }
 
-.richEditorButton:disabled {
-  opacity: 0.55;
-  cursor: progress;
+.tiptapEditorLoading {
+  min-height: 400px;
+  padding: 18px;
+  color: var(--muted);
 }
 
-.richEditorEmojiWrap {
+.tiptapToolbar {
+  position: sticky;
+  z-index: 15;
+  top: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid #d9e7f4;
+  border-radius: 7px 7px 0 0;
+  background: #f6f9fd;
+}
+
+.tiptapToolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding-right: 6px;
+  border-right: 1px solid #d7e3ef;
+}
+
+.tiptapToolbarEnd {
+  margin-left: auto;
+  padding-right: 0;
+  border-right: 0;
+}
+
+.tiptapToolButton,
+.tiptapColorControl {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #183b63;
+  cursor: pointer;
+}
+
+.tiptapToolButton svg,
+.tiptapColorControl svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2;
+}
+
+.tiptapToolButton:hover:not(:disabled),
+.tiptapToolButton:focus-visible,
+.tiptapColorControl:hover {
+  border-color: #bfd5ea;
+  background: #e8f2fc;
+  outline: none;
+}
+
+.tiptapToolButtonActive {
+  border-color: #8dbce4;
+  background: #dceeff;
+  color: var(--primary-dark);
+}
+
+.tiptapToolButton:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.tiptapSelect {
+  width: 126px;
+  height: 34px;
+  padding: 0 26px 0 8px;
+  border: 1px solid #c7d9eb;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: var(--ink);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tiptapBlockSelect {
+  width: 134px;
+}
+
+.tiptapSmallSelect {
+  width: 82px;
+}
+
+.tiptapColorControl {
   position: relative;
 }
 
-.richEditorEmojiPicker {
+.tiptapColorControl input {
   position: absolute;
-  z-index: 30;
-  top: calc(100% + 7px);
-  left: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 36px);
-  gap: 4px;
-  padding: 8px;
-  border: 1px solid #c9ddf3;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 16px 36px rgba(7, 31, 61, 0.18);
+  inset: auto 5px 4px;
+  width: 24px;
+  height: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
 }
 
-.richEditorEmojiPicker button {
+.tiptapColorControl input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.tiptapColorControl input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 2px;
+}
+
+.tiptapColorGlyph {
+  font-weight: 800;
+}
+
+.tiptapEmojiWrap {
+  position: relative;
+}
+
+.tiptapEmojiPicker {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 36px);
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid #bfd5ea;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 42px rgba(7, 31, 61, 0.2);
+}
+
+.tiptapEmojiPicker button {
   display: grid;
   place-items: center;
   width: 36px;
@@ -1730,45 +1907,192 @@ textarea {
   cursor: pointer;
 }
 
-.richEditorEmojiPicker button:hover {
+.tiptapEmojiPicker button:hover {
   background: #eaf4ff;
 }
 
-.richEditorSurface {
-  min-height: 260px;
-  padding: 14px;
+.tiptapImageToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #dce7f2;
+  background: #edf6ff;
+  color: #284d76;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tiptapImageToolbar button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid #b9d3eb;
+  border-radius: 5px;
+  background: #ffffff;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.tiptapImageToolbar .tiptapImageDelete {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #9b2c2c;
+}
+
+.tiptapImageDelete svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tiptapEditorSurface {
+  min-height: 400px;
+  padding: 20px;
   outline: none;
+  color: var(--ink);
   line-height: 1.65;
 }
 
-.richEditorSurface:empty::before {
-  content: attr(data-placeholder);
-  color: #6f7f91;
+.tiptapEditorSurface p,
+.tiptapEditorSurface ul,
+.tiptapEditorSurface ol,
+.tiptapEditorSurface blockquote {
+  margin: 0 0 12px;
 }
 
-.richEditorSurface img {
+.tiptapEditorSurface h1,
+.tiptapEditorSurface h2,
+.tiptapEditorSurface h3 {
+  margin: 18px 0 10px;
+  line-height: 1.25;
+}
+
+.tiptapEditorSurface h1 {
+  font-size: 30px;
+}
+
+.tiptapEditorSurface h2 {
+  font-size: 24px;
+}
+
+.tiptapEditorSurface h3 {
+  font-size: 20px;
+}
+
+.tiptapEditorSurface ul,
+.tiptapEditorSurface ol {
+  padding-left: 28px;
+}
+
+.tiptapEditorSurface blockquote {
+  padding: 10px 14px;
+  border-left: 4px solid var(--primary);
+  background: #eef7ff;
+  color: #25466f;
+}
+
+.tiptapEditorSurface hr {
+  margin: 22px 0;
+  border: 0;
+  border-top: 1px solid #bfd3e8;
+}
+
+.tiptapEditorSurface .is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+  color: #7689a0;
+  content: attr(data-placeholder);
+  pointer-events: none;
+}
+
+.tiptapEditorSurface img {
   display: block;
   max-width: 100%;
-  max-height: 420px;
-  border-radius: 12px;
-  border: 1px solid #d7e5f5;
+  max-height: 560px;
+  border: 1px solid #cbddeb;
+  border-radius: 6px;
+  background: #ffffff;
   object-fit: contain;
 }
 
-.richEditorSurface figure {
-  margin: 10px 0;
+.tiptapEditorSurface img.ProseMirror-selectednode {
+  outline: 3px solid rgba(7, 95, 171, 0.25);
+  outline-offset: 2px;
 }
 
-.richEditorSurface figcaption {
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 13px;
+.tiptapEditorSurface img[data-align="left"] {
+  margin-right: auto;
 }
 
-.richEditorStatus {
-  padding: 0 14px 12px;
+.tiptapEditorSurface img[data-align="center"] {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.tiptapEditorSurface img[data-align="right"] {
+  margin-left: auto;
+}
+
+.tiptapEditorSurface [data-indent="1"] {
+  margin-left: 24px;
+}
+
+.tiptapEditorSurface [data-indent="2"] {
+  margin-left: 48px;
+}
+
+.tiptapEditorSurface [data-indent="3"] {
+  margin-left: 72px;
+}
+
+.tiptapEditorSurface [data-indent="4"] {
+  margin-left: 96px;
+}
+
+.tiptapEditorFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top: 1px solid #e4edf5;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
+}
+
+.tiptapCountLimit {
+  color: var(--danger);
+  font-weight: 800;
+}
+
+.tiptapEditorFullscreen {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  border: 0;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+.tiptapEditorFullscreen .tiptapToolbar {
+  border-radius: 0;
+}
+
+.tiptapEditorFullscreen > div:has(.tiptapEditorSurface) {
+  min-height: 0;
+  overflow: auto;
+}
+
+.tiptapEditorFullscreen .tiptapEditorSurface {
+  width: min(980px, calc(100% - 32px));
+  min-height: 100%;
+  margin: 0 auto;
+}
+
+.tiptapFullscreenOpen {
+  overflow: hidden;
 }
 
 .reactionBar {
@@ -3639,6 +3963,49 @@ textarea {
 
   .achievementEditorWideField {
     grid-column: auto;
+  }
+
+  .tiptapToolbar {
+    position: static;
+    align-items: stretch;
+    overflow-x: auto;
+  }
+
+  .tiptapToolbarGroup {
+    flex: 0 0 auto;
+  }
+
+  .tiptapToolbarEnd {
+    margin-left: 0;
+  }
+
+  .tiptapSelect {
+    width: 116px;
+  }
+
+  .tiptapBlockSelect {
+    width: 128px;
+  }
+
+  .tiptapSmallSelect {
+    width: 80px;
+  }
+
+  .tiptapEditorSurface {
+    min-height: 350px;
+    padding: 14px;
+  }
+
+  .tiptapEmojiPicker {
+    position: fixed;
+    right: 12px;
+    bottom: 12px;
+    top: auto;
+    grid-template-columns: repeat(6, 36px);
+  }
+
+  .tiptapEditorFooter {
+    flex-wrap: wrap;
   }
 
   .sidebarMenu {

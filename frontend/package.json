@@ -9,6 +9,19 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tiptap/core": "^3.28.0",
+    "@tiptap/extension-character-count": "3.28.0",
+    "@tiptap/extension-file-handler": "3.28.0",
+    "@tiptap/extension-image": "3.28.0",
+    "@tiptap/extension-placeholder": "3.28.0",
+    "@tiptap/extension-text-align": "3.28.0",
+    "@tiptap/extension-text-style": "3.28.0",
+    "@tiptap/extension-typography": "3.28.0",
+    "@tiptap/extensions": "^3.28.0",
+    "@tiptap/pm": "3.28.0",
+    "@tiptap/react": "3.28.0",
+    "@tiptap/starter-kit": "3.28.0",
+    "lucide-react": "^1.26.0",
     "react": "*",
     "react-dom": "*",
     "react-router-dom": "*"
