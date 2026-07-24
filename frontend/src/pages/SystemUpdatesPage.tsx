@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { apiFetch } from "../api/client";
 import type { SystemUpdatePublic, UserPublic } from "../api/types";
+import { RichTextContent, RichTextEditor } from "./UserProfilePage";
 
 type ShellContext = {
   me: UserPublic | null;
@@ -116,11 +117,10 @@ export function SystemUpdatesPage() {
                 onChange={(event) => setForm({ ...form, title: event.target.value })}
                 placeholder="Например: Новый дашборд выдачи курьерам"
               />
-              <textarea
-                className="input"
-                rows={5}
+              <RichTextEditor
                 value={form.body}
-                onChange={(event) => setForm({ ...form, body: event.target.value })}
+                onChange={(body) => setForm({ ...form, body })}
+                maxLength={5000}
                 placeholder="Опишите, что добавилось или изменилось. Можно писать коротко, по делу."
               />
               <div className="row">
@@ -160,7 +160,7 @@ export function SystemUpdatesPage() {
                 <span>{authorName(item)}</span>
               </div>
               <h2>{item.title}</h2>
-              <p>{item.body}</p>
+              <RichTextContent value={item.body} />
               {canManage && (
                 <button className="btn btnDanger" type="button" onClick={() => deleteUpdate(item)}>
                   Удалить

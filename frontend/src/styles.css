@@ -1698,6 +1698,42 @@ textarea {
   cursor: progress;
 }
 
+.richEditorEmojiWrap {
+  position: relative;
+}
+
+.richEditorEmojiPicker {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 7px);
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 36px);
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid #c9ddf3;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(7, 31, 61, 0.18);
+}
+
+.richEditorEmojiPicker button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.richEditorEmojiPicker button:hover {
+  background: #eaf4ff;
+}
+
 .richEditorSurface {
   min-height: 260px;
   padding: 14px;

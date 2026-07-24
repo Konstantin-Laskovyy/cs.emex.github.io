@@ -4,6 +4,7 @@ import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
 import type { DepartmentPublic, UserCreate, UserPublic, WorkStatus } from "../api/types";
+import { RichTextEditor } from "./UserProfilePage";
 
 type CreateFormState = {
   email: string;
@@ -377,7 +378,11 @@ export function UsersPage() {
 
               <label>
                 <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{t("form.description")}</div>
-                <textarea className="input" rows={4} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} />
+                <RichTextEditor
+                  value={form.bio}
+                  onChange={(bio) => setForm({ ...form, bio })}
+                  placeholder="Расскажите о сотруднике, его задачах и опыте..."
+                />
               </label>
 
               {saveMessage && <div style={{ color: "#bfdbfe" }}>{saveMessage}</div>}

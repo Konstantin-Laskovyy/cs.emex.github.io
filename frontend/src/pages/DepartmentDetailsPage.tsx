@@ -427,7 +427,7 @@ function DepartmentDocumentsTab({
             {draft.documents.map((document, index) => (
               <div className="departmentRecordCard" key={`${document.title}-${index}`}>
                 <strong>{document.title || "Документ без названия"}</strong>
-                {document.description && <p>{document.description}</p>}
+                {document.description && <RichTextContent value={document.description} />}
                 {document.url && (
                   <a className="btn" href={document.url} target="_blank" rel="noreferrer">
                     Открыть
@@ -540,15 +540,15 @@ function DocumentEditor({
               </a>
             )}
           </div>
-          <textarea
-            className="input"
+          <RichTextEditor
             value={document.description}
             placeholder="Краткое описание"
-            onChange={(event) =>
+            maxLength={3000}
+            onChange={(description) =>
               setDraft((current) => ({
                 ...current,
                 documents: current.documents.map((item, itemIndex) =>
-                  itemIndex === index ? { ...item, description: event.target.value } : item,
+                  itemIndex === index ? { ...item, description } : item,
                 ),
               }))
             }
@@ -609,7 +609,7 @@ function DepartmentProjectsTab({
                   <strong>{project.title || "Проект без названия"}</strong>
                   {project.status && <span className="newsBadge">{project.status}</span>}
                 </div>
-                {project.description && <p>{project.description}</p>}
+                {project.description && <RichTextContent value={project.description} />}
                 <small>
                   {project.owner && `Ответственный: ${project.owner}`}
                   {project.owner && project.dueDate ? " · " : ""}
@@ -681,11 +681,11 @@ function ProjectEditor({
               onChange={(event) => updateProject(index, { dueDate: event.target.value })}
             />
           </div>
-          <textarea
-            className="input"
+          <RichTextEditor
             value={project.description}
             placeholder="Описание"
-            onChange={(event) => updateProject(index, { description: event.target.value })}
+            maxLength={3000}
+            onChange={(description) => updateProject(index, { description })}
           />
           <button
             className="btn"

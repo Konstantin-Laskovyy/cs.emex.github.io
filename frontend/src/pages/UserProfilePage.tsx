@@ -1568,12 +1568,11 @@ function AchievementRecordsEditor({
               </label>
               <label className="achievementEditorWideField">
                 <span>Описание</span>
-                <textarea
-                  className="input"
-                  rows={4}
+                <RichTextEditor
                   value={item.description}
                   placeholder="Что было сделано и какой результат получен"
-                  onChange={(event) => updateAchievement(index, { description: event.target.value })}
+                  maxLength={3000}
+                  onChange={(description) => updateAchievement(index, { description })}
                 />
               </label>
             </div>
@@ -1623,7 +1622,11 @@ function AchievementsTab({ achievements }: { achievements: AchievementRecord[] }
               <div className="cardInner">
                 <div className="muted" style={{ fontSize: 13 }}>{item.date ? formatRuDate(item.date) : "Дата не указана"}</div>
                 <h3 style={{ margin: "6px 0 0", fontSize: 16 }}>{displayTitle}</h3>
-                {item.description && <div className="achievementDescription">{item.description}</div>}
+                {item.description && (
+                  <div className="achievementDescription">
+                    <RichTextContent value={item.description} />
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -8,12 +8,18 @@ type RichTextEditorProps = {
   placeholder?: string;
 };
 
+const emojiOptions = [
+  "😀", "😊", "👍", "👏", "🎉", "⭐", "❤️", "💡",
+  "✅", "📌", "📣", "🚀", "🤝", "💼", "📚", "🏆",
+];
+
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement | null>(null);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const selectionRef = useRef<Range | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
 
   useEffect(() => {
     const editor = editorRef.current;
@@ -125,6 +131,35 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
         <button className="richEditorButton" type="button" onClick={() => runCommand("formatBlock", "blockquote")}>
           Цитата
         </button>
+        <div className="richEditorEmojiWrap">
+          <button
+            className="richEditorButton"
+            type="button"
+            title="Добавить смайлик"
+            aria-label="Добавить смайлик"
+            aria-expanded={showEmoji}
+            onClick={() => setShowEmoji((current) => !current)}
+          >
+            😊
+          </button>
+          {showEmoji && (
+            <div className="richEditorEmojiPicker">
+              {emojiOptions.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  aria-label={`Добавить ${emoji}`}
+                  onClick={() => {
+                    insertHtml(emoji);
+                    setShowEmoji(false);
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <button className="richEditorButton" type="button" onClick={addLink}>
           Ссылка
         </button>
