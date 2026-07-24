@@ -1,5 +1,6 @@
 import { createElement, useEffect, useMemo, useState } from "react";
 import type { DragEvent, FormEvent, ReactNode } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
@@ -31,11 +32,11 @@ type ProfileFormState = {
   vacation_days_total: string;
   vacation_days_used: string;
   vacation_periods_text: string;
-  education_records_text: string;
-  additional_education_records_text: string;
-  certificate_records_text: string;
-  course_records_text: string;
-  skills_text: string;
+  education_records: EducationRecord[];
+  additional_education_records: AdditionalEducationRecord[];
+  certificate_records: CertificateRecord[];
+  course_records: CourseRecord[];
+  skills: string[];
   achievement_records: AchievementRecord[];
 };
 
@@ -125,19 +126,11 @@ function toFormState(profile: UserPublic): ProfileFormState {
     vacation_periods_text: (profile.vacation_periods ?? [])
       .map((period) => `${period.start_date} — ${period.end_date}${period.note ? ` | ${period.note}` : ""}`)
       .join("\n"),
-    education_records_text: (profile.education_records ?? [])
-      .map((item) => [item.school, item.faculty, item.specialty, item.graduationYear].join(" | "))
-      .join("\n"),
-    additional_education_records_text: (profile.additional_education_records ?? [])
-      .map((item) => [item.organization, item.course, item.date].join(" | "))
-      .join("\n"),
-    certificate_records_text: (profile.certificate_records ?? [])
-      .map((item) => [item.title, item.organization, item.issuedAt, item.validUntil ?? ""].join(" | "))
-      .join("\n"),
-    course_records_text: (profile.course_records ?? [])
-      .map((item) => [item.title, item.provider, item.duration, item.status].join(" | "))
-      .join("\n"),
-    skills_text: (profile.skills ?? []).join("\n"),
+    education_records: (profile.education_records ?? []).map((item) => ({ ...item })),
+    additional_education_records: (profile.additional_education_records ?? []).map((item) => ({ ...item })),
+    certificate_records: (profile.certificate_records ?? []).map((item) => ({ ...item })),
+    course_records: (profile.course_records ?? []).map((item) => ({ ...item })),
+    skills: [...(profile.skills ?? [])],
     achievement_records: (profile.achievement_records ?? []).map((item) => ({
       icon: item.icon ?? "",
       title: item.title ?? "",
@@ -162,45 +155,6 @@ function parseVacationPeriods(value: string) {
       };
     })
     .filter((period) => period.start_date && period.end_date);
-}
-
-function splitProfileLines(value: string) {
-  return value
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => line.split("|").map((part) => part.trim()));
-}
-
-function parseEducationRecords(value: string): EducationRecord[] {
-  return splitProfileLines(value)
-    .map(([school, faculty, specialty, graduationYear]) => ({ school, faculty, specialty, graduationYear }))
-    .filter((item) => item.school || item.faculty || item.specialty || item.graduationYear);
-}
-
-function parseAdditionalEducationRecords(value: string): AdditionalEducationRecord[] {
-  return splitProfileLines(value)
-    .map(([organization, course, date]) => ({ organization, course, date }))
-    .filter((item) => item.organization || item.course || item.date);
-}
-
-function parseCertificateRecords(value: string): CertificateRecord[] {
-  return splitProfileLines(value)
-    .map(([title, organization, issuedAt, validUntil]) => ({ title, organization, issuedAt, validUntil: validUntil || null }))
-    .filter((item) => item.title || item.organization || item.issuedAt || item.validUntil);
-}
-
-function parseCourseRecords(value: string): CourseRecord[] {
-  return splitProfileLines(value)
-    .map(([title, provider, duration, status]) => ({ title, provider, duration, status }))
-    .filter((item) => item.title || item.provider || item.duration || item.status);
-}
-
-function parseSkills(value: string) {
-  return value
-    .split(/\n|,/)
-    .map((skill) => skill.trim())
-    .filter(Boolean);
 }
 
 function formatRuDate(value?: string | null) {
@@ -456,11 +410,38 @@ export function UserProfilePage() {
       work_status: form.work_status,
       workday_start: form.workday_start,
       workday_end: form.workday_end,
-      education_records: parseEducationRecords(form.education_records_text),
-      additional_education_records: parseAdditionalEducationRecords(form.additional_education_records_text),
-      certificate_records: parseCertificateRecords(form.certificate_records_text),
-      course_records: parseCourseRecords(form.course_records_text),
-      skills: parseSkills(form.skills_text),
+      education_records: form.education_records
+        .map((item) => ({
+          school: item.school.trim(),
+          faculty: item.faculty.trim(),
+          specialty: item.specialty.trim(),
+          graduationYear: item.graduationYear.trim(),
+        }))
+        .filter((item) => item.school || item.faculty || item.specialty || item.graduationYear),
+      additional_education_records: form.additional_education_records
+        .map((item) => ({
+          organization: item.organization.trim(),
+          course: item.course.trim(),
+          date: item.date.trim(),
+        }))
+        .filter((item) => item.organization || item.course || item.date),
+      certificate_records: form.certificate_records
+        .map((item) => ({
+          title: item.title.trim(),
+          organization: item.organization.trim(),
+          issuedAt: item.issuedAt.trim(),
+          validUntil: item.validUntil?.trim() || null,
+        }))
+        .filter((item) => item.title || item.organization || item.issuedAt || item.validUntil),
+      course_records: form.course_records
+        .map((item) => ({
+          title: item.title.trim(),
+          provider: item.provider.trim(),
+          duration: item.duration.trim(),
+          status: item.status.trim(),
+        }))
+        .filter((item) => item.title || item.provider || item.duration || item.status),
+      skills: form.skills.map((skill) => skill.trim()).filter(Boolean),
       achievement_records: form.achievement_records
         .map((item) => ({
           icon: item.icon.trim(),
@@ -966,43 +947,14 @@ export function UserProfilePage() {
               )}
 
               {activeEditTab === "education" && (
-                <div className="profileSectionGrid">
-                  <ProfileEditTextarea
-                    label="Высшее образование"
-                    hint="Формат: учебное заведение | факультет | специальность | год окончания"
-                    rows={4}
-                    value={form.education_records_text}
-                    onChange={(value) => setForm({ ...form, education_records_text: value })}
-                  />
-                  <ProfileEditTextarea
-                    label="Дополнительное образование"
-                    hint="Формат: организация | название курса | дата"
-                    rows={4}
-                    value={form.additional_education_records_text}
-                    onChange={(value) => setForm({ ...form, additional_education_records_text: value })}
-                  />
-                  <ProfileEditTextarea
-                    label="Сертификаты"
-                    hint="Формат: название | организация | дата получения | срок действия"
-                    rows={4}
-                    value={form.certificate_records_text}
-                    onChange={(value) => setForm({ ...form, certificate_records_text: value })}
-                  />
-                  <ProfileEditTextarea
-                    label="Курсы"
-                    hint="Формат: название курса | провайдер | продолжительность | статус"
-                    rows={4}
-                    value={form.course_records_text}
-                    onChange={(value) => setForm({ ...form, course_records_text: value })}
-                  />
-                  <ProfileEditTextarea
-                    label="Навыки"
-                    hint="Каждый навык с новой строки или через запятую"
-                    rows={4}
-                    value={form.skills_text}
-                    onChange={(value) => setForm({ ...form, skills_text: value })}
-                  />
-                </div>
+                <EducationRecordsEditor
+                  educationRecords={form.education_records}
+                  additionalEducationRecords={form.additional_education_records}
+                  certificateRecords={form.certificate_records}
+                  courseRecords={form.course_records}
+                  skills={form.skills}
+                  onChange={(patch) => setForm({ ...form, ...patch })}
+                />
               )}
 
               {activeEditTab === "achievements" && (
@@ -1424,6 +1376,332 @@ function EducationDevelopmentTab({ profile }: { profile: UserPublic }) {
   );
 }
 
+type EducationFormPatch = Partial<
+  Pick<
+    ProfileFormState,
+    "education_records" | "additional_education_records" | "certificate_records" | "course_records" | "skills"
+  >
+>;
+
+function ProfileRecordSection({
+  title,
+  description,
+  addLabel,
+  emptyText,
+  onAdd,
+  children,
+}: {
+  title: string;
+  description: string;
+  addLabel: string;
+  emptyText: string;
+  onAdd: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <section className="profileRecordSection">
+      <div className="profileRecordSectionHeader">
+        <div>
+          <h3>{title}</h3>
+          <p>{description}</p>
+        </div>
+        <button className="btn" type="button" onClick={onAdd}>
+          <Plus aria-hidden="true" />
+          {addLabel}
+        </button>
+      </div>
+      {children || <div className="profileEmptyState">{emptyText}</div>}
+    </section>
+  );
+}
+
+function EducationRecordsEditor({
+  educationRecords,
+  additionalEducationRecords,
+  certificateRecords,
+  courseRecords,
+  skills,
+  onChange,
+}: {
+  educationRecords: EducationRecord[];
+  additionalEducationRecords: AdditionalEducationRecord[];
+  certificateRecords: CertificateRecord[];
+  courseRecords: CourseRecord[];
+  skills: string[];
+  onChange: (patch: EducationFormPatch) => void;
+}) {
+  const updateAt = <T,>(items: T[], index: number, patch: Partial<T>) =>
+    items.map((item, itemIndex) => (itemIndex === index ? { ...item, ...patch } : item));
+  const removeAt = <T,>(items: T[], index: number) => items.filter((_, itemIndex) => itemIndex !== index);
+
+  return (
+    <div className="profileRecordsEditor">
+      <ProfileRecordSection
+        title="Высшее образование"
+        description="Каждое учебное заведение заполняется отдельной записью."
+        addLabel="Добавить образование"
+        emptyText="Высшее образование пока не добавлено."
+        onAdd={() => onChange({
+          education_records: [...educationRecords, { school: "", faculty: "", specialty: "", graduationYear: "" }],
+        })}
+      >
+        {educationRecords.length > 0 && (
+          <div className="profileRecordList">
+            {educationRecords.map((item, index) => (
+              <div className="profileRecordItem" key={index}>
+                <div className="profileRecordItemHeader">
+                  <strong>Образование {index + 1}</strong>
+                  <button
+                    className="profileRecordRemoveButton"
+                    type="button"
+                    title="Удалить образование"
+                    aria-label={`Удалить образование ${index + 1}`}
+                    onClick={() => onChange({ education_records: removeAt(educationRecords, index) })}
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+                <div className="profileRecordGrid">
+                  <label>
+                    <span>Учебное заведение</span>
+                    <input className="input" value={item.school} onChange={(event) => onChange({
+                      education_records: updateAt(educationRecords, index, { school: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Факультет</span>
+                    <input className="input" value={item.faculty} onChange={(event) => onChange({
+                      education_records: updateAt(educationRecords, index, { faculty: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Специальность</span>
+                    <input className="input" value={item.specialty} onChange={(event) => onChange({
+                      education_records: updateAt(educationRecords, index, { specialty: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Год окончания</span>
+                    <input className="input" inputMode="numeric" placeholder="2024" value={item.graduationYear} onChange={(event) => onChange({
+                      education_records: updateAt(educationRecords, index, { graduationYear: event.target.value }),
+                    })} />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ProfileRecordSection>
+
+      <ProfileRecordSection
+        title="Дополнительное образование"
+        description="Тренинги и программы дополнительного обучения."
+        addLabel="Добавить обучение"
+        emptyText="Дополнительное образование пока не добавлено."
+        onAdd={() => onChange({
+          additional_education_records: [...additionalEducationRecords, { organization: "", course: "", date: "" }],
+        })}
+      >
+        {additionalEducationRecords.length > 0 && (
+          <div className="profileRecordList">
+            {additionalEducationRecords.map((item, index) => (
+              <div className="profileRecordItem" key={index}>
+                <div className="profileRecordItemHeader">
+                  <strong>Обучение {index + 1}</strong>
+                  <button
+                    className="profileRecordRemoveButton"
+                    type="button"
+                    title="Удалить обучение"
+                    aria-label={`Удалить обучение ${index + 1}`}
+                    onClick={() => onChange({
+                      additional_education_records: removeAt(additionalEducationRecords, index),
+                    })}
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+                <div className="profileRecordGrid">
+                  <label>
+                    <span>Организация</span>
+                    <input className="input" value={item.organization} onChange={(event) => onChange({
+                      additional_education_records: updateAt(additionalEducationRecords, index, {
+                        organization: event.target.value,
+                      }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Название курса или программы</span>
+                    <input className="input" value={item.course} onChange={(event) => onChange({
+                      additional_education_records: updateAt(additionalEducationRecords, index, { course: event.target.value }),
+                    })} />
+                  </label>
+                  <label className="profileRecordWideField">
+                    <span>Дата или период</span>
+                    <input className="input" placeholder="2024 или январь - март 2024" value={item.date} onChange={(event) => onChange({
+                      additional_education_records: updateAt(additionalEducationRecords, index, { date: event.target.value }),
+                    })} />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ProfileRecordSection>
+
+      <ProfileRecordSection
+        title="Сертификаты"
+        description="Каждый сертификат с организацией и сроком действия."
+        addLabel="Добавить сертификат"
+        emptyText="Сертификаты пока не добавлены."
+        onAdd={() => onChange({
+          certificate_records: [...certificateRecords, {
+            title: "", organization: "", issuedAt: "", validUntil: "",
+          }],
+        })}
+      >
+        {certificateRecords.length > 0 && (
+          <div className="profileRecordList">
+            {certificateRecords.map((item, index) => (
+              <div className="profileRecordItem" key={index}>
+                <div className="profileRecordItemHeader">
+                  <strong>Сертификат {index + 1}</strong>
+                  <button
+                    className="profileRecordRemoveButton"
+                    type="button"
+                    title="Удалить сертификат"
+                    aria-label={`Удалить сертификат ${index + 1}`}
+                    onClick={() => onChange({ certificate_records: removeAt(certificateRecords, index) })}
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+                <div className="profileRecordGrid">
+                  <label>
+                    <span>Название</span>
+                    <input className="input" value={item.title} onChange={(event) => onChange({
+                      certificate_records: updateAt(certificateRecords, index, { title: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Организация</span>
+                    <input className="input" value={item.organization} onChange={(event) => onChange({
+                      certificate_records: updateAt(certificateRecords, index, { organization: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Дата получения</span>
+                    <input className="input" placeholder="2024-05-20" value={item.issuedAt} onChange={(event) => onChange({
+                      certificate_records: updateAt(certificateRecords, index, { issuedAt: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Действителен до</span>
+                    <input className="input" placeholder="2027-05-20 или бессрочно" value={item.validUntil ?? ""} onChange={(event) => onChange({
+                      certificate_records: updateAt(certificateRecords, index, { validUntil: event.target.value }),
+                    })} />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ProfileRecordSection>
+
+      <ProfileRecordSection
+        title="Курсы"
+        description="Курсы и программы профессионального развития."
+        addLabel="Добавить курс"
+        emptyText="Курсы пока не добавлены."
+        onAdd={() => onChange({
+          course_records: [...courseRecords, { title: "", provider: "", duration: "", status: "" }],
+        })}
+      >
+        {courseRecords.length > 0 && (
+          <div className="profileRecordList">
+            {courseRecords.map((item, index) => (
+              <div className="profileRecordItem" key={index}>
+                <div className="profileRecordItemHeader">
+                  <strong>Курс {index + 1}</strong>
+                  <button
+                    className="profileRecordRemoveButton"
+                    type="button"
+                    title="Удалить курс"
+                    aria-label={`Удалить курс ${index + 1}`}
+                    onClick={() => onChange({ course_records: removeAt(courseRecords, index) })}
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+                <div className="profileRecordGrid">
+                  <label>
+                    <span>Название курса</span>
+                    <input className="input" value={item.title} onChange={(event) => onChange({
+                      course_records: updateAt(courseRecords, index, { title: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Провайдер</span>
+                    <input className="input" value={item.provider} onChange={(event) => onChange({
+                      course_records: updateAt(courseRecords, index, { provider: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Продолжительность</span>
+                    <input className="input" placeholder="40 часов" value={item.duration} onChange={(event) => onChange({
+                      course_records: updateAt(courseRecords, index, { duration: event.target.value }),
+                    })} />
+                  </label>
+                  <label>
+                    <span>Статус</span>
+                    <input className="input" placeholder="Завершён" value={item.status} onChange={(event) => onChange({
+                      course_records: updateAt(courseRecords, index, { status: event.target.value }),
+                    })} />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ProfileRecordSection>
+
+      <ProfileRecordSection
+        title="Навыки"
+        description="Каждый навык добавляется отдельной строкой."
+        addLabel="Добавить навык"
+        emptyText="Навыки пока не добавлены."
+        onAdd={() => onChange({ skills: [...skills, ""] })}
+      >
+        {skills.length > 0 && (
+          <div className="profileSkillEditorList">
+            {skills.map((skill, index) => (
+              <div className="profileSkillEditorItem" key={index}>
+                <input
+                  className="input"
+                  aria-label={`Навык ${index + 1}`}
+                  placeholder={`Навык ${index + 1}`}
+                  value={skill}
+                  onChange={(event) => onChange({
+                    skills: skills.map((item, itemIndex) => itemIndex === index ? event.target.value : item),
+                  })}
+                />
+                <button
+                  className="profileRecordRemoveButton"
+                  type="button"
+                  title="Удалить навык"
+                  aria-label={`Удалить навык ${index + 1}`}
+                  onClick={() => onChange({ skills: removeAt(skills, index) })}
+                >
+                  <Trash2 />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </ProfileRecordSection>
+    </div>
+  );
+}
+
 function AchievementRecordsEditor({
   items,
   onChange,
@@ -1762,34 +2040,6 @@ function ProfileSection({ title, children }: { title: string; children: ReactNod
 
 function ProfileDataCard({ children }: { children: ReactNode }) {
   return <div className="profileDataCard">{children}</div>;
-}
-
-function ProfileEditTextarea({
-  label,
-  hint,
-  rows,
-  value,
-  onChange,
-}: {
-  label: string;
-  hint: string;
-  rows: number;
-  value: string;
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label>
-      <div className="muted" style={{ fontSize: 13, marginBottom: 6 }}>{label}</div>
-      <textarea
-        className="input"
-        rows={rows}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={hint}
-      />
-      <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>{hint}</div>
-    </label>
-  );
 }
 
 function ProfileEmptyState({ children }: { children: ReactNode }) {

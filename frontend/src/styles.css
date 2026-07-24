@@ -2628,6 +2628,133 @@ textarea {
   gap: 12px;
 }
 
+.profileRecordsEditor {
+  display: grid;
+  gap: 26px;
+}
+
+.profileRecordSection {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #dce8f4;
+}
+
+.profileRecordSection:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.profileRecordSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.profileRecordSectionHeader h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.profileRecordSectionHeader p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.profileRecordSectionHeader .btn {
+  flex: 0 0 auto;
+}
+
+.profileRecordSectionHeader .btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.profileRecordList {
+  display: grid;
+  gap: 12px;
+}
+
+.profileRecordItem {
+  overflow: hidden;
+  border: 1px solid #cfe0f3;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.profileRecordItemHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 7px 10px 7px 14px;
+  border-bottom: 1px solid #e1ebf5;
+  background: #f5f9fe;
+}
+
+.profileRecordRemoveButton {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #9b2c2c;
+  cursor: pointer;
+}
+
+.profileRecordRemoveButton svg {
+  width: 17px;
+  height: 17px;
+}
+
+.profileRecordRemoveButton:hover,
+.profileRecordRemoveButton:focus-visible {
+  border-color: #fecaca;
+  background: #fff1f2;
+  outline: none;
+}
+
+.profileRecordGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.profileRecordGrid label {
+  min-width: 0;
+}
+
+.profileRecordGrid label > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.profileRecordWideField {
+  grid-column: 1 / -1;
+}
+
+.profileSkillEditorList {
+  display: grid;
+  gap: 8px;
+}
+
+.profileSkillEditorItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 36px;
+  gap: 8px;
+  align-items: center;
+}
+
 .achievementEditor {
   display: grid;
   gap: 14px;
@@ -3994,6 +4121,23 @@ textarea {
   }
 
   .achievementEditorWideField {
+    grid-column: auto;
+  }
+
+  .profileRecordSectionHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profileRecordSectionHeader .btn {
+    align-self: flex-start;
+  }
+
+  .profileRecordGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profileRecordWideField {
     grid-column: auto;
   }
 
