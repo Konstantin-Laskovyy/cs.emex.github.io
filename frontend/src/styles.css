@@ -2261,6 +2261,12 @@ textarea {
   margin: 0 0 12px;
 }
 
+.profileAboutContent h1 {
+  margin: 22px 0 10px;
+  font-size: 25px;
+  line-height: 1.2;
+}
+
 .profileAboutContent h2 {
   margin: 20px 0 10px;
   font-size: 21px;
@@ -2273,6 +2279,7 @@ textarea {
   line-height: 1.35;
 }
 
+.profileAboutContent h1:first-child,
 .profileAboutContent h2:first-child,
 .profileAboutContent h3:first-child {
   margin-top: 0;
@@ -2312,6 +2319,31 @@ textarea {
   margin: 5px 0 8px;
   padding-left: 24px;
   list-style-type: circle;
+}
+
+.profileAboutContent hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid #c9d9eb;
+}
+
+.profileAboutContent a {
+  color: #075fab;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.profileAboutContent pre {
+  overflow-x: auto;
+  margin: 14px 0;
+  padding: 12px 14px;
+  border: 1px solid #c9d9eb;
+  border-radius: 6px;
+  background: #f3f7fb;
+}
+
+.profileAboutContent code {
+  font-family: "Courier New", monospace;
 }
 
 .profileAboutEmpty {

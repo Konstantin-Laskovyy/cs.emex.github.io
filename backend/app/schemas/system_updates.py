@@ -20,7 +20,7 @@ class SystemUpdatePublic(BaseModel):
 
 class SystemUpdateCreate(BaseModel):
     title: str = Field(min_length=3, max_length=240)
-    body: str = Field(min_length=5, max_length=5000)
+    body: str = Field(min_length=5, max_length=20000)
 
 
 class SystemUpdateUpdate(SystemUpdateCreate):

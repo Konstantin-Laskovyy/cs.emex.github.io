@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createElement, useEffect, useMemo, useState } from "react";
 import type { DragEvent, FormEvent, ReactNode } from "react";
 import { Link, useOutletContext, useParams } from "react-router-dom";
 import { ApiError, apiFetch } from "../api/client";
 import { useLanguage } from "../i18n";
+import { RichTextEditor as VisualRichTextEditor } from "../ui/RichTextEditor";
 import type {
   DepartmentPublic,
   EmployeeGratitudeListPublic,
@@ -1065,11 +1066,6 @@ export function UserProfilePage() {
   );
 }
 
-const profileEmojiOptions = [
-  "😀", "😊", "👍", "👏", "🎉", "⭐", "❤️", "💡",
-  "✅", "📌", "📣", "🚀", "🤝", "💼", "📚", "🏆",
-];
-
 export function RichTextEditor({
   value,
   onChange,
@@ -1081,131 +1077,14 @@ export function RichTextEditor({
   placeholder?: string;
   maxLength?: number;
 }) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [showEmoji, setShowEmoji] = useState(false);
-
-  const updateValue = (nextValue: string, selectionStart: number, selectionEnd = selectionStart) => {
-    onChange(nextValue.slice(0, maxLength));
-    window.requestAnimationFrame(() => {
-      textareaRef.current?.focus();
-      textareaRef.current?.setSelectionRange(selectionStart, selectionEnd);
-    });
-  };
-
-  const wrapSelection = (before: string, after: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = value.slice(start, end) || "текст";
-    const nextValue = `${value.slice(0, start)}${before}${selectedText}${after}${value.slice(end)}`;
-    const contentStart = start + before.length;
-    updateValue(nextValue, contentStart, contentStart + selectedText.length);
-  };
-
-  const formatLines = (kind: "paragraph" | "heading" | "subheading" | "quote" | "bullet" | "numbered") => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = value.lastIndexOf("\n", Math.max(0, textarea.selectionStart - 1)) + 1;
-    const nextLineBreak = value.indexOf("\n", textarea.selectionEnd);
-    const end = nextLineBreak === -1 ? value.length : nextLineBreak;
-    const selectedLines = value.slice(start, end).split("\n");
-    const cleanLine = (line: string) => line.replace(/^(?:#{1,3}\s+|>\s+|[•\-]\s+|\d+[.)]\s+)/, "");
-    const formattedLines = selectedLines.map((line, index) => {
-      const cleaned = cleanLine(line);
-      if (kind === "heading") return `## ${cleaned}`;
-      if (kind === "subheading") return `### ${cleaned}`;
-      if (kind === "quote") return `> ${cleaned}`;
-      if (kind === "bullet") return `• ${cleaned}`;
-      if (kind === "numbered") return `${index + 1}. ${cleaned}`;
-      return cleaned;
-    });
-    const replacement = formattedLines.join("\n");
-    updateValue(`${value.slice(0, start)}${replacement}${value.slice(end)}`, start, start + replacement.length);
-  };
-
-  const insertEmoji = (emoji: string) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    updateValue(`${value.slice(0, start)}${emoji}${value.slice(end)}`, start + emoji.length);
-    setShowEmoji(false);
-  };
-
   return (
-    <div className="richTextEditor">
-      <div className="richTextToolbar" role="toolbar" aria-label="Форматирование описания">
-        <select
-          className="richTextTypeSelect"
-          aria-label="Тип текста"
-          defaultValue=""
-          onChange={(event) => {
-            if (event.target.value) {
-              formatLines(event.target.value as "paragraph" | "heading" | "subheading" | "quote");
-              event.target.value = "";
-            }
-          }}
-        >
-          <option value="" disabled>Тип текста</option>
-          <option value="paragraph">Обычный текст</option>
-          <option value="heading">Заголовок</option>
-          <option value="subheading">Подзаголовок</option>
-          <option value="quote">Цитата</option>
-        </select>
-        <span className="richTextToolbarDivider" />
-        <button type="button" className="richTextToolButton" title="Жирный" aria-label="Жирный" onClick={() => wrapSelection("**", "**")}>
-          <strong>B</strong>
-        </button>
-        <button type="button" className="richTextToolButton" title="Курсив" aria-label="Курсив" onClick={() => wrapSelection("*", "*")}>
-          <em>I</em>
-        </button>
-        <button type="button" className="richTextToolButton" title="Подчеркнутый" aria-label="Подчеркнутый" onClick={() => wrapSelection("++", "++")}>
-          <u>U</u>
-        </button>
-        <span className="richTextToolbarDivider" />
-        <button type="button" className="richTextToolButton" title="Маркированный список" aria-label="Маркированный список" onClick={() => formatLines("bullet")}>
-          •
-        </button>
-        <button type="button" className="richTextToolButton richTextNumberButton" title="Нумерованный список" aria-label="Нумерованный список" onClick={() => formatLines("numbered")}>
-          1.
-        </button>
-        <div className="richTextEmojiWrap">
-          <button
-            type="button"
-            className="richTextToolButton"
-            title="Добавить смайлик"
-            aria-label="Добавить смайлик"
-            aria-expanded={showEmoji}
-            onClick={() => setShowEmoji((current) => !current)}
-          >
-            😊
-          </button>
-          {showEmoji && (
-            <div className="richTextEmojiPicker">
-              {profileEmojiOptions.map((emoji) => (
-                <button key={emoji} type="button" onClick={() => insertEmoji(emoji)} aria-label={`Добавить ${emoji}`}>
-                  {emoji}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-      <textarea
-        ref={textareaRef}
-        className="richTextArea"
-        value={value}
-        onChange={(event) => onChange(event.target.value.slice(0, maxLength))}
-        rows={8}
-        maxLength={maxLength}
-        placeholder={placeholder}
-      />
-      <div className="richTextFooter">
-        <span>Выделите текст и выберите формат</span>
-        <span>{value.length} / {maxLength}</span>
-      </div>
-    </div>
+    <VisualRichTextEditor
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      maxLength={maxLength}
+      allowUploads={false}
+    />
   );
 }
 
@@ -1290,6 +1169,62 @@ function parseProfileBio(value: string): ProfileBioBlock[] {
   return blocks;
 }
 
+const safeRichTextTags = new Set([
+  "a", "blockquote", "br", "code", "em", "h1", "h2", "h3", "hr",
+  "li", "ol", "p", "pre", "s", "span", "strong", "u", "ul",
+]);
+const safeRichTextFonts = new Set(["Arial", "Georgia", "Verdana", "Times New Roman", "Courier New"]);
+const safeRichTextSizes = new Set(["12px", "14px", "16px", "18px", "24px", "32px"]);
+const safeRichTextLineHeights = new Set(["1", "1.25", "1.5", "1.75", "2"]);
+const safeRichTextAlignments = new Set(["left", "center", "right", "justify"]);
+const safeRichTextColor = /^(?:#[0-9a-f]{3}(?:[0-9a-f]{3}|[0-9a-f]{5})?|rgba?\(\s*\d{1,3}(?:\s*,\s*\d{1,3}){2}(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\))$/i;
+
+function renderSafeRichTextHtml(value: string): ReactNode[] {
+  const documentValue = new DOMParser().parseFromString(value, "text/html");
+
+  const renderNode = (node: Node, key: string): ReactNode => {
+    if (node.nodeType === 3) return node.textContent;
+    if (node.nodeType !== 1) return null;
+
+    const element = node as HTMLElement;
+    const tag = element.tagName.toLowerCase();
+    const children = Array.from(element.childNodes).map((child, index) => renderNode(child, `${key}-${index}`));
+    if (!safeRichTextTags.has(tag)) return children;
+
+    const props: Record<string, unknown> = { key };
+    const style: Record<string, string | number> = {};
+
+    if (tag === "a") {
+      const href = element.getAttribute("href")?.trim() || "";
+      if (/^(https?:|mailto:|tel:|\/(?!\/))/i.test(href)) {
+        props.href = href;
+        props.target = "_blank";
+        props.rel = "noopener noreferrer";
+      }
+    }
+
+    const indent = Number(element.getAttribute("data-indent") || 0);
+    if (Number.isInteger(indent) && indent >= 1 && indent <= 4) {
+      style.marginLeft = `${indent * 24}px`;
+    }
+
+    const textAlign = element.style.textAlign;
+    if (safeRichTextAlignments.has(textAlign)) style.textAlign = textAlign;
+    const fontFamily = element.style.fontFamily.replace(/^["']|["']$/g, "");
+    if (safeRichTextFonts.has(fontFamily)) style.fontFamily = fontFamily;
+    if (safeRichTextSizes.has(element.style.fontSize)) style.fontSize = element.style.fontSize;
+    if (safeRichTextLineHeights.has(element.style.lineHeight)) style.lineHeight = element.style.lineHeight;
+    if (safeRichTextColor.test(element.style.color)) style.color = element.style.color;
+    if (safeRichTextColor.test(element.style.backgroundColor)) style.backgroundColor = element.style.backgroundColor;
+    if (Object.keys(style).length) props.style = style;
+
+    if (tag === "br" || tag === "hr") return createElement(tag, props);
+    return createElement(tag, props, children);
+  };
+
+  return Array.from(documentValue.body.childNodes).map((node, index) => renderNode(node, `html-${index}`));
+}
+
 export function RichTextContent({
   value,
   emptyText = "Описание пока не заполнено.",
@@ -1300,6 +1235,10 @@ export function RichTextContent({
   const normalizedValue = value?.trim();
   if (!normalizedValue) {
     return <div className="profileAboutEmpty">{emptyText}</div>;
+  }
+
+  if (/<\/?[a-z][\s\S]*>/i.test(normalizedValue)) {
+    return <div className="profileAboutContent">{renderSafeRichTextHtml(normalizedValue)}</div>;
   }
 
   return (

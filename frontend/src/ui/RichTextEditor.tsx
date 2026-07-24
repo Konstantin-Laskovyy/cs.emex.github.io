@@ -45,6 +45,7 @@ type RichTextEditorProps = {
   onChange: (value: string) => void;
   placeholder?: string;
   maxLength?: number;
+  allowUploads?: boolean;
 };
 
 const allowedImageTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -161,6 +162,7 @@ export function RichTextEditor({
   onChange,
   placeholder = "Начните вводить текст публикации...",
   maxLength,
+  allowUploads = true,
 }: RichTextEditorProps) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -253,18 +255,22 @@ export function RichTextEditor({
       CharacterCount.configure(maxLength ? { limit: maxLength } : {}),
       Typography,
       Indent,
-      FileHandler.configure({
-        allowedMimeTypes: allowedImageTypes,
-        consumePasteEvent: true,
-        onPaste: (currentEditor, files) => {
-          void uploadFiles(currentEditor, files);
-        },
-        onDrop: (currentEditor, files, position) => {
-          void uploadFiles(currentEditor, files, position);
-        },
-      }),
+      ...(allowUploads
+        ? [
+            FileHandler.configure({
+              allowedMimeTypes: allowedImageTypes,
+              consumePasteEvent: true,
+              onPaste: (currentEditor, files) => {
+                void uploadFiles(currentEditor, files);
+              },
+              onDrop: (currentEditor, files, position) => {
+                void uploadFiles(currentEditor, files, position);
+              },
+            }),
+          ]
+        : []),
     ],
-    content: value || "",
+    content: normalizeEditorContent(value),
     editorProps: {
       attributes: {
         class: "tiptapEditorSurface",
@@ -282,8 +288,9 @@ export function RichTextEditor({
   });
 
   useEffect(() => {
-    if (!editor || editor.getHTML() === value) return;
-    editor.commands.setContent(value || "", { emitUpdate: false });
+    const normalizedValue = normalizeEditorContent(value);
+    if (!editor || editor.getHTML() === normalizedValue) return;
+    editor.commands.setContent(normalizedValue, { emitUpdate: false });
   }, [editor, value]);
 
   useEffect(() => {
@@ -439,8 +446,12 @@ export function RichTextEditor({
         <div className="tiptapToolbarGroup">
           <ToolbarButton label="Добавить или изменить ссылку" active={editor.isActive("link")} onClick={setLink}><Link2 /></ToolbarButton>
           <ToolbarButton label="Удалить ссылку" disabled={!editor.isActive("link")} onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}><Unlink /></ToolbarButton>
-          <ToolbarButton label="Добавить изображение" disabled={uploading} onClick={() => imageInputRef.current?.click()}><ImagePlus /></ToolbarButton>
-          <ToolbarButton label="Прикрепить файл" disabled={uploading} onClick={() => fileInputRef.current?.click()}><Paperclip /></ToolbarButton>
+          {allowUploads && (
+            <>
+              <ToolbarButton label="Добавить изображение" disabled={uploading} onClick={() => imageInputRef.current?.click()}><ImagePlus /></ToolbarButton>
+              <ToolbarButton label="Прикрепить файл" disabled={uploading} onClick={() => fileInputRef.current?.click()}><Paperclip /></ToolbarButton>
+            </>
+          )}
           <div className="tiptapEmojiWrap">
             <ToolbarButton label="Добавить смайлик" active={showEmoji} onClick={() => setShowEmoji((current) => !current)}><Smile /></ToolbarButton>
             {showEmoji && (
@@ -472,7 +483,7 @@ export function RichTextEditor({
         </div>
       </div>
 
-      {editor.isActive("image") && (
+      {allowUploads && editor.isActive("image") && (
         <div className="tiptapImageToolbar">
           <span>Изображение</span>
           <button type="button" onClick={updateImageAlt}>Альтернативный текст</button>
@@ -486,34 +497,38 @@ export function RichTextEditor({
       <EditorContent editor={editor} />
 
       <div className="tiptapEditorFooter">
-        <span>{uploading ? "Загружаем файл..." : uploadError || "Визуальный текстовый редактор"}</span>
+        <span>{allowUploads && uploading ? "Загружаем файл..." : uploadError || "Форматирование отображается сразу"}</span>
         <span className={maxLength && characters >= maxLength ? "tiptapCountLimit" : ""}>
           {characters}{maxLength ? ` / ${maxLength}` : ""} символов
         </span>
       </div>
 
-      <input
-        ref={imageInputRef}
-        type="file"
-        accept={allowedImageTypes.join(",")}
-        multiple
-        hidden
-        onChange={(event) => {
-          const files = Array.from(event.target.files || []);
-          event.target.value = "";
-          if (files.length) void uploadFiles(editor, files);
-        }}
-      />
-      <input
-        ref={fileInputRef}
-        type="file"
-        hidden
-        onChange={(event) => {
-          const file = event.target.files?.[0];
-          event.target.value = "";
-          if (file) void uploadAttachment(editor, file);
-        }}
-      />
+      {allowUploads && (
+        <>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept={allowedImageTypes.join(",")}
+            multiple
+            hidden
+            onChange={(event) => {
+              const files = Array.from(event.target.files || []);
+              event.target.value = "";
+              if (files.length) void uploadFiles(editor, files);
+            }}
+          />
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (file) void uploadAttachment(editor, file);
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -532,6 +547,67 @@ function escapeHtml(value: string) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function normalizeEditorContent(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/<\/?[a-z][\s\S]*>/i.test(trimmed)) return trimmed;
+
+  const blocks: string[] = [];
+  let listType: "ul" | "ol" | null = null;
+  let listItems: string[] = [];
+
+  const flushList = () => {
+    if (!listType || !listItems.length) return;
+    blocks.push(`<${listType}>${listItems.map((item) => `<li>${item}</li>`).join("")}</${listType}>`);
+    listType = null;
+    listItems = [];
+  };
+
+  for (const rawLine of trimmed.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line) {
+      flushList();
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushList();
+      blocks.push(`<h${heading[1].length}>${formatLegacyInline(heading[2])}</h${heading[1].length}>`);
+      continue;
+    }
+
+    const quote = line.match(/^>\s+(.+)$/);
+    if (quote) {
+      flushList();
+      blocks.push(`<blockquote><p>${formatLegacyInline(quote[1])}</p></blockquote>`);
+      continue;
+    }
+
+    const listItem = line.match(/^(\d+[.)]|[•●▪◦\-–—])\s*(.+)$/);
+    if (listItem) {
+      const nextType = /^\d/.test(listItem[1]) ? "ol" : "ul";
+      if (listType && listType !== nextType) flushList();
+      listType = nextType;
+      listItems.push(formatLegacyInline(listItem[2]));
+      continue;
+    }
+
+    flushList();
+    blocks.push(`<p>${formatLegacyInline(line)}</p>`);
+  }
+
+  flushList();
+  return blocks.join("");
+}
+
+function formatLegacyInline(value: string) {
+  return escapeHtml(value)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\+\+(.+?)\+\+/g, "<u>$1</u>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>");
 }
 
 function escapeAttribute(value: string) {
